@@ -74,6 +74,12 @@ final class ShieldActionExtension: ShieldActionDelegate {
             return .defer
         }
         startOpenSession(ruleID: ruleID)
+        // Keep Uninstall Protection in step with the (possibly changed) blocking
+        // state now that an open was spent.
+        UninstallProtectionEnforcer(
+            snapshots: RuleSnapshotStore(),
+            shields: ManagedSettingsShieldController()
+        ).reconcile()
         return .none
     }
 

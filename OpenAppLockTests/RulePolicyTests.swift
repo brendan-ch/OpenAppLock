@@ -135,4 +135,150 @@ struct UninstallProtectionPolicyTests {
                 rules: [rule], enabled: true, usageFor: { _ in RuleUsage(minutesUsed: 10) },
                 at: mondayDuringWork, calendar: utc))
     }
+
+    @Test("The toggle is locked while a hard rule is actively blocking")
+    func toggleLockedDuringHardBlock() {
+        let hard = scheduleRule(hardMode: true)
+        // Actively blocking → locked.
+        #expect(
+            !RulePolicy.canToggleUninstallProtection(
+                rules: [hard], at: mondayDuringWork, calendar: utc))
+        // Outside its window → editable again.
+        #expect(
+            RulePolicy.canToggleUninstallProtection(
+                rules: [hard], at: mondayEvening, calendar: utc))
+    }
+
+    @Test("The toggle stays editable when only a soft rule is blocking")
+    func toggleEditableWithSoftRule() {
+        let soft = scheduleRule(hardMode: false)
+        #expect(
+            RulePolicy.canToggleUninstallProtection(
+                rules: [soft], at: mondayDuringWork, calendar: utc))
+    }
+
+    @Test("A spent hard-mode limit rule locks the toggle")
+    func toggleLockedByHardLimit() {
+        let rule = hardLimitRule()
+        #expect(
+            !RulePolicy.canToggleUninstallProtection(
+                rules: [rule], usageFor: { _ in RuleUsage(minutesUsed: 45) },
+                at: mondayDuringWork, calendar: utc))
+        #expect(
+            RulePolicy.canToggleUninstallProtection(
+                rules: [rule], usageFor: { _ in RuleUsage(minutesUsed: 10) },
+                at: mondayDuringWork, calendar: utc))
+    }
+}
+
+/// The snapshot-based mirror of the uninstall-protection policy, used by the
+/// background (extension) enforcement path. It must agree with `RulePolicy` —
+/// the parity test below is the anti-drift guard.
+@MainActor
+@Suite("Uninstall protection policy (snapshot)")
+struct UninstallProtectionSnapshotPolicyTests {
+    let mondayDuringWork = date(2025, 1, 6, 10, 0)  // inside the default 09:00–17:00
+    let mondayEvening = date(2025, 1, 6, 19, 0)      // outside it
+
+    func scheduleRule(hardMode: Bool) -> BlockingRule {
+        BlockingRule(name: "Work Time", hardMode: hardMode)
+    }
+
+    /// A hard time-limit blocking every day, so it is scheduled on the Monday
+    /// the test dates fall on.
+    func hardLimitRule() -> BlockingRule {
+        BlockingRule(
+            name: "Time Keeper",
+            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 45)),
+            hardMode: true,
+            days: Weekday.everyDay)
+    }
+
+    /// A hard time-limit scheduled only on Tuesdays — never active on the test
+    /// Mondays even when its budget is spent.
+    func tuesdayHardLimitRule() -> BlockingRule {
+        BlockingRule(
+            name: "Tuesday Only",
+            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 45)),
+            hardMode: true,
+            days: [.tuesday])
+    }
+
+    @Test("App removal denied only with the setting on AND a hard snapshot active")
+    func deniedOnlyWhenEnabledAndHardLocked() {
+        let snap = RuleSnapshot(rule: scheduleRule(hardMode: true))
+        #expect(
+            !UninstallProtectionPolicy.shouldDenyAppRemoval(
+                snapshots: [snap], enabled: false, at: mondayDuringWork, calendar: utc))
+        #expect(
+            UninstallProtectionPolicy.shouldDenyAppRemoval(
+                snapshots: [snap], enabled: true, at: mondayDuringWork, calendar: utc))
+        #expect(
+            !UninstallProtectionPolicy.shouldDenyAppRemoval(
+                snapshots: [snap], enabled: true, at: mondayEvening, calendar: utc))
+    }
+
+    @Test("A soft snapshot never triggers denial")
+    func softRuleNeverDenies() {
+        let snap = RuleSnapshot(rule: scheduleRule(hardMode: false))
+        #expect(
+            !UninstallProtectionPolicy.shouldDenyAppRemoval(
+                snapshots: [snap], enabled: true, at: mondayDuringWork, calendar: utc))
+    }
+
+    @Test("A spent hard-mode limit snapshot denies; unspent does not")
+    func spentHardLimitDenies() {
+        let snap = RuleSnapshot(rule: hardLimitRule())
+        #expect(
+            UninstallProtectionPolicy.shouldDenyAppRemoval(
+                snapshots: [snap], enabled: true, usageFor: { _ in RuleUsage(minutesUsed: 45) },
+                at: mondayDuringWork, calendar: utc))
+        #expect(
+            !UninstallProtectionPolicy.shouldDenyAppRemoval(
+                snapshots: [snap], enabled: true, usageFor: { _ in RuleUsage(minutesUsed: 10) },
+                at: mondayDuringWork, calendar: utc))
+    }
+
+    @Test("A spent hard limit not scheduled today does not deny")
+    func spentButNotScheduledTodayDoesNotDeny() {
+        // Guards the WIP bug: omitting the scheduled-today check would wrongly
+        // deny removal for a Tuesday-only rule on a Monday.
+        let snap = RuleSnapshot(rule: tuesdayHardLimitRule())
+        #expect(
+            !UninstallProtectionPolicy.shouldDenyAppRemoval(
+                snapshots: [snap], enabled: true, usageFor: { _ in RuleUsage(minutesUsed: 99) },
+                at: mondayDuringWork, calendar: utc))
+    }
+
+    @Test("Snapshot policy agrees with RulePolicy across representative cases")
+    func parityWithRulePolicy() {
+        let disabled = BlockingRule(name: "Off", isEnabled: false, hardMode: true)
+        let cases: [(BlockingRule, RuleUsage?)] = [
+            (scheduleRule(hardMode: true), nil),
+            (scheduleRule(hardMode: false), nil),
+            (hardLimitRule(), RuleUsage(minutesUsed: 45)),
+            (hardLimitRule(), RuleUsage(minutesUsed: 10)),
+            (tuesdayHardLimitRule(), RuleUsage(minutesUsed: 99)),
+            (disabled, nil),
+        ]
+        for (rule, usage) in cases {
+            let snap = RuleSnapshot(rule: rule)
+            for moment in [mondayDuringWork, mondayEvening] {
+                #expect(
+                    UninstallProtectionPolicy.isHardLocked(
+                        snap, usage: usage, at: moment, calendar: utc)
+                        == RulePolicy.isHardLocked(
+                            rule, usage: usage, at: moment, calendar: utc))
+                for enabled in [true, false] {
+                    #expect(
+                        UninstallProtectionPolicy.shouldDenyAppRemoval(
+                            snapshots: [snap], enabled: enabled, usageFor: { _ in usage },
+                            at: moment, calendar: utc)
+                            == RulePolicy.shouldDenyAppRemoval(
+                                rules: [rule], enabled: enabled, usageFor: { _ in usage },
+                                at: moment, calendar: utc))
+                }
+            }
+        }
+    }
 }

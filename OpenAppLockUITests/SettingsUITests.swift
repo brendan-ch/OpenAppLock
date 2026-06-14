@@ -24,6 +24,21 @@ final class SettingsUITests: XCTestCase {
         XCTAssertEqual(toggle.value as? String, "1", "Tapping should turn it on")
     }
 
+    func testUninstallProtectionLockedDuringHardSession() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "hard-mode-active")
+        app.goToSettingsTab()
+
+        // While the seeded "Locked In" Hard Mode rule is blocking, the toggle is
+        // replaced by a lock (mirroring Home's "Currently Blocking" rows) so the
+        // protection can't be turned off mid-block.
+        app.element("uninstallProtectionLockedNotice").waitToAppear()
+        app.element("uninstallProtectionLockIcon").waitToAppear()
+        XCTAssertFalse(
+            app.switches["uninstallProtectionToggle"].exists,
+            "The Uninstall Protection switch must be hidden while a Hard Mode rule is blocking"
+        )
+    }
+
     func testManageAppListsCreateFlow() throws {
         let app = XCUIApplication.launchOpenAppLock()
         app.goToSettingsTab()

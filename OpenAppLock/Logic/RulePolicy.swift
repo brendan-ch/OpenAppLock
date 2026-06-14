@@ -81,6 +81,16 @@ enum RulePolicy {
         !isAnyHardLocked(rules: rules, usageFor: usageFor, at: now, calendar: calendar)
     }
 
+    /// Whether the Uninstall Protection toggle may be changed right now. It is
+    /// locked while any hard-mode rule is actively blocking — turning it off
+    /// mid-block would be an escape hatch, the very thing it exists to prevent.
+    static func canToggleUninstallProtection(
+        rules: [BlockingRule], usageFor: (BlockingRule) -> RuleUsage? = { _ in nil },
+        at now: Date = .now, calendar: Calendar = .current
+    ) -> Bool {
+        !isAnyHardLocked(rules: rules, usageFor: usageFor, at: now, calendar: calendar)
+    }
+
     /// Whether the device's app removal should be denied right now: the user has
     /// turned on Uninstall Protection *and* a hard block is currently in force.
     /// Engaging this while a hard rule blocks makes the block harder to escape

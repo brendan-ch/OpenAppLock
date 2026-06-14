@@ -20,7 +20,9 @@ protocol AppSettingsReading: AnyObject {
 /// Observable so the Settings screen's toggle stays in sync.
 @Observable
 final class AppSettingsStore: AppSettingsReading {
-    static let uninstallProtectionKey = "uninstallProtectionEnabled"
+    /// The single source of truth for the key is `AppGroup`, so the app and the
+    /// extensions read and write the same defaults entry.
+    static let uninstallProtectionKey = AppGroup.uninstallProtectionKey
 
     @ObservationIgnored private let defaults: UserDefaults
 

@@ -11,6 +11,11 @@ import Foundation
 enum AppGroup {
     static let identifier = "group.dev.bchen.OpenAppLock"
 
+    /// Defaults key for the Uninstall Protection opt-in. Lives here (not on the
+    /// app-only `AppSettingsStore`) so the Screen Time extensions can read the
+    /// same setting when recomputing app-removal denial in the background.
+    static let uninstallProtectionKey = "uninstallProtectionEnabled"
+
     /// Shared defaults; falls back to standard defaults when the group
     /// container is unavailable (e.g. entitlement not provisioned yet).
     static var defaults: UserDefaults {

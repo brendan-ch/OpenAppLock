@@ -95,6 +95,12 @@ when reminded:
   (e.g. the Xcode MCP / a simulator is not reachable in the session) — in that
   case, say so explicitly and hand the verification back to the user rather
   than silently skipping it.
+- **Branch and open a PR for every change.** New features and bug fixes do not
+  go directly onto `main`. Create a topic branch (`feat/…`, `fix/…`,
+  `chore/…`), push it, and open a GitHub PR with `gh pr create` for the
+  maintainer (brendan-ch) to review and merge themselves. `main` advances only
+  through reviewed PRs. (The repository remains mirrored to `gitea`; GitHub is
+  the review surface.)
 - Conventional commits (`feat:`, `fix:`, `refactor:` …). **Agent attribution is
   required**: every commit an agent authors or co-authors must end with a
   `Co-Authored-By:` trailer naming the specific agent/model that did the work,

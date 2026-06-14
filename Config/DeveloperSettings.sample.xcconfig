@@ -1,0 +1,28 @@
+// DeveloperSettings.sample.xcconfig
+//
+// TEMPLATE — do not fill in this copy. Copy it to a "SharedXcodeSettings"
+// folder that sits NEXT TO your OpenAppLock clone (one level above the repo),
+// so your personal Team ID lives physically outside git and can never be
+// committed by accident:
+//
+//     Developer/
+//     ├── OpenAppLock/                          <- your clone
+//     └── SharedXcodeSettings/
+//         └── DeveloperSettings.xcconfig        <- copy this file here, then edit
+//
+// From the repo root:
+//
+//     mkdir -p ../SharedXcodeSettings
+//     cp Config/DeveloperSettings.sample.xcconfig \
+//        ../SharedXcodeSettings/DeveloperSettings.xcconfig
+//
+// Then open the copy and set DEVELOPMENT_TEAM to your 10-character Apple Team
+// ID, found at https://developer.apple.com/account → Membership details.
+//
+// Note: the app and its Screen Time extensions are registered under the
+// `dev.bchen.OpenAppLock` bundle-ID prefix and the `group.dev.bchen.OpenAppLock`
+// App Group, which belong to the maintainer's team. To run on your own device
+// you must also change those identifiers to your own — see CONTRIBUTING.md.
+// Building and running the tests in the simulator needs no signing at all.
+
+DEVELOPMENT_TEAM = YOUR_TEAM_ID

@@ -1,0 +1,55 @@
+name: Run tests
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run all tests on iOS
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+
+      - name: Set Xcode version
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.5.app
+
+      - name: Build for testing
+        run: |
+          xcodebuild build-for-testing \
+            -project OpenAppLock.xcodeproj \
+            -scheme OpenAppLock \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -xcconfig Config/CI.xcconfig
+
+      - name: Run tests
+        id: tests
+        continue-on-error: true
+        run: |
+          xcodebuild test-without-building \
+            -project OpenAppLock.xcodeproj \
+            -scheme OpenAppLock \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -resultBundlePath ./output/test-result.xcresult \
+            -xcconfig Config/CI.xcconfig
+
+      - name: Compress test result
+        run: |
+          ditto -c -k --keepParent "output/test-result.xcresult" "output/test-result.zip"
+
+      - name: Upload test result
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-result
+          path: output/test-result.zip
+
+      - name: Check for test failure
+        if: steps.tests.outcome == 'failure'
+        run: |
+          echo "Tests failed. Check the uploaded artifacts for details."
+          exit 1

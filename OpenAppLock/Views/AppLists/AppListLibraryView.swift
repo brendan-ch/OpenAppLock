@@ -1,0 +1,154 @@
+//
+//  AppListLibraryView.swift
+//  OpenAppLock
+//
+
+import SwiftData
+import SwiftUI
+
+/// The reusable app-list library: the saved lists, an Edit affordance, the New
+/// List flow, swipe-to-delete, and the Hard Mode lock. Used in two modes:
+///
+/// - **Picker** (`selection` non-nil): each row shows a checkmark and tapping it
+///   selects the list and calls `onPick` (the rule editor uses this to dismiss).
+///   Creating a list selects it without dismissing.
+/// - **Management** (`selection` nil): no checkmark; tapping a row (when unlocked)
+///   opens it for editing. Used by Settings ▸ Manage App Lists.
+///
+/// In both modes editing and deletion are disabled while any Hard Mode rule is
+/// actively blocking — changing a list would be a back door out of the block.
+struct AppListLibraryView: View {
+    /// Picker mode when non-nil; management mode when nil.
+    var selection: Binding<AppList?>?
+    /// Called after a row is tapped in picker mode (e.g. to dismiss the sheet).
+    var onPick: (() -> Void)?
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(RuleEnforcer.self) private var enforcer
+    @Query(sort: \AppList.createdAt) private var lists: [AppList]
+    @Query private var rules: [BlockingRule]
+
+    @State private var editingList: AppList?
+    @State private var creatingList = false
+    @State private var deletionBlocked = false
+
+    private var isPicking: Bool { selection != nil }
+
+    /// While any hard-mode rule is actively blocking, lists are read-only.
+    private var listsLocked: Bool {
+        !RulePolicy.canEditAppLists(rules: rules, usageFor: { enforcer.usage(for: $0) })
+    }
+
+    var body: some View {
+        List {
+            Section {
+                if lists.isEmpty {
+                    Text("No app lists yet. Create one to choose which apps a rule affects.")
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("emptyAppListsLabel")
+                } else {
+                    ForEach(lists) { list in
+                        listRow(list)
+                    }
+                }
+            } header: {
+                Text("Your App Lists").textCase(nil)
+            } footer: {
+                if listsLocked {
+                    Label(
+                        "Hard Mode is on — app lists are locked until the block ends.",
+                        systemImage: "lock.fill"
+                    )
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("appListsLockedNotice")
+                }
+            }
+            Section {
+                Button {
+                    creatingList = true
+                } label: {
+                    Label("New List", systemImage: "plus")
+                }
+                .accessibilityIdentifier("newAppListButton")
+            }
+        }
+        .navigationDestination(isPresented: $creatingList) {
+            AppListEditorView(list: nil) { created in
+                selection?.wrappedValue = created
+                creatingList = false
+            }
+        }
+        .navigationDestination(item: $editingList) { list in
+            AppListEditorView(list: list) { _ in
+                editingList = nil
+            }
+        }
+        .alert("This list is in use", isPresented: $deletionBlocked) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Remove it from the rules that use it before deleting.")
+        }
+    }
+
+    private func listRow(_ list: AppList) -> some View {
+        HStack {
+            Button {
+                if isPicking {
+                    selection?.wrappedValue = list
+                    onPick?()
+                } else if !listsLocked {
+                    editingList = list
+                }
+            } label: {
+                HStack {
+                    if isPicking {
+                        Image(systemName: isSelected(list) ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(
+                                isSelected(list) ? AnyShapeStyle(.tint) : AnyShapeStyle(Color.secondary)
+                            )
+                            .frame(width: 28)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(list.name)
+                            .foregroundStyle(Color.primary)
+                        Text(list.appCountLabel)
+                            .font(.caption)
+                            .foregroundStyle(Color.secondary)
+                    }
+                }
+            }
+            .accessibilityIdentifier("appListRow-\(list.name)")
+            Spacer()
+            if !listsLocked {
+                Button("Edit") {
+                    editingList = list
+                }
+                .font(.subheadline)
+                .accessibilityIdentifier("editAppListButton-\(list.name)")
+            }
+        }
+        .buttonStyle(.borderless)
+        .swipeActions {
+            if !listsLocked {
+                Button("Delete", role: .destructive) {
+                    delete(list)
+                }
+            }
+        }
+    }
+
+    private func isSelected(_ list: AppList) -> Bool {
+        selection?.wrappedValue?.id == list.id
+    }
+
+    private func delete(_ list: AppList) {
+        guard !AppList.isInUse(list, context: modelContext) else {
+            deletionBlocked = true
+            return
+        }
+        if isSelected(list) {
+            selection?.wrappedValue = nil
+        }
+        modelContext.delete(list)
+    }
+}

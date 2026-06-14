@@ -1,0 +1,104 @@
+{
+  "fill" : "system-light",
+  "groups" : [
+    {
+      "hidden" : false,
+      "layers" : [
+        {
+          "image-name" : "openapplock-light 2.svg",
+          "name" : "openapplock-light"
+        }
+      ],
+      "opacity-specializations" : [
+        {
+          "appearance" : "dark",
+          "value" : 0
+        },
+        {
+          "appearance" : "tinted",
+          "value" : 0
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "hidden" : false,
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : "none"
+            },
+            {
+              "appearance" : "dark",
+              "value" : "automatic"
+            }
+          ],
+          "glass" : true,
+          "image-name" : "openapplock-dark 4.svg",
+          "name" : "openapplock-dark"
+        }
+      ],
+      "lighting" : "individual",
+      "opacity-specializations" : [
+        {
+          "value" : 0
+        },
+        {
+          "appearance" : "dark",
+          "value" : 1
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "hidden" : false,
+      "layers" : [
+        {
+          "image-name" : "openapplock-mono.svg",
+          "name" : "openapplock-mono"
+        }
+      ],
+      "opacity-specializations" : [
+        {
+          "value" : 0
+        },
+        {
+          "appearance" : "dark",
+          "value" : 0
+        },
+        {
+          "appearance" : "tinted",
+          "value" : 1
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : "shared"
+  }
+}

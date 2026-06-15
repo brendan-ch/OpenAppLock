@@ -42,7 +42,7 @@ identifier steps in [CONTRIBUTING.md](CONTRIBUTING.md).
 | `Docs/` | Feature spec and Swift guidelines |
 
 Deeper architecture notes live in [AGENTS.md](AGENTS.md); feature behavior is
-specified in [Docs/RULES_FEATURE_SPEC.md](Docs/RULES_FEATURE_SPEC.md).
+specified in [Docs/AGENT_RULES_FEATURE_SPEC.md](Docs/AGENT_RULES_FEATURE_SPEC.md).
 
 ## Contributing
 

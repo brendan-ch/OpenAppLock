@@ -39,10 +39,10 @@ identifier steps in [CONTRIBUTING.md](CONTRIBUTING.md).
 | `OpenAppLockShieldConfig/` | ShieldConfiguration extension (shield UI) |
 | `OpenAppLockShieldAction/` | ShieldAction extension (Open button handling) |
 | `Config/` | Build configuration (`.xcconfig`) — see CONTRIBUTING.md |
-| `docs/` | Feature spec and Swift guidelines |
+| `Docs/` | Feature spec and Swift guidelines |
 
 Deeper architecture notes live in [AGENTS.md](AGENTS.md); feature behavior is
-specified in [docs/RULES_FEATURE_SPEC.md](docs/RULES_FEATURE_SPEC.md).
+specified in [Docs/AGENT_RULES_FEATURE_SPEC.md](Docs/AGENT_RULES_FEATURE_SPEC.md).
 
 ## Contributing
 

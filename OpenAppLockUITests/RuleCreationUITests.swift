@@ -105,9 +105,16 @@ final class RuleCreationUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["ruleEditorTitle"].waitToAppear().label, "Time Keeper")
         XCTAssertTrue(app.staticTexts["When I use"].exists)
         XCTAssertEqual(app.staticTexts["dailyLimitStepperValue"].label, "45m")
+        // The stepper exposes a spoken value so VoiceOver announces changes.
+        XCTAssertEqual(
+            app.steppers["dailyLimitStepper"].value as? String, "45 minutes",
+            "The daily-limit stepper must expose a spoken accessibility value"
+        )
 
-        app.steppers["dailyLimitStepper"].buttons["Increment"].tap()
+        // The stepper's labeled control suffixes its increment button id.
+        app.steppers["dailyLimitStepper"].buttons["dailyLimitStepper-Increment"].tap()
         XCTAssertEqual(app.staticTexts["dailyLimitStepperValue"].label, "60m")
+        XCTAssertEqual(app.steppers["dailyLimitStepper"].value as? String, "60 minutes")
 
         app.buttons["commitRuleButton"].waitToAppear().tap()
         app.buttons["ruleCard-Time Keeper"].waitToAppear()
@@ -123,7 +130,10 @@ final class RuleCreationUITests: XCTestCase {
         // commit bar before tapping.
         app.staticTexts["ruleEditorTitle"].waitToAppear()
         app.swipeUp()
-        app.switches["adultContentToggle"].waitToAppear().tap()
+        let adultToggle = app.switches["adultContentToggle"].waitToAppear()
+        XCTAssertEqual(adultToggle.label, "Block Adult Content")
+        // Labeled Toggle fills the row; tap the switch at the trailing edge.
+        adultToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         app.buttons["commitRuleButton"].waitToAppear().tap()
 
         app.buttons["ruleCard-In the Zone"].waitToAppear().tap()

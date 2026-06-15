@@ -138,6 +138,8 @@ struct RuleEditorView: View {
             Section {
                 budgetRow(
                     value: "\(draft.timeLimitConfig.dailyLimitMinutes)m",
+                    accessibilityLabel: "Daily time limit",
+                    accessibilityValue: "\(draft.timeLimitConfig.dailyLimitMinutes) minutes",
                     stepperID: "dailyLimitStepper",
                     onIncrement: {
                         draft.timeLimitConfig.dailyLimitMinutes =
@@ -163,6 +165,8 @@ struct RuleEditorView: View {
             Section {
                 budgetRow(
                     value: "\(draft.openLimitConfig.maxOpens) opens",
+                    accessibilityLabel: "Daily open limit",
+                    accessibilityValue: "\(draft.openLimitConfig.maxOpens) opens",
                     stepperID: "maxOpensStepper",
                     onIncrement: {
                         draft.openLimitConfig.maxOpens = min(50, draft.openLimitConfig.maxOpens + 1)
@@ -200,16 +204,12 @@ struct RuleEditorView: View {
         }
     }
 
-    /// Hard Mode applies to every kind.
+    /// Hard Mode applies to every kind. A labeled `Toggle` makes the whole row
+    /// the tap target and gives VoiceOver a "Hard Mode" switch in one element.
     private var hardModeSection: some View {
         Section {
-            HStack {
-                Text("Hard Mode")
-                Spacer()
-                Toggle("", isOn: $draft.hardMode)
-                    .labelsHidden()
-                    .accessibilityIdentifier("hardModeToggle")
-            }
+            Toggle("Hard Mode", isOn: $draft.hardMode)
+                .accessibilityIdentifier("hardModeToggle")
         } footer: {
             Text("No unblocks allowed while the rule is blocking.")
         }
@@ -218,13 +218,8 @@ struct RuleEditorView: View {
     /// Schedule-only: filter adult websites while the rule's window is active.
     private var adultContentSection: some View {
         Section {
-            HStack {
-                Text("Block Adult Content")
-                Spacer()
-                Toggle("", isOn: $draft.scheduleConfig.blockAdultContent)
-                    .labelsHidden()
-                    .accessibilityIdentifier("adultContentToggle")
-            }
+            Toggle("Block Adult Content", isOn: $draft.scheduleConfig.blockAdultContent)
+                .accessibilityIdentifier("adultContentToggle")
         } footer: {
             Text("Filter adult websites while this rule is active.")
         }
@@ -255,6 +250,8 @@ struct RuleEditorView: View {
 
     private func budgetRow(
         value: String,
+        accessibilityLabel: String,
+        accessibilityValue: String,
         stepperID: String,
         onIncrement: @escaping () -> Void,
         onDecrement: @escaping () -> Void
@@ -265,9 +262,14 @@ struct RuleEditorView: View {
             Text(value)
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("\(stepperID)Value")
+            // The stepper carries its own label + spoken value so VoiceOver
+            // announces e.g. "Daily time limit, 45 minutes" as it changes —
+            // the adjacent value Text is silent decoration to sighted users.
             Stepper("", onIncrement: onIncrement, onDecrement: onDecrement)
                 .labelsHidden()
                 .accessibilityIdentifier(stepperID)
+                .accessibilityLabel(accessibilityLabel)
+                .accessibilityValue(accessibilityValue)
         }
     }
 

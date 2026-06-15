@@ -37,7 +37,11 @@ final class RuleManagementUITests: XCTestCase {
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
         app.buttons["editRuleButton"].waitToAppear().tap()
 
-        app.switches["hardModeToggle"].waitToAppear().tap()
+        let hardMode = app.switches["hardModeToggle"].waitToAppear()
+        XCTAssertEqual(hardMode.label, "Hard Mode", "The Hard Mode switch must carry its label for VoiceOver")
+        // A labeled Toggle fills the row, so a centered `.tap()` lands on the
+        // label; tap the switch itself at the trailing edge to flip it.
+        hardMode.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         app.buttons["doneButton"].tap()
 
         // Back on the detail view, unblocks are no longer allowed.

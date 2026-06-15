@@ -78,7 +78,7 @@ struct RuleDetailSheet: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
+            ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark") {
                     dismiss()
                 }

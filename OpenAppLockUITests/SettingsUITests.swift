@@ -62,6 +62,13 @@ final class SettingsUITests: XCTestCase {
 
         // Saving returns to the management list with the new list present.
         app.element("appListRow-Distractions").waitToAppear()
+
+        // Management rows open for editing on tap (no separate Edit button).
+        app.element("appListRow-Distractions").tap()
+        XCTAssertTrue(
+            app.textFields["appListNameField"].waitToAppear().exists,
+            "Tapping a list in management mode should open it for editing"
+        )
     }
 
     func testManageAppListsLockedDuringHardSession() throws {
@@ -74,8 +81,10 @@ final class SettingsUITests: XCTestCase {
         // hard-mode rule is blocking — same lock as the rule editor's picker.
         app.element("appListRow-Distractions").waitToAppear()
         app.element("appListsLockedNotice").waitToAppear()
+        // Management mode edits via row tap; while locked, the tap must do nothing.
+        app.element("appListRow-Distractions").tap()
         XCTAssertFalse(
-            app.buttons["editAppListButton-Distractions"].exists,
+            app.textFields["appListNameField"].waitForExistence(timeout: 1.5),
             "App lists must be read-only while a Hard Mode rule is blocking"
         )
     }

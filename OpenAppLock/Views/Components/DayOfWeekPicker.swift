@@ -30,6 +30,11 @@ struct DayOfWeekPicker: View {
         } label: {
             Text(day.shortLabel)
                 .font(.subheadline.weight(.semibold))
+                // Keep the circle a fixed size so all seven always fit one row;
+                // let the letter shrink to fit instead of clipping at large
+                // Dynamic Type sizes.
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
                 .foregroundStyle(isOn ? Color.white : Color.secondary)
                 .frame(width: 38, height: 38)
                 .background(

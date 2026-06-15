@@ -42,7 +42,7 @@ struct NewRuleSheet: View {
             .navigationTitle("New Rule")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Close", systemImage: "xmark") {
                         dismiss()
                     }
@@ -102,8 +102,12 @@ struct NewRuleSheet: View {
                         .foregroundStyle(Color.secondary)
                 }
                 Spacer()
-                Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(.tint)
+                // A chevron (matching the Rule Type rows) is the honest
+                // affordance: picking a preset pushes the editor to confirm,
+                // it does not add the rule outright.
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color(.tertiaryLabel))
             }
         }
         .accessibilityIdentifier("preset-\(preset.id)")

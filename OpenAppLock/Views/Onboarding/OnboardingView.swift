@@ -34,26 +34,40 @@ struct OnboardingView: View {
         .padding()
     }
 
+    /// Shared vertical rhythm so both onboarding steps line up.
+    private var stepSpacing: CGFloat { 20 }
+
     private var welcome: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "scissors")
-                .font(.system(size: 56))
-                .foregroundStyle(.tint)
+        VStack(spacing: stepSpacing) {
+            appLogo
             Text("OpenAppLock")
                 .font(.largeTitle.bold())
+                .multilineTextAlignment(.center)
             Text("Block your most distracting apps with rules that keep you honest — on a schedule, with no way out when you choose Hard Mode.")
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
     }
 
+    /// The real app icon, shown as a rounded tile so the welcome screen leads
+    /// with the app's own identity rather than a generic symbol.
+    private var appLogo: some View {
+        Image("AppLogo")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 96, height: 96)
+            .clipShape(RoundedRectangle(cornerRadius: 21, style: .continuous))
+            .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
+            .accessibilityHidden(true)
+    }
+
     private var permission: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: stepSpacing) {
             Image(systemName: "hourglass")
-                .font(.system(size: 48))
+                .font(.system(size: 52))
                 .foregroundStyle(.tint)
             Text("Allow Screen Time Access")
-                .font(.title.bold())
+                .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
             VStack(alignment: .leading, spacing: 14) {
                 bullet("shield.fill", "OpenAppLock uses Apple's Screen Time framework to block the apps you choose.")

@@ -40,36 +40,48 @@ struct AppListLibraryView: View {
     }
 
     var body: some View {
-        List {
-            Section {
-                if lists.isEmpty {
-                    Text("No app lists yet. Create one to choose which apps a rule affects.")
-                        .foregroundStyle(.secondary)
+        Group {
+            if lists.isEmpty {
+                ContentUnavailableView {
+                    Label("No App Lists", systemImage: "square.stack.3d.up")
+                } description: {
+                    // Identifier on the description so it stays a distinct
+                    // element instead of collapsing onto the action button.
+                    Text("Create one to choose which apps a rule affects.")
                         .accessibilityIdentifier("emptyAppListsLabel")
-                } else {
-                    ForEach(lists) { list in
-                        listRow(list)
+                } actions: {
+                    Button("New List") {
+                        creatingList = true
+                    }
+                    .accessibilityIdentifier("newAppListButton")
+                }
+            } else {
+                List {
+                    Section {
+                        ForEach(lists) { list in
+                            listRow(list)
+                        }
+                    } header: {
+                        Text("Your App Lists").textCase(nil)
+                    } footer: {
+                        if listsLocked {
+                            Label(
+                                "Hard Mode is on — app lists are locked until the block ends.",
+                                systemImage: "lock.fill"
+                            )
+                            .accessibilityElement(children: .combine)
+                            .accessibilityIdentifier("appListsLockedNotice")
+                        }
+                    }
+                    Section {
+                        Button {
+                            creatingList = true
+                        } label: {
+                            Label("New List", systemImage: "plus")
+                        }
+                        .accessibilityIdentifier("newAppListButton")
                     }
                 }
-            } header: {
-                Text("Your App Lists").textCase(nil)
-            } footer: {
-                if listsLocked {
-                    Label(
-                        "Hard Mode is on — app lists are locked until the block ends.",
-                        systemImage: "lock.fill"
-                    )
-                    .accessibilityElement(children: .combine)
-                    .accessibilityIdentifier("appListsLockedNotice")
-                }
-            }
-            Section {
-                Button {
-                    creatingList = true
-                } label: {
-                    Label("New List", systemImage: "plus")
-                }
-                .accessibilityIdentifier("newAppListButton")
             }
         }
         .navigationDestination(isPresented: $creatingList) {
@@ -90,49 +102,75 @@ struct AppListLibraryView: View {
         }
     }
 
+    @ViewBuilder
     private func listRow(_ list: AppList) -> some View {
-        HStack {
-            Button {
-                if isPicking {
+        if isPicking {
+            // Picker mode: tapping the row selects the list, so it keeps a
+            // distinct trailing Edit affordance to open the list for editing.
+            HStack {
+                Button {
                     selection?.wrappedValue = list
                     onPick?()
-                } else if !listsLocked {
-                    editingList = list
-                }
-            } label: {
-                HStack {
-                    if isPicking {
+                } label: {
+                    HStack {
                         Image(systemName: isSelected(list) ? "checkmark.circle.fill" : "circle")
                             .foregroundStyle(
                                 isSelected(list) ? AnyShapeStyle(.tint) : AnyShapeStyle(Color.secondary)
                             )
                             .frame(width: 28)
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(list.name)
-                            .foregroundStyle(Color.primary)
-                        Text(list.appCountLabel)
-                            .font(.caption)
-                            .foregroundStyle(Color.secondary)
+                        rowText(list)
                     }
                 }
+                .accessibilityIdentifier("appListRow-\(list.name)")
+                Spacer()
+                if !listsLocked {
+                    Button("Edit") {
+                        editingList = list
+                    }
+                    .font(.subheadline)
+                    .accessibilityIdentifier("editAppListButton-\(list.name)")
+                }
             }
+            .buttonStyle(.borderless)
+            .swipeActions { deleteAction(list) }
+        } else {
+            // Management mode: the whole row taps to edit (a full-width target),
+            // with a disclosure chevron instead of a redundant Edit button.
+            Button {
+                if !listsLocked { editingList = list }
+            } label: {
+                HStack {
+                    rowText(list)
+                    Spacer()
+                    if !listsLocked {
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color(.tertiaryLabel))
+                    }
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             .accessibilityIdentifier("appListRow-\(list.name)")
-            Spacer()
-            if !listsLocked {
-                Button("Edit") {
-                    editingList = list
-                }
-                .font(.subheadline)
-                .accessibilityIdentifier("editAppListButton-\(list.name)")
-            }
+            .swipeActions { deleteAction(list) }
         }
-        .buttonStyle(.borderless)
-        .swipeActions {
-            if !listsLocked {
-                Button("Delete", role: .destructive) {
-                    delete(list)
-                }
+    }
+
+    private func rowText(_ list: AppList) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(list.name)
+                .foregroundStyle(Color.primary)
+            Text(list.appCountLabel)
+                .font(.caption)
+                .foregroundStyle(Color.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private func deleteAction(_ list: AppList) -> some View {
+        if !listsLocked {
+            Button("Delete", role: .destructive) {
+                delete(list)
             }
         }
     }

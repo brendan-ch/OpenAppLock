@@ -141,7 +141,7 @@ struct RuleStatusTests {
     }
 
     /// Limit rules block by budget, not by the clock, so a spent one reads its
-    /// usage ("15m of 15m used today"), never a countdown (that is schedule-only).
+    /// usage ("15m of 15m used"), never a countdown (that is schedule-only).
     @Test("A spent time-limit budget shows its usage, not a countdown")
     func timeLimitBlockingDisplayLabel() {
         let rule = BlockingRule(
@@ -150,6 +150,6 @@ struct RuleStatusTests {
         let usage = RuleUsage(minutesUsed: 15)
         let status = rule.status(at: now, calendar: utc, usage: usage)
         #expect(status.isActive)
-        #expect(rule.rowContext(for: status, usage: usage, relativeTo: now) == "15m of 15m used today")
+        #expect(rule.rowContext(for: status, usage: usage, relativeTo: now) == "15m of 15m used")
     }
 }

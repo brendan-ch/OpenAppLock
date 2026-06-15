@@ -9,26 +9,26 @@ import Foundation
 /// so overshoot (thresholds can fire late) never reads "50m of 45m".
 enum UsageDisplay {
     /// The Home-list subtitle: the rule's type, then its live context, so the
-    /// kind reads without relying on the icon ("Time Limit · 18m of 45m used
-    /// today", "Schedule · 6h left"). The Rules list omits the type prefix
-    /// because its section header already conveys it.
+    /// kind reads without relying on the icon ("Time Limit · 18m of 45m used",
+    /// "Schedule · 6h left"). The Rules list omits the type prefix because its
+    /// section header already conveys it.
     static func homeSubtitle(
         for rule: BlockingRule, status: RuleStatus, usage: RuleUsage, relativeTo now: Date
     ) -> String {
         "\(rule.kind.displayName) · \(rule.rowContext(for: status, usage: usage, relativeTo: now))"
     }
 
-    /// "18m of 45m used today" / "2 of 5 opens today". Empty for schedule rules,
-    /// which have no usage budget.
+    /// "18m of 45m used" / "2 of 5 opens". Empty for schedule rules, which have
+    /// no usage budget. ("today" is implied — usage always covers the current day.)
     static func usagePhrase(for rule: BlockingRule, usage: RuleUsage) -> String {
         switch rule.configuration {
         case .schedule:
             ""
         case .timeLimit(let config):
             "\(min(usage.minutesUsed, config.dailyLimitMinutes))m of "
-                + "\(config.dailyLimitMinutes)m used today"
+                + "\(config.dailyLimitMinutes)m used"
         case .openLimit(let config):
-            "\(min(usage.opensUsed, config.maxOpens)) of \(config.maxOpens) opens today"
+            "\(min(usage.opensUsed, config.maxOpens)) of \(config.maxOpens) opens"
         }
     }
 

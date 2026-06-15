@@ -90,9 +90,9 @@ extension BlockingRule {
     ///   "Paused", "Disabled", "No days selected".
     /// - Limit rules share that wording while disabled / dormant / paused;
     ///   otherwise they read their budget — live usage once the rule has been
-    ///   used today ("18m of 45m used today"), and the plain daily allowance
-    ///   while still untouched ("45m / day"). A spent limit therefore reads
-    ///   "45m of 45m used today", never a clock countdown.
+    ///   used today ("18m of 45m used"), and the plain daily allowance while
+    ///   still untouched ("45m / day"). A spent limit therefore reads
+    ///   "45m of 45m used", never a clock countdown.
     func rowContext(for status: RuleStatus, usage: RuleUsage, relativeTo now: Date) -> String {
         switch configuration {
         case .schedule:

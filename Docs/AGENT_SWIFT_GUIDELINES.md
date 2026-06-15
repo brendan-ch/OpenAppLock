@@ -118,7 +118,7 @@ swift test --enable-code-coverage
 
 ### Workflow
 
-Red-green TDD: update `docs/RULES_FEATURE_SPEC.md` first for behavior changes,
+Red-green TDD: update `Docs/AGENT_RULES_FEATURE_SPEC.md` first for behavior changes,
 write the failing test, run it (a compile failure counts as red), implement,
 re-run focused tests, then the full suite. Run tests often and fail fast.
 

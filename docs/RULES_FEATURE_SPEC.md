@@ -534,7 +534,7 @@ it runs regardless of the selected tab.
 |---|---|
 | Home tab | `NavigationStack` + `List`. **"Currently Blocking"** section (renamed from "Blocked Apps") — the *rules* blocking right now: **no leading icon**; a Hard Mode rule shows a trailing `lock.fill` (the block can't be lifted), a soft rule shows a trailing "Unblock" button; tapping a hard row shows the "Hard Mode is on" alert, a soft row the unblock dialog. A limit rule whose budget is **spent** appears here (moved out of Usage) with a `<Type> · <usage>` subtitle. **"Usage"** section: every enabled limit rule scheduled today that is *not* currently blocking, each row a `<Type> · NN of MM used today` subtitle + trailing remaining/blocked label. |
 | Rules tab | `NavigationStack` + `List` split into **Schedule / Time Limit / Open Limit** sections (empty sections hidden); **rules are list rows** (leading kind icon, name, block summary, trailing live status — green when active); "+" toolbar button opens the New Rule sheet; tapping a row opens the Rule Detail sheet. |
-| Settings tab | `NavigationStack` + `Form`. **Uninstall Protection** toggle — while on, the device's app-removal is denied (`ManagedSettingsStore.application.denyAppRemoval`) whenever any Hard Mode rule is actively blocking. **Manage App Lists** pushes the shared App List library in management mode (create / edit / delete, honoring the Hard Mode lock — same flow as the rule editor's picker, minus selection). |
+| Settings tab | `NavigationStack` + `Form`. **Uninstall Protection** toggle — while on, the device's app-removal is denied (`ManagedSettingsStore.application.denyAppRemoval`) whenever any Hard Mode rule is actively blocking. The toggle itself is **locked while any Hard Mode rule is actively blocking**: the switch is replaced by a trailing red `lock.fill` (same treatment as a Home "Currently Blocking" hard row) so the protection can't be turned off mid-block — its whole purpose. **Manage App Lists** pushes the shared App List library in management mode (create / edit / delete, honoring the Hard Mode lock — same flow as the rule editor's picker, minus selection). |
 | Rule detail | Sheet with inline nav title (name + "Schedule, 6h left" caption), `LabeledContent` rows, "Edit Rule" row pushes the editor; hard-locked rules show a lock row instead |
 | New Rule | `List` with a "Rule Type" section and preset sections as plain rows; editor pushed via `navigationDestination(item:)` |
 | Rule editor | Native `Form`: an inline **Name text field** at the top (no separate rename button; empty names fall back to the kind default), `DatePicker` rows, full-width day-circle row (≥44pt tap targets) with the summary in the section header, toggle rows with footers, stepper rows. Both modes commit via a **checkmark** in the navigation bar (labels: "Add Rule" / "Done"; replaces Hold to Commit). In edit mode an **ellipsis menu** ("Rule Actions") next to the checkmark holds Disable Rule and the destructive Delete Rule |
@@ -547,17 +547,36 @@ icon-pair/circle-button chrome.
 
 A device-wide opt-in that makes Hard Mode harder to escape: while it is on **and**
 any Hard Mode rule is actively blocking, the user cannot delete apps from the
-device. `RulePolicy.shouldDenyAppRemoval(rules:enabled:usageFor:)` (= setting on
-AND any rule `isHardLocked`) is the single gate; `RuleEnforcer.refresh` applies it
+device (so the block can't be removed by uninstalling OpenAppLock itself). The
+decision (= setting on AND any rule actively blocking with Hard Mode) is applied
 through `ShieldApplying.setAppRemovalDenied`, which sets
 `ManagedSettingsStore(named: "uninstall-protection").application.denyAppRemoval`
 (`true` to engage, `nil` to relinquish) on a **dedicated** store so per-rule
 shield clears never touch it. The setting persists in the app-group defaults
-(`uninstallProtectionEnabled`).
+under `AppGroup.uninstallProtectionKey` (`"uninstallProtectionEnabled"`), readable
+by both the app and the extensions.
 
-Enforced on the **foreground path only** for v1 (launch + 30 s loop + rule change
-+ scene-active). Known limitation: a Hard Mode window that *ends* while the app is
-closed leaves protection engaged until the app is next foregrounded — the safe
-failure direction for a locker. Background recompute in the monitor extension is a
-follow-up. Like all Screen Time behavior, the real device effect is only
-observable on a device (the simulator uses mock shields).
+Recomputed on **both** enforcement paths so it stays correct whether the app is
+open or not:
+- **Foreground** — `RuleEnforcer.refresh` evaluates
+  `RulePolicy.shouldDenyAppRemoval(rules:enabled:usageFor:)` over the live
+  `BlockingRule`s (launch + 30 s loop + rule change + scene-active).
+- **Background** — the DeviceActivity monitor extension (interval start/end,
+  usage threshold) and the ShieldAction extension (after a granted open) call
+  `UninstallProtectionEnforcer.reconcile()`, which evaluates the snapshot mirror
+  `UninstallProtectionPolicy.shouldDenyAppRemoval(snapshots:enabled:usageFor:)`
+  over the `RuleSnapshot`s in the app group. `UninstallProtectionPolicy` mirrors
+  `RulePolicy`'s active/hard-locked semantics exactly (a unit test asserts parity),
+  so the two paths never disagree. This closes the prior v1 gap where a Hard Mode
+  window that started or ended while the app was closed left protection out of sync.
+
+The toggle is **fully locked while any Hard Mode rule is actively blocking**:
+`SettingsView` replaces the switch with a trailing red `lock.fill`
+(`uninstallProtectionLockIcon`, mirroring the Home "Currently Blocking" treatment)
+and shows the `uninstallProtectionLockedNotice` footer; the gate is
+`RulePolicy.canToggleUninstallProtection(rules:usageFor:)` (= no rule
+`isHardLocked`). It can't be turned off (or on) mid-block — turning it off would be
+an escape hatch.
+
+Like all Screen Time behavior, the real device effect is only observable on a
+device (the simulator uses mock shields and delivers no DeviceActivity callbacks).

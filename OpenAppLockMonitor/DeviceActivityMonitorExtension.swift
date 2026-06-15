@@ -26,6 +26,16 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         )
     }
 
+    /// Re-evaluates Uninstall Protection from the snapshots + opt-in after each
+    /// callback, so app-removal denial tracks hard-mode blocks even while the
+    /// app is closed.
+    private var uninstallProtection: UninstallProtectionEnforcer {
+        UninstallProtectionEnforcer(
+            snapshots: RuleSnapshotStore(),
+            shields: ManagedSettingsShieldController()
+        )
+    }
+
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
         if let ruleID = MonitoringPlan.ruleID(fromDailyActivityName: activity.rawValue) {
@@ -35,6 +45,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             // pause and the midnight-crossing rule).
             scheduleEnforcement.reconcile(ruleID: ruleID)
         }
+        uninstallProtection.reconcile()
     }
 
     override func intervalDidEnd(for activity: DeviceActivityName) {
@@ -48,6 +59,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             // one clears.
             scheduleEnforcement.reconcile(ruleID: ruleID)
         }
+        uninstallProtection.reconcile()
     }
 
     override func eventDidReachThreshold(
@@ -58,5 +70,6 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
               let minutes = MonitoringPlan.minutes(fromEventName: event.rawValue)
         else { return }
         enforcement.handleUsageMinutes(minutes, ruleID: ruleID)
+        uninstallProtection.reconcile()
     }
 }

@@ -80,12 +80,13 @@ struct HomeView: View {
         }
     }
 
-    /// A blocking rule: no leading icon. A limit rule shows its type + usage so
-    /// the kind reads without an icon; a schedule rule shows just its name.
-    /// Trailing affordance: a lock when Hard Mode (the block can't be lifted),
-    /// otherwise an Unblock button.
+    /// A blocking rule: leading kind icon, name, and a "<Type> · <context>"
+    /// subtitle (a schedule shows its countdown, a limit its usage). Trailing
+    /// affordance: a lock when Hard Mode (the block can't be lifted), otherwise
+    /// an Unblock button.
     private func blockingRow(for rule: BlockingRule, now: Date) -> some View {
         let usage = enforcer.usage(for: rule, at: now) ?? RuleUsage()
+        let status = liveStatus(for: rule, now: now)
         return Button {
             if RulePolicy.canUnblock(rule, usage: enforcer.usage(for: rule, at: now), at: now) {
                 unblockCandidate = rule
@@ -94,14 +95,13 @@ struct HomeView: View {
             }
         } label: {
             HStack {
+                kindIcon(for: rule)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(rule.name)
                         .foregroundStyle(Color.primary)
-                    if rule.kind != .schedule {
-                        Text(UsageDisplay.typedSubtitle(for: rule, usage: usage))
-                            .font(.caption)
-                            .foregroundStyle(Color.secondary)
-                    }
+                    Text(UsageDisplay.homeSubtitle(for: rule, status: status, usage: usage, relativeTo: now))
+                        .font(.caption)
+                        .foregroundStyle(Color.secondary)
                 }
                 Spacer()
                 if rule.hardMode {
@@ -116,12 +116,21 @@ struct HomeView: View {
         .accessibilityIdentifier("blockedTile-\(rule.name)")
     }
 
+    /// The rule's kind icon, tinted, sized to align row text. Decorative — the
+    /// type is also spelled out in the subtitle, so it is hidden from VoiceOver.
+    private func kindIcon(for rule: BlockingRule) -> some View {
+        Image(systemName: rule.kind.symbolName)
+            .foregroundStyle(.tint)
+            .frame(width: 28)
+            .accessibilityHidden(true)
+    }
+
     // MARK: - Usage
 
     /// Live tracking for every limit rule scheduled today that is *not* already
     /// blocking. Once a budget is spent (the rule is actively blocking) the row
     /// moves up to "Currently Blocking"; a soft-unblocked rule (paused) stays
-    /// here reading "Unblocked until tomorrow".
+    /// here reading "Paused".
     @ViewBuilder
     private func usageSection(now: Date) -> some View {
         let tracked = rules.filter {
@@ -141,23 +150,17 @@ struct HomeView: View {
 
     private func usageRow(for rule: BlockingRule, now: Date) -> some View {
         let usage = enforcer.usage(for: rule, at: now) ?? RuleUsage()
-        let isPaused =
-            if case .paused = liveStatus(for: rule, now: now) { true } else { false }
+        let status = liveStatus(for: rule, now: now)
         return HStack {
+            kindIcon(for: rule)
             VStack(alignment: .leading, spacing: 2) {
                 Text(rule.name)
                     .foregroundStyle(Color.primary)
-                Text(UsageDisplay.typedSubtitle(for: rule, usage: usage))
+                Text(UsageDisplay.homeSubtitle(for: rule, status: status, usage: usage, relativeTo: now))
                     .font(.caption)
                     .foregroundStyle(Color.secondary)
             }
             Spacer()
-            Text(UsageDisplay.remainingLabel(for: rule, usage: usage, isPaused: isPaused))
-                .font(.subheadline)
-                .foregroundStyle(
-                    rule.limitReached(given: usage) && !isPaused
-                        ? AnyShapeStyle(Color.red) : AnyShapeStyle(Color.secondary)
-                )
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("usageRow-\(rule.name)")

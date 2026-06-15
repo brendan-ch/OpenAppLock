@@ -91,14 +91,15 @@ Dark theme throughout (near-black background, very dark green tint).
    also appear here, blocked until midnight.
 3. **Usage** *(OpenAppLock addition)* — a section
    showing live tracking for every enabled Time/Open Limit rule scheduled today
-   **that is not currently blocking**. Each row leads its subtitle with the rule
-   **type** so the kind is clear without relying on the icon:
-   - Time Limit row: subtitle "Time Limit · 18m of 45m used today", trailing "27m left".
-   - Open Limit row: subtitle "Open Limit · 2 of 5 opens today", trailing "3 opens left".
+   **that is not currently blocking**. Each row has a leading kind icon and a
+   `<Type> · <context>` subtitle (no trailing label); the type prefix keeps the
+   kind clear and "today" is dropped as implied:
+   - Time Limit row: subtitle "Time Limit · 18m of 45m used".
+   - Open Limit row: subtitle "Open Limit · 2 of 5 opens".
    A rule whose budget is **spent** (actively blocking) **moves out of Usage into
    the "Currently Blocking" section** (it shows its type + usage there instead);
    a *soft-unblocked* spent rule is paused (not blocking), so it returns to Usage
-   reading "Unblocked until tomorrow". Usage numbers come from the shared app-group
+   reading "Paused". Usage numbers come from the shared app-group
    ledger written by the DeviceActivity monitor and shield-action extensions.
 3. **Rules** — header row: "Rules ›" (leading, tappable to a full list,
    presumably) and "**+ New**" (trailing, green tint) which opens the New Rule
@@ -532,8 +533,8 @@ it runs regardless of the selected tab.
 
 | Spec element | Native presentation |
 |---|---|
-| Home tab | `NavigationStack` + `List`. **"Currently Blocking"** section (renamed from "Blocked Apps") — the *rules* blocking right now: **no leading icon**; a Hard Mode rule shows a trailing `lock.fill` (the block can't be lifted), a soft rule shows a trailing "Unblock" button; tapping a hard row shows the "Hard Mode is on" alert, a soft row the unblock dialog. A limit rule whose budget is **spent** appears here (moved out of Usage) with a `<Type> · <usage>` subtitle. **"Usage"** section: every enabled limit rule scheduled today that is *not* currently blocking, each row a `<Type> · NN of MM used today` subtitle + trailing remaining/blocked label. |
-| Rules tab | `NavigationStack` + `List` split into **Schedule / Time Limit / Open Limit** sections (empty sections hidden); **rules are list rows** (leading kind icon, name, block summary, trailing live status — green when active); "+" toolbar button opens the New Rule sheet; tapping a row opens the Rule Detail sheet. |
+| Home tab | `NavigationStack` + `List`. Every row carries a **leading kind icon**, the name, and a `<Type> · <context>` subtitle, where *context* is the rule's live status: a schedule reads its countdown (`Schedule · 6h left`), a limit reads its usage once used today (`Time Limit · 18m of 45m used`) or its plain budget while untouched (`Time Limit · 45m / day`). **"Currently Blocking"** section (renamed from "Blocked Apps") — the *rules* blocking right now: a Hard Mode rule shows a trailing `lock.fill` (the block can't be lifted), a soft rule shows a trailing "Unblock" button; tapping a hard row shows the "Hard Mode is on" alert, a soft row the unblock dialog. A limit rule whose budget is **spent** appears here (moved out of Usage). **"Usage"** section: every enabled limit rule scheduled today that is *not* currently blocking; rows have **no trailing label** (the context lives in the subtitle). |
+| Rules tab | `NavigationStack` + `List` split into **Schedule / Time Limit / Open Limit** sections (empty sections hidden); **rules are list rows** (leading kind icon, name, and a `<context>` subtitle — the same live status/countdown/usage as Home, but **without the type prefix** since the section header already conveys the kind, and **without a separate trailing status label**; the `ruleStatus-<name>` identifier lives on this subtitle); "+" toolbar button opens the New Rule sheet; tapping a row opens the Rule Detail sheet. |
 | Settings tab | `NavigationStack` + `Form`. **Uninstall Protection** toggle — while on, the device's app-removal is denied (`ManagedSettingsStore.application.denyAppRemoval`) whenever any Hard Mode rule is actively blocking. The toggle itself is **locked while any Hard Mode rule is actively blocking**: the switch is replaced by a trailing red `lock.fill` (same treatment as a Home "Currently Blocking" hard row) so the protection can't be turned off mid-block — its whole purpose. **Manage App Lists** pushes the shared App List library in management mode (create / edit / delete, honoring the Hard Mode lock — same flow as the rule editor's picker, minus selection). |
 | Rule detail | Sheet with inline nav title (name + "Schedule, 6h left" caption), `LabeledContent` rows, "Edit Rule" row pushes the editor; hard-locked rules show a lock row instead |
 | New Rule | `List` with a "Rule Type" section and preset sections as plain rows; editor pushed via `navigationDestination(item:)` |

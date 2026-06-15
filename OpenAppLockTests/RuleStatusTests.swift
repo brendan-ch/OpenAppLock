@@ -110,26 +110,26 @@ struct RuleStatusTests {
         #expect(RuleStatus.paused(until: now).label(relativeTo: now) == "Paused")
     }
 
-    // MARK: - Kind-aware display label
+    // MARK: - Kind-aware row context
 
-    /// A non-blocking time-limit rule has no clock window, so it must show its
-    /// daily budget — never the vestigial 09:00 start as "Starts in 22h".
-    @Test("Idle time-limit rule shows its daily budget, not a clock countdown")
+    /// An untouched time-limit rule has no clock window, so it shows its daily
+    /// budget — never the vestigial 09:00 start as "Starts in 22h".
+    @Test("Untouched time-limit rule shows its daily budget, not a clock countdown")
     func timeLimitDisplayLabel() {
         let rule = BlockingRule(
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
         let now = date(2025, 1, 6, 11, 38) // past the vestigial 09:00 window start
         let status = rule.status(at: now, calendar: utc)
-        #expect(rule.statusLabel(for: status, relativeTo: now) == "15m / day")
+        #expect(rule.rowContext(for: status, usage: RuleUsage(), relativeTo: now) == "15m / day")
     }
 
-    @Test("Idle open-limit rule shows its daily opens budget")
+    @Test("Untouched open-limit rule shows its daily opens budget")
     func openLimitDisplayLabel() {
         let rule = BlockingRule(
             name: "Gate Keeper", configuration: .openLimit(OpenLimitConfig(maxOpens: 5)))
         let now = date(2025, 1, 6, 11, 38)
         let status = rule.status(at: now, calendar: utc)
-        #expect(rule.statusLabel(for: status, relativeTo: now) == "5 opens / day")
+        #expect(rule.rowContext(for: status, usage: RuleUsage(), relativeTo: now) == "5 opens / day")
     }
 
     @Test("Schedule rule still shows the clock countdown")
@@ -137,17 +137,19 @@ struct RuleStatusTests {
         let weekend = BlockingRule(name: "Weekend Zen", days: Weekday.weekends)
         let friday = date(2025, 1, 10, 11, 28)
         let status = weekend.status(at: friday, calendar: utc)
-        #expect(weekend.statusLabel(for: status, relativeTo: friday) == "Starts in 22h")
+        #expect(weekend.rowContext(for: status, usage: RuleUsage(), relativeTo: friday) == "Starts in 22h")
     }
 
-    @Test("A spent time-limit budget still shows the blocked countdown")
+    /// Limit rules block by budget, not by the clock, so a spent one reads its
+    /// usage ("15m of 15m used"), never a countdown (that is schedule-only).
+    @Test("A spent time-limit budget shows its usage, not a countdown")
     func timeLimitBlockingDisplayLabel() {
         let rule = BlockingRule(
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
         let now = date(2025, 1, 6, 11, 38)
-        let status = rule.status(at: now, calendar: utc, usage: RuleUsage(minutesUsed: 15))
+        let usage = RuleUsage(minutesUsed: 15)
+        let status = rule.status(at: now, calendar: utc, usage: usage)
         #expect(status.isActive)
-        // Stays on the live countdown ("Xh left"), not overridden to the budget.
-        #expect(rule.statusLabel(for: status, relativeTo: now) == status.label(relativeTo: now))
+        #expect(rule.rowContext(for: status, usage: usage, relativeTo: now) == "15m of 15m used")
     }
 }

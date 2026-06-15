@@ -80,7 +80,8 @@ struct RulesListView: View {
     }
 
     private func ruleRow(for rule: BlockingRule, now: Date) -> some View {
-        let status = rule.status(at: now, usage: enforcer.usage(for: rule, at: now))
+        let usage = enforcer.usage(for: rule, at: now) ?? RuleUsage()
+        let status = rule.status(at: now, usage: usage)
         return Button {
             detailRule = rule
         } label: {
@@ -88,24 +89,20 @@ struct RulesListView: View {
                 Image(systemName: rule.kind.symbolName)
                     .foregroundStyle(.tint)
                     .frame(width: 28)
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(rule.name)
                         .foregroundStyle(Color.primary)
-                    Text(blockSummary(for: rule))
+                    // The kind is conveyed by the section header, so the
+                    // subtitle is just the live context (no type prefix).
+                    Text(rule.rowContext(for: status, usage: usage, relativeTo: now))
                         .font(.caption)
                         .foregroundStyle(Color.secondary)
+                        .accessibilityIdentifier("ruleStatus-\(rule.name)")
                 }
                 Spacer()
-                Text(rule.statusLabel(for: status, relativeTo: now))
-                    .font(.subheadline)
-                    .foregroundStyle(status.isActive ? .green : .secondary)
-                    .accessibilityIdentifier("ruleStatus-\(rule.name)")
             }
         }
         .accessibilityIdentifier("ruleCard-\(rule.name)")
-    }
-
-    private func blockSummary(for rule: BlockingRule) -> String {
-        "\(rule.selectionMode.displayName) · \(rule.appList?.name ?? "No apps")"
     }
 }

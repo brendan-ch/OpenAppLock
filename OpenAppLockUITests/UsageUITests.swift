@@ -18,16 +18,14 @@ final class UsageUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Usage"].waitToAppear().exists)
 
-        // The row leads with the rule type, then the live usage and remaining.
+        // The row leads with the rule type, then the live usage of the budget.
         let timeRow = app.element("usageRow-Time Keeper").waitToAppear()
         XCTAssertTrue(timeRow.label.contains("Time Limit"), "Got: \(timeRow.label)")
-        XCTAssertTrue(timeRow.label.contains("18m of 45m used today"), "Got: \(timeRow.label)")
-        XCTAssertTrue(timeRow.label.contains("27m left"), "Got: \(timeRow.label)")
+        XCTAssertTrue(timeRow.label.contains("18m of 45m used"), "Got: \(timeRow.label)")
 
         let openRow = app.element("usageRow-Gate Keeper").waitToAppear()
         XCTAssertTrue(openRow.label.contains("Open Limit"), "Got: \(openRow.label)")
-        XCTAssertTrue(openRow.label.contains("2 of 5 opens today"), "Got: \(openRow.label)")
-        XCTAssertTrue(openRow.label.contains("3 opens left"), "Got: \(openRow.label)")
+        XCTAssertTrue(openRow.label.contains("2 of 5 opens"), "Got: \(openRow.label)")
     }
 
     func testSpentBudgetMovesToCurrentlyBlocking() throws {
@@ -37,7 +35,7 @@ final class UsageUITests: XCTestCase {
         // Currently Blocking, carrying its type + usage tracking.
         let tile = app.buttons["blockedTile-Doom Scroll"].waitToAppear()
         XCTAssertTrue(tile.label.contains("Time Limit"), "Got: \(tile.label)")
-        XCTAssertTrue(tile.label.contains("30m of 30m used today"), "Got: \(tile.label)")
+        XCTAssertTrue(tile.label.contains("30m of 30m used"), "Got: \(tile.label)")
 
         // It is no longer tracked under Usage.
         XCTAssertFalse(
@@ -55,6 +53,6 @@ final class UsageUITests: XCTestCase {
         // Unblocked → paused (not blocking), so it drops back into Usage.
         app.staticTexts["nothingBlockedLabel"].waitToAppear()
         let row = app.element("usageRow-Doom Scroll").waitToAppear()
-        XCTAssertTrue(row.label.contains("Unblocked until tomorrow"), "Got: \(row.label)")
+        XCTAssertTrue(row.label.contains("Paused"), "Got: \(row.label)")
     }
 }

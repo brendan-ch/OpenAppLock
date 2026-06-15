@@ -5,20 +5,22 @@
 
 import Foundation
 
-/// Strings for the home screen's Usage section. Used values clamp to the
-/// budget so overshoot (thresholds can fire late) never reads "50m of 45m".
+/// Strings for the home- and rules-list rows. Used values clamp to the budget
+/// so overshoot (thresholds can fire late) never reads "50m of 45m".
 enum UsageDisplay {
-    /// The usage subtitle prefixed with the rule's type, so the kind is clear
-    /// without relying on an icon: "Time Limit · 18m of 45m used today".
-    /// Schedule rules (no usage text) fall back to just the type name.
-    static func typedSubtitle(for rule: BlockingRule, usage: RuleUsage) -> String {
-        let usageText = subtitle(for: rule, usage: usage)
-        guard !usageText.isEmpty else { return rule.kind.displayName }
-        return "\(rule.kind.displayName) · \(usageText)"
+    /// The Home-list subtitle: the rule's type, then its live context, so the
+    /// kind reads without relying on the icon ("Time Limit · 18m of 45m used
+    /// today", "Schedule · 6h left"). The Rules list omits the type prefix
+    /// because its section header already conveys it.
+    static func homeSubtitle(
+        for rule: BlockingRule, status: RuleStatus, usage: RuleUsage, relativeTo now: Date
+    ) -> String {
+        "\(rule.kind.displayName) · \(rule.rowContext(for: status, usage: usage, relativeTo: now))"
     }
 
-    /// "18m of 45m used today" / "2 of 5 opens today".
-    static func subtitle(for rule: BlockingRule, usage: RuleUsage) -> String {
+    /// "18m of 45m used today" / "2 of 5 opens today". Empty for schedule rules,
+    /// which have no usage budget.
+    static func usagePhrase(for rule: BlockingRule, usage: RuleUsage) -> String {
         switch rule.configuration {
         case .schedule:
             ""
@@ -30,20 +32,16 @@ enum UsageDisplay {
         }
     }
 
-    /// "27m left" / "3 opens left", or the blocked/unblocked state once the
-    /// budget is spent.
-    static func remainingLabel(for rule: BlockingRule, usage: RuleUsage, isPaused: Bool) -> String {
-        guard !rule.limitReached(given: usage) else {
-            return isPaused ? "Unblocked until tomorrow" : "Blocked until tomorrow"
-        }
+    /// "45m / day" / "5 opens / day" — the plain daily allowance, shown while a
+    /// limit rule has no usage recorded today. Empty for schedule rules.
+    static func budgetPhrase(for rule: BlockingRule) -> String {
         switch rule.configuration {
         case .schedule:
-            return ""
+            ""
         case .timeLimit(let config):
-            return "\(config.dailyLimitMinutes - usage.minutesUsed)m left"
+            "\(config.dailyLimitMinutes)m / day"
         case .openLimit(let config):
-            let remaining = config.maxOpens - usage.opensUsed
-            return remaining == 1 ? "1 open left" : "\(remaining) opens left"
+            "\(config.maxOpens) opens / day"
         }
     }
 }

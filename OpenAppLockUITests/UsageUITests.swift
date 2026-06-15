@@ -18,16 +18,14 @@ final class UsageUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Usage"].waitToAppear().exists)
 
-        // The row leads with the rule type, then the live usage and remaining.
+        // The row leads with the rule type, then the live usage of the budget.
         let timeRow = app.element("usageRow-Time Keeper").waitToAppear()
         XCTAssertTrue(timeRow.label.contains("Time Limit"), "Got: \(timeRow.label)")
         XCTAssertTrue(timeRow.label.contains("18m of 45m used today"), "Got: \(timeRow.label)")
-        XCTAssertTrue(timeRow.label.contains("27m left"), "Got: \(timeRow.label)")
 
         let openRow = app.element("usageRow-Gate Keeper").waitToAppear()
         XCTAssertTrue(openRow.label.contains("Open Limit"), "Got: \(openRow.label)")
         XCTAssertTrue(openRow.label.contains("2 of 5 opens today"), "Got: \(openRow.label)")
-        XCTAssertTrue(openRow.label.contains("3 opens left"), "Got: \(openRow.label)")
     }
 
     func testSpentBudgetMovesToCurrentlyBlocking() throws {
@@ -55,6 +53,6 @@ final class UsageUITests: XCTestCase {
         // Unblocked → paused (not blocking), so it drops back into Usage.
         app.staticTexts["nothingBlockedLabel"].waitToAppear()
         let row = app.element("usageRow-Doom Scroll").waitToAppear()
-        XCTAssertTrue(row.label.contains("Unblocked until tomorrow"), "Got: \(row.label)")
+        XCTAssertTrue(row.label.contains("Paused"), "Got: \(row.label)")
     }
 }

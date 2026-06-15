@@ -89,7 +89,7 @@ struct RuleDetailSheet: View {
                     Text(rule.name)
                         .font(.headline)
                         .accessibilityIdentifier("detailRuleName")
-                    Text("\(rule.kind.displayName), \(rule.statusLabel(for: status, relativeTo: now))")
+                    Text("\(rule.kind.displayName), \(rule.rowContext(for: status, usage: usage ?? RuleUsage(), relativeTo: now))")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("detailStatusLabel")

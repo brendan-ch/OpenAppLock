@@ -82,20 +82,32 @@ extension BlockingRule {
         return .dormant
     }
 
-    /// User-facing status label, kind-aware. Limit rules apply all day and have
-    /// no clock window, so while they are not blocking they show their daily
-    /// budget ("15m / day") instead of `.upcoming`'s vestigial start countdown.
-    /// Schedule rules, and any rule that is actually blocking/paused/dormant,
-    /// use the plain status label.
-    func statusLabel(for status: RuleStatus, relativeTo now: Date) -> String {
-        if case .upcoming = status {
-            switch configuration {
-            case .schedule: break
-            case .timeLimit(let config): return "\(config.dailyLimitMinutes)m / day"
-            case .openLimit(let config): return "\(config.maxOpens) opens / day"
+    /// The live "context" line shown under a rule's name on the Home and Rules
+    /// lists, and as the rule-detail caption. A single source of truth so every
+    /// screen renders a given kind/state the same way.
+    ///
+    /// - Schedule rules read their clock status: "6h left", "Starts in 22h",
+    ///   "Paused", "Disabled", "No days selected".
+    /// - Limit rules share that wording while disabled / dormant / paused;
+    ///   otherwise they read their budget — live usage once the rule has been
+    ///   used today ("18m of 45m used today"), and the plain daily allowance
+    ///   while still untouched ("45m / day"). A spent limit therefore reads
+    ///   "45m of 45m used today", never a clock countdown.
+    func rowContext(for status: RuleStatus, usage: RuleUsage, relativeTo now: Date) -> String {
+        switch configuration {
+        case .schedule:
+            return status.label(relativeTo: now)
+        case .timeLimit, .openLimit:
+            switch status {
+            case .disabled, .dormant, .paused:
+                return status.label(relativeTo: now)
+            case .active, .upcoming:
+                let usedToday = usage.minutesUsed > 0 || usage.opensUsed > 0
+                return usedToday
+                    ? UsageDisplay.usagePhrase(for: self, usage: usage)
+                    : UsageDisplay.budgetPhrase(for: self)
             }
         }
-        return status.label(relativeTo: now)
     }
 
     /// Whether the rule's enabled days include the day containing `now`.

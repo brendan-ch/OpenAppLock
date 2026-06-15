@@ -220,48 +220,62 @@ struct UsageDisplayTests {
         configuration: .openLimit(OpenLimitConfig(maxOpens: 5)),
         days: Weekday.everyDay)
 
-    @Test("Time-limit rows show minutes used and remaining")
+    let now = date(2025, 1, 6, 10, 0) // a Monday, so the every-day rules fire
+
+    @Test("Time-limit rows show minutes used of the budget")
     func timeLimitStrings() {
         let usage = RuleUsage(minutesUsed: 18)
-        #expect(UsageDisplay.subtitle(for: timeRule, usage: usage) == "18m of 45m used today")
-        #expect(UsageDisplay.remainingLabel(for: timeRule, usage: usage, isPaused: false) == "27m left")
+        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: usage) == "18m of 45m used today")
     }
 
-    @Test("Open-limit rows show opens used and remaining")
+    @Test("Open-limit rows show opens used of the budget")
     func openLimitStrings() {
         let usage = RuleUsage(opensUsed: 2)
-        #expect(UsageDisplay.subtitle(for: openRule, usage: usage) == "2 of 5 opens today")
-        #expect(UsageDisplay.remainingLabel(for: openRule, usage: usage, isPaused: false) == "3 opens left")
-
-        let oneLeft = RuleUsage(opensUsed: 4)
-        #expect(UsageDisplay.remainingLabel(for: openRule, usage: oneLeft, isPaused: false) == "1 open left")
+        #expect(UsageDisplay.usagePhrase(for: openRule, usage: usage) == "2 of 5 opens today")
     }
 
-    @Test("Spent budgets read as blocked, or unblocked while paused")
-    func exhaustedStrings() {
+    /// Limit context adapts: the daily budget while untouched, live usage once
+    /// the rule has been used today.
+    @Test("Limit context shows budget while idle and usage once used")
+    func adaptiveLimitContext() {
+        let idle = timeRule.status(at: now, calendar: utc, usage: RuleUsage())
+        #expect(timeRule.rowContext(for: idle, usage: RuleUsage(), relativeTo: now) == "45m / day")
+
+        let used = RuleUsage(minutesUsed: 18)
+        let active = timeRule.status(at: now, calendar: utc, usage: used)
+        #expect(timeRule.rowContext(for: active, usage: used, relativeTo: now) == "18m of 45m used today")
+    }
+
+    @Test("A spent limit reads its usage; unblocking it reads Paused")
+    func exhaustedContext() {
         let spent = RuleUsage(minutesUsed: 45)
-        #expect(
-            UsageDisplay.remainingLabel(for: timeRule, usage: spent, isPaused: false)
-                == "Blocked until tomorrow")
-        #expect(
-            UsageDisplay.remainingLabel(for: timeRule, usage: spent, isPaused: true)
-                == "Unblocked until tomorrow")
-        #expect(UsageDisplay.subtitle(for: timeRule, usage: spent) == "45m of 45m used today")
+        let blocking = timeRule.status(at: now, calendar: utc, usage: spent)
+        #expect(blocking.isActive)
+        #expect(timeRule.rowContext(for: blocking, usage: spent, relativeTo: now) == "45m of 45m used today")
+
+        timeRule.pausedUntil = utc.date(byAdding: .hour, value: 5, to: now)
+        let paused = timeRule.status(at: now, calendar: utc, usage: spent)
+        #expect(timeRule.rowContext(for: paused, usage: spent, relativeTo: now) == "Paused")
     }
 
     @Test("Overshoot clamps to the budget")
     func overshootClamps() {
         let over = RuleUsage(minutesUsed: 60)
-        #expect(UsageDisplay.subtitle(for: timeRule, usage: over) == "45m of 45m used today")
+        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: over) == "45m of 45m used today")
     }
 
-    @Test("Typed subtitles prefix the rule kind so type is clear without the icon")
-    func typedSubtitles() {
+    @Test("Home subtitles prefix the rule kind so the type reads without the icon")
+    func homeSubtitles() {
+        let timeUsage = RuleUsage(minutesUsed: 18)
+        let timeStatus = timeRule.status(at: now, calendar: utc, usage: timeUsage)
         #expect(
-            UsageDisplay.typedSubtitle(for: timeRule, usage: RuleUsage(minutesUsed: 18))
+            UsageDisplay.homeSubtitle(for: timeRule, status: timeStatus, usage: timeUsage, relativeTo: now)
                 == "Time Limit · 18m of 45m used today")
+
+        let openUsage = RuleUsage(opensUsed: 2)
+        let openStatus = openRule.status(at: now, calendar: utc, usage: openUsage)
         #expect(
-            UsageDisplay.typedSubtitle(for: openRule, usage: RuleUsage(opensUsed: 2))
+            UsageDisplay.homeSubtitle(for: openRule, status: openStatus, usage: openUsage, relativeTo: now)
                 == "Open Limit · 2 of 5 opens today")
     }
 }

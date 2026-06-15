@@ -40,21 +40,23 @@ struct RulesListView: View {
 
     @ViewBuilder
     private func rulesList(now: Date) -> some View {
-        List {
-            if rules.isEmpty {
-                Section {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("No rules yet")
-                            .font(.headline)
-                        Text("Create a rule to block distracting apps on a schedule.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                    .accessibilityElement(children: .combine)
+        if rules.isEmpty {
+            ContentUnavailableView {
+                Label("No Rules Yet", systemImage: "shield.lefthalf.filled")
+            } description: {
+                // The identifier lives on the description (not the container),
+                // so it surfaces as its own element rather than collapsing onto
+                // the action button.
+                Text("Create a rule to block distracting apps on a schedule.")
                     .accessibilityIdentifier("emptyRulesCard")
+            } actions: {
+                Button("New Rule") {
+                    showingNewRule = true
                 }
-            } else {
+                .accessibilityIdentifier("emptyStateNewRuleButton")
+            }
+        } else {
+            List {
                 kindSection(.schedule, now: now)
                 kindSection(.timeLimit, now: now)
                 kindSection(.openLimit, now: now)

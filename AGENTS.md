@@ -21,7 +21,7 @@ OpenAppLock/                    App target (iOS 26, SwiftUI + SwiftData)
                             RuleScheduler (rules → DeviceActivity monitoring),
                             AppListMigration, LaunchConfiguration +
                             SampleRules (UI-test harness)
-  Views/                    Native SwiftUI screens (see docs spec §6)
+  Views/                    Native SwiftUI screens (see Docs spec §6)
 Shared/                     Compiled into the app AND all three extensions:
                             RuleKind, Weekday, RuleSchedule, AppGroup,
                             UsageLedger (per-day minutes/opens),
@@ -39,12 +39,24 @@ OpenAppLockShieldAction/    ShieldAction extension: Open press spends an open,
 OpenAppLockTests/               Swift Testing unit suites (@MainActor — the app
                             target defaults to MainActor isolation)
 OpenAppLockUITests/             XCUITest flows (see harness below)
-docs/RULES_FEATURE_SPEC.md  Feature spec for the rules behavior; §6 maps it
-                            to the native presentation. Review/update this
-                            BEFORE behavior changes.
-docs/SWIFT_GUIDELINES.md    Swift coding/testing/patterns/security standards
+Docs/RULES_FEATURE_SPEC.md  Feature spec for the rules behavior; §6 maps it
+                            to the native presentation. Review this BEFORE
+                            behavior changes (read-only — see Documentation).
+Docs/SWIFT_GUIDELINES.md    Swift coding/testing/patterns/security standards
                             agents must follow on this project.
 ```
+
+## Documentation
+
+The `Docs/` directory (`RULES_FEATURE_SPEC.md`, `SWIFT_GUIDELINES.md`) is
+**human-authored reference material**. Agents may — and should — read it for
+context and treat the feature spec as the source of truth, but must **never
+create or modify any file under `Docs/`**. The goal is for all documentation to
+be written by humans; the only docs an agent maintains are this `AGENTS.md` and
+`CLAUDE.md`.
+
+If a behavior change would make the spec inaccurate, do **not** edit `Docs/`
+yourself — flag the needed change so the maintainer can update it.
 
 ## Domain facts worth knowing
 
@@ -85,10 +97,11 @@ when reminded:
 - **Always plan before execution.** Think through and lay out the approach (a
   written plan / plan mode for anything non-trivial) and confirm scope before
   editing code. Do not start changing files until the plan is clear.
-- **Always use red-green TDD.** Update `docs/RULES_FEATURE_SPEC.md` first for
-  behavior changes, write the failing test, run it (compile failure counts as
-  red), implement, re-run focused tests, then the full suite. Run tests often
-  and fail fast.
+- **Always use red-green TDD.** Consult `Docs/RULES_FEATURE_SPEC.md` first for
+  behavior changes — it is the source of truth, but it is human-authored, so
+  read it rather than editing it (see Documentation above). Then write the
+  failing test, run it (compile failure counts as red), implement, re-run
+  focused tests, then the full suite. Run tests often and fail fast.
 - **Always attempt to validate the UI manually before committing.** Build and
   run the app (simulator/device) and visually confirm the change behaves as
   intended. This step **may be skipped only when such tooling is unavailable**

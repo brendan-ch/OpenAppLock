@@ -72,9 +72,9 @@ xcodebuild test \
 ```
 
 Follow red-green TDD: for any behavior change, update
-[`docs/RULES_FEATURE_SPEC.md`](docs/RULES_FEATURE_SPEC.md) first, write the
+[`Docs/RULES_FEATURE_SPEC.md`](Docs/RULES_FEATURE_SPEC.md) first, write the
 failing test, then implement. See [`AGENTS.md`](AGENTS.md) and
-`docs/SWIFT_GUIDELINES.md` for the project's coding and testing standards.
+`Docs/SWIFT_GUIDELINES.md` for the project's coding and testing standards.
 
 ## Branch & PR workflow
 

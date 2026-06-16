@@ -79,6 +79,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AB00000000000000000000B0 /* Exceptions for "OpenAppLock" folder in "OpenAppLock" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 20A7EDCD2E47B7CD0097608D /* OpenAppLock */;
+		};
 		AB00000000000000000000B1 /* Exceptions for "OpenAppLockMonitor" folder in "OpenAppLockMonitor" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -105,6 +112,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		20A7EDD02E47B7CD0097608D /* OpenAppLock */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AB00000000000000000000B0 /* Exceptions for "OpenAppLock" folder in "OpenAppLock" target */,
+			);
 			path = OpenAppLock;
 			sourceTree = "<group>";
 		};
@@ -673,6 +683,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenAppLock/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OpenAppLock;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -690,6 +701,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0.0;
+				OAL_WEBSITE_URL = "https:$(SLASH)$(SLASH)openapplock.bchen.dev";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.bchen.OpenAppLock;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -717,6 +729,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenAppLock/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OpenAppLock;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -734,6 +747,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0.0;
+				OAL_WEBSITE_URL = "https:$(SLASH)$(SLASH)openapplock.bchen.dev";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.bchen.OpenAppLock;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

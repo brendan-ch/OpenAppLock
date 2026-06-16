@@ -40,6 +40,24 @@ struct LaunchConfigurationTests {
         let config = LaunchConfiguration.parse(arguments: ["OpenAppLockApp", "-seed-scenario=nope"])
         #expect(config.seedScenario == nil)
     }
+
+    @Test("Link overrides are parsed from their prefixed arguments")
+    func linkOverrides() {
+        let config = LaunchConfiguration.parse(arguments: [
+            "OpenAppLockApp",
+            "-github-url=https://example.com/repo",
+            "-website-url=https://example.com/site",
+        ])
+        #expect(config.gitHubURLOverride == "https://example.com/repo")
+        #expect(config.websiteURLOverride == "https://example.com/site")
+    }
+
+    @Test("Link overrides default to nil when absent")
+    func linkOverridesDefaultNil() {
+        let config = LaunchConfiguration.parse(arguments: ["OpenAppLockApp"])
+        #expect(config.gitHubURLOverride == nil)
+        #expect(config.websiteURLOverride == nil)
+    }
 }
 
 @MainActor

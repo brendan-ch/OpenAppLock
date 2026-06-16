@@ -141,6 +141,7 @@ when reminded:
 | `-onboarding-completed` / `-onboarding-required` | Force the onboarding flag |
 | `-seed-scenario=standard` | Active soft rule "Work Time" + upcoming "Sleep" |
 | `-seed-scenario=hard-mode-active` | Active Hard Mode rule "Locked In" + upcoming "Sleep" |
+| `-github-url=<url>` / `-website-url=<url>` | Override the Settings About links with deterministic URLs |
 
 Use `XCUIApplication.launchOpenAppLock(...)` (UITestSupport.swift), which also
 provides `app.element(_:)` for identifier lookup across element types and
@@ -155,7 +156,8 @@ them): `newRuleButton`, `ruleCard-<name>`, `ruleStatus-<name>`,
 `maxOpensStepper(+Value)`, `commitRuleButton`, `doneButton`,
 `toggleEnabledButton`, `deleteRuleButton`, `closeDetailButton`,
 `detailRuleName`, `detailStatusLabel`, `detailRow-<label>`,
-`hardModeLockedNotice`, onboarding: `onboardingContinueButton`,
+`hardModeLockedNotice`, settings About links: `githubLinkButton` /
+`websiteLinkButton`, onboarding: `onboardingContinueButton`,
 `allowScreenTimeButton`, `permissionDeniedLabel`, `openSettingsButton`.
 
 Gotchas learned the hard way:

@@ -521,7 +521,7 @@ own `NavigationStack`:
 
 ```
 TabView: [Home] [Rules] [Settings]
-   │        │        └── "Uninstall Protection" toggle + "Manage App Lists" ─▶ App List library (management mode)
+   │        │        └── "Uninstall Protection" toggle + "Manage App Lists" ─▶ App List library (management mode) + "About" GitHub / Website links
    │        └── rules grouped into Schedule / Time Limit / Open Limit sections; "+" ─▶ New Rule sheet
    │                 └── tap a rule row ─▶ Rule Detail sheet ─▶ "Edit Rule" ─▶ Rule Editor
    └── "Currently Blocking" section + "Usage" section
@@ -535,7 +535,7 @@ it runs regardless of the selected tab.
 |---|---|
 | Home tab | `NavigationStack` + `List`. Every row carries a **leading kind icon**, the name, and a `<Type> · <context>` subtitle, where *context* is the rule's live status: a schedule reads its countdown (`Schedule · 6h left`), a limit reads its usage once used today (`Time Limit · 18m of 45m used`) or its plain budget while untouched (`Time Limit · 45m / day`). **"Currently Blocking"** section (renamed from "Blocked Apps") — the *rules* blocking right now: a Hard Mode rule shows a trailing `lock.fill` (the block can't be lifted), a soft rule shows a trailing "Unblock" button; tapping a hard row shows the "Hard Mode is on" alert, a soft row the unblock dialog. A limit rule whose budget is **spent** appears here (moved out of Usage). **"Usage"** section: every enabled limit rule scheduled today that is *not* currently blocking; rows have **no trailing label** (the context lives in the subtitle). |
 | Rules tab | `NavigationStack` + `List` split into **Schedule / Time Limit / Open Limit** sections (empty sections hidden); **rules are list rows** (leading kind icon, name, and a `<context>` subtitle — the same live status/countdown/usage as Home, but **without the type prefix** since the section header already conveys the kind, and **without a separate trailing status label**; the `ruleStatus-<name>` identifier lives on this subtitle); "+" toolbar button opens the New Rule sheet; tapping a row opens the Rule Detail sheet. |
-| Settings tab | `NavigationStack` + `Form`. **Uninstall Protection** toggle — while on, the device's app-removal is denied (`ManagedSettingsStore.application.denyAppRemoval`) whenever any Hard Mode rule is actively blocking. The toggle itself is **locked while any Hard Mode rule is actively blocking**: the switch is replaced by a trailing red `lock.fill` (same treatment as a Home "Currently Blocking" hard row) so the protection can't be turned off mid-block — its whole purpose. **Manage App Lists** pushes the shared App List library in management mode (create / edit / delete, honoring the Hard Mode lock — same flow as the rule editor's picker, minus selection). |
+| Settings tab | `NavigationStack` + `Form`. **Uninstall Protection** toggle — while on, the device's app-removal is denied (`ManagedSettingsStore.application.denyAppRemoval`) whenever any Hard Mode rule is actively blocking. The toggle itself is **locked while any Hard Mode rule is actively blocking**: the switch is replaced by a trailing red `lock.fill` (same treatment as a Home "Currently Blocking" hard row) so the protection can't be turned off mid-block — its whole purpose. **Manage App Lists** pushes the shared App List library in management mode (create / edit / delete, honoring the Hard Mode lock — same flow as the rule editor's picker, minus selection). An **About** section holds outbound `Link` rows — **GitHub** and **Website** — each shown only when its destination is configured (see §6.2). |
 | Rule detail | Sheet with inline nav title (name + "Schedule, 6h left" caption), `LabeledContent` rows, "Edit Rule" row pushes the editor; hard-locked rules show a lock row instead |
 | New Rule | `List` with a "Rule Type" section and preset sections as plain rows; editor pushed via `navigationDestination(item:)` |
 | Rule editor | Native `Form`: an inline **Name text field** at the top (no separate rename button; empty names fall back to the kind default), `DatePicker` rows, full-width day-circle row (≥44pt tap targets) with the summary in the section header, toggle rows with footers, stepper rows. Both modes commit via a **checkmark** in the navigation bar (labels: "Add Rule" / "Done"; replaces Hold to Commit). In edit mode an **ellipsis menu** ("Rule Actions") next to the checkmark holds Disable Rule and the destructive Delete Rule |
@@ -581,3 +581,26 @@ an escape hatch.
 
 Like all Screen Time behavior, the real device effect is only observable on a
 device (the simulator uses mock shields and delivers no DeviceActivity callbacks).
+
+### 6.2 About links (Settings)
+
+The Settings "About" section offers two outbound `Link` rows — **GitHub**
+(`githubLinkButton`) and **Website** (`websiteLinkButton`) — that open the
+project's repository and marketing site in the browser.
+
+Both destinations are **configuration, not code**. They come from the
+`OAL_GITHUB_URL` / `OAL_WEBSITE_URL` user-defined build settings in
+`Config/Shared.xcconfig`, ride into the app through `OpenAppLock/Info.plist`
+(keys `OALGitHubURL` / `OALWebsiteURL` — custom keys can't be injected into a
+*generated* Info.plist, so a real partial plist carries them), and are read at
+runtime through the single accessor `AppLinks`. Point them at the real links by
+editing the build settings; the website value is a placeholder until the site
+exists. A row whose URL is unset, blank, or unparseable is omitted, so the
+section is empty (and hidden) only when neither link is configured.
+
+`AppLinks.url(from:)` is the pure parse seam (trims, rejects blank/non-string);
+unit tests cover it and the full build-setting → Info.plist pipeline. A UI test
+asserts each button opens the configured URL by intercepting the `openURL`
+action in UI-testing mode (so no browser launches) — the launch arguments
+`-github-url=` / `-website-url=` (parsed by `LaunchConfiguration`) feed it
+deterministic URLs decoupled from the committed build settings.

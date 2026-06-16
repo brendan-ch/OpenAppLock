@@ -362,6 +362,18 @@ struct RuleSchedulerTests {
         scheduler.sync(rules: [rule])
         #expect(monitor.startCallCount == 2)
     }
+
+    @Test("Selection fingerprint is a deterministic SHA-256, stable across launches")
+    func selectionFingerprintIsProcessStable() {
+        // `Data.hashValue` is seeded randomly per process, so using it in the
+        // limit-activity fingerprint restarted every daily activity on each
+        // launch (resetting threshold accounting). SHA-256 is fixed, so the
+        // fingerprint can be asserted against a constant — a value that random
+        // per-process hashing could never satisfy.
+        #expect(
+            RuleScheduler.selectionFingerprint(Data([1]))
+                == "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a")
+    }
 }
 
 @MainActor
@@ -428,6 +440,40 @@ struct LimitEnforcementTests {
         #expect(shields.shieldedRuleIDs.isEmpty)
 
         enforcement.handleUsageMinutes(45, ruleID: snap.id, now: monday, calendar: utc)
+        #expect(shields.shieldedRuleIDs == [snap.id])
+    }
+
+    @Test("A stale checkpoint exceeding today's elapsed minutes is ignored")
+    func staleCrossMidnightCheckpointIgnored() {
+        let (enforcement, shields, ledger, store) = makeEnforcement()
+        let snap = snapshot(kind: .timeLimit, limit: 45)
+        store.save([snap])
+
+        // 00:30 — only 30 minutes have elapsed since midnight, so a 45-minute
+        // cumulative checkpoint can only be yesterday's spent budget delivered
+        // late across midnight. It must not be recorded as today's usage, and
+        // must not re-shield apps the user hasn't touched today.
+        let earlyMorning = date(2025, 1, 6, 0, 30)
+        enforcement.handleUsageMinutes(45, ruleID: snap.id, now: earlyMorning, calendar: utc)
+
+        #expect(
+            ledger.usage(for: snap.id, onDayContaining: earlyMorning, calendar: utc).minutesUsed == 0)
+        #expect(shields.shieldedRuleIDs.isEmpty)
+    }
+
+    @Test("A checkpoint within today's elapsed time still records and shields")
+    func freshCheckpointWithinElapsedHonoured() {
+        let (enforcement, shields, ledger, store) = makeEnforcement()
+        let snap = snapshot(kind: .timeLimit, limit: 45)
+        store.save([snap])
+
+        // 00:45 — 45 minutes have elapsed, so a 45-minute checkpoint is
+        // physically possible today and must be honoured (boundary case).
+        let quarterToOne = date(2025, 1, 6, 0, 45)
+        enforcement.handleUsageMinutes(45, ruleID: snap.id, now: quarterToOne, calendar: utc)
+
+        #expect(
+            ledger.usage(for: snap.id, onDayContaining: quarterToOne, calendar: utc).minutesUsed == 45)
         #expect(shields.shieldedRuleIDs == [snap.id])
     }
 

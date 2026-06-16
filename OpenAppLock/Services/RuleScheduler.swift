@@ -3,6 +3,7 @@
 //  OpenAppLock
 //
 
+import CryptoKit
 import DeviceActivity
 import FamilyControls
 import Foundation
@@ -69,7 +70,7 @@ final class RuleScheduler {
                     ? MonitoringPlan.minuteEvents(forLimit: rule.dailyLimitMinutes)
                     : [:]
                 let fingerprint = "\(rule.kindRaw)|\(rule.dailyLimitMinutes)|"
-                    + "\(selectionData.hashValue)"
+                    + Self.selectionFingerprint(selectionData)
                 guard needsRestart(name, fingerprint, in: fingerprints) else { continue }
                 start(name: name) {
                     try monitor.startDailyMonitoring(
@@ -114,6 +115,16 @@ final class RuleScheduler {
         _ name: String, _ fingerprint: String, in fingerprints: [String: String]
     ) -> Bool {
         fingerprints[name] != fingerprint || !monitor.monitoredNames.contains(name)
+    }
+
+    /// Process-stable fingerprint of an app selection. `Data.hashValue` is
+    /// seeded randomly per process, so feeding it into the monitoring
+    /// fingerprint changed the fingerprint on every launch — restarting each
+    /// limit activity and resetting its threshold accounting. SHA-256 is
+    /// deterministic across launches, so an unchanged selection keeps the same
+    /// fingerprint and the activity is left running.
+    static func selectionFingerprint(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
     /// Runs a best-effort `startMonitoring` call. Monitoring throws on the

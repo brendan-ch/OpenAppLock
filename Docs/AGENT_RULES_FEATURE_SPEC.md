@@ -459,12 +459,19 @@ Xh", "Xh left") is **derived**, not stored.
     shorter than DeviceActivity's 15-minute minimum interval, may fail to
     register (`intervalTooShort`) and falls back to the foreground loop.
   Activities restart only when their configuration changes, because a
-  restart resets threshold accounting.
+  restart resets threshold accounting. The change-detection fingerprint must
+  be **process-stable** (the app selection is hashed with SHA-256, never
+  `Data.hashValue`, which is seeded randomly per launch and would otherwise
+  restart — and reset — every limit activity on each launch).
 - **`OpenAppLockMonitor`** (DeviceActivityMonitor extension): interval start
   = midnight reset for limit rules (open-limit rules re-shield so opens can
   be counted; time-limit shields clear for the fresh budget); each
-  `minutes-<k>` event records usage and shields at the budget; a finished
-  `open-session-<uuid>` one-shot re-shields after a granted open. For
+  `minutes-<k>` event records usage and shields at the budget — **but a
+  checkpoint whose minute count exceeds the minutes elapsed since local
+  midnight is dropped**, since it cannot be today's usage (it is yesterday's
+  spent budget delivered late across midnight, which would otherwise re-block
+  unused apps); a finished `open-session-<uuid>` one-shot re-shields after a
+  granted open. For
   schedule-window activities (`sched-`/`sched2-`), **both** interval start
   and interval end **recompute** the rule's live schedule state from its
   snapshot (`RuleSchedule.isActive`, honouring enabled days, pause and the

@@ -59,9 +59,9 @@ directory:
   `Docs/AGENT_SWIFT_GUIDELINES.md`). Agents may **read, create, and edit** these
   and are expected to keep them accurate. Treat the feature spec as the source
   of truth for behavior, and update it when a behavior change makes it stale.
-- **Human-authored** — every other doc, e.g. `README.md` and `CONTRIBUTING.md`.
-  Agents may **read** these for context but must **never create or modify**
-  them; flag needed changes for the maintainer instead.
+- **Human-authored** — every other doc, e.g. `README.md`. Agents may **read**
+  these for context but must **never create or modify** them; flag needed
+  changes for the maintainer instead.
 
 The `AGENT_` prefix is the contract: it marks a file as safe for agents to
 maintain. Any human-authored doc added without the prefix is automatically
@@ -141,6 +141,7 @@ when reminded:
 | `-onboarding-completed` / `-onboarding-required` | Force the onboarding flag |
 | `-seed-scenario=standard` | Active soft rule "Work Time" + upcoming "Sleep" |
 | `-seed-scenario=hard-mode-active` | Active Hard Mode rule "Locked In" + upcoming "Sleep" |
+| `-github-url=<url>` / `-website-url=<url>` | Override the Settings About links with deterministic URLs |
 
 Use `XCUIApplication.launchOpenAppLock(...)` (UITestSupport.swift), which also
 provides `app.element(_:)` for identifier lookup across element types and
@@ -155,7 +156,8 @@ them): `newRuleButton`, `ruleCard-<name>`, `ruleStatus-<name>`,
 `maxOpensStepper(+Value)`, `commitRuleButton`, `doneButton`,
 `toggleEnabledButton`, `deleteRuleButton`, `closeDetailButton`,
 `detailRuleName`, `detailStatusLabel`, `detailRow-<label>`,
-`hardModeLockedNotice`, onboarding: `onboardingContinueButton`,
+`hardModeLockedNotice`, settings About links: `githubLinkButton` /
+`websiteLinkButton`, onboarding: `onboardingContinueButton`,
 `allowScreenTimeButton`, `permissionDeniedLabel`, `openSettingsButton`.
 
 Gotchas learned the hard way:

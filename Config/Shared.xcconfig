@@ -11,11 +11,27 @@
 // The optional include below is a no-op when that file is absent (a fresh
 // clone, or CI), so the project always opens and builds for the simulator. To
 // produce a signed build or run on a device, create that file from
-// Config/DeveloperSettings.sample.xcconfig — see CONTRIBUTING.md.
+// Config/DeveloperSettings.sample.xcconfig (it has step-by-step instructions).
 
 // Fallback defaults. These are overridden by DeveloperSettings.xcconfig when
 // it is present, because the include below comes after them.
 DEVELOPMENT_TEAM =
 CODE_SIGN_STYLE = Automatic
+
+// --- App metadata links ------------------------------------------------------
+// Outbound URLs surfaced on the Settings screen (GitHub repo + marketing site).
+// They are user-defined build settings so the destinations are configurable
+// without touching code; OpenAppLock/Info.plist maps them to the OALGitHubURL /
+// OALWebsiteURL keys (custom INFOPLIST_KEY_* settings are NOT injected into a
+// generated Info.plist, so the values have to ride through a real plist), and
+// the app reads them at runtime through `AppLinks`. Edit these to point at the
+// real links — the website value is a placeholder until the site exists.
+//
+// xcconfig treats "//" as the start of a comment, so a literal "https://…"
+// would be truncated to "https:". `$(SLASH)` (a single "/") lets us spell the
+// "://" without tripping the comment parser; it expands at build time.
+SLASH = /
+OAL_GITHUB_URL = https:$(SLASH)$(SLASH)github.com/brendan-ch/OpenAppLock
+OAL_WEBSITE_URL = https:$(SLASH)$(SLASH)openapplock.app
 
 #include? "../../SharedXcodeSettings/DeveloperSettings.xcconfig"

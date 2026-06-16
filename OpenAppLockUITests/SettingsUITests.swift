@@ -71,6 +71,27 @@ final class SettingsUITests: XCTestCase {
         )
     }
 
+    func testAboutLinksOpenConfiguredURLs() throws {
+        let gitHub = "https://example.com/openapplock-repo"
+        let website = "https://example.com/openapplock-site"
+        let app = XCUIApplication.launchOpenAppLock(gitHubURL: gitHub, websiteURL: website)
+        app.goToSettingsTab()
+
+        // In UI-testing mode link taps are intercepted (no Safari launch) and the
+        // last-opened URL is reflected into `openedLinkProbe`, so we can assert
+        // each button opens the URL the app was configured with.
+        let probe = app.staticTexts["openedLinkProbe"].waitToAppear()
+        XCTAssertEqual(probe.label, "none", "No link should have been opened yet")
+
+        app.element("githubLinkButton").waitToAppear().tap()
+        expectation(for: NSPredicate(format: "label == %@", gitHub), evaluatedWith: probe)
+        waitForExpectations(timeout: 3)
+
+        app.element("websiteLinkButton").waitToAppear().tap()
+        expectation(for: NSPredicate(format: "label == %@", website), evaluatedWith: probe)
+        waitForExpectations(timeout: 3)
+    }
+
     func testManageAppListsLockedDuringHardSession() throws {
         let app = XCUIApplication.launchOpenAppLock(seedScenario: "hard-mode-active")
         app.goToSettingsTab()

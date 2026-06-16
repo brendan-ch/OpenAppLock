@@ -8,15 +8,27 @@ import XCTest
 extension XCUIApplication {
     /// Launches the app in UI-testing mode: in-memory storage, mocked Screen
     /// Time authorization, and no shield side effects.
+    ///
+    /// `gitHubURL` / `websiteURL` override the configured Settings links with
+    /// deterministic values, so link tests don't depend on the committed build
+    /// settings (which point at the real, swappable destinations).
     static func launchOpenAppLock(
         onboardingCompleted: Bool = true,
-        seedScenario: String? = nil
+        seedScenario: String? = nil,
+        gitHubURL: String? = nil,
+        websiteURL: String? = nil
     ) -> XCUIApplication {
         let app = XCUIApplication()
         var arguments = ["-ui-testing"]
         arguments.append(onboardingCompleted ? "-onboarding-completed" : "-onboarding-required")
         if let seedScenario {
             arguments.append("-seed-scenario=\(seedScenario)")
+        }
+        if let gitHubURL {
+            arguments.append("-github-url=\(gitHubURL)")
+        }
+        if let websiteURL {
+            arguments.append("-website-url=\(websiteURL)")
         }
         app.launchArguments = arguments
         app.launch()

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Partial Info.plist: GENERATE_INFOPLIST_FILE=YES still merges Xcode's
+	     generated keys (scene manifest, orientations, …) on top of this file.
+	     Only the app-specific keys that can't be expressed as INFOPLIST_KEY_*
+	     build settings live here. The two link keys are fed from the
+	     OAL_GITHUB_URL / OAL_WEBSITE_URL build settings (Config/Shared.xcconfig)
+	     and read at runtime through AppLinks. -->
+	<key>OALGitHubURL</key>
+	<string>$(OAL_GITHUB_URL)</string>
+	<key>OALWebsiteURL</key>
+	<string>$(OAL_WEBSITE_URL)</string>
+</dict>
+</plist>

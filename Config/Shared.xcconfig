@@ -11,7 +11,7 @@
 // The optional include below is a no-op when that file is absent (a fresh
 // clone, or CI), so the project always opens and builds for the simulator. To
 // produce a signed build or run on a device, create that file from
-// Config/DeveloperSettings.sample.xcconfig — see CONTRIBUTING.md.
+// Config/DeveloperSettings.sample.xcconfig (it has step-by-step instructions).
 
 // Fallback defaults. These are overridden by DeveloperSettings.xcconfig when
 // it is present, because the include below comes after them.

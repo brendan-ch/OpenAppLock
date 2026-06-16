@@ -59,9 +59,9 @@ directory:
   `Docs/AGENT_SWIFT_GUIDELINES.md`). Agents may **read, create, and edit** these
   and are expected to keep them accurate. Treat the feature spec as the source
   of truth for behavior, and update it when a behavior change makes it stale.
-- **Human-authored** — every other doc, e.g. `README.md` and `CONTRIBUTING.md`.
-  Agents may **read** these for context but must **never create or modify**
-  them; flag needed changes for the maintainer instead.
+- **Human-authored** — every other doc, e.g. `README.md`. Agents may **read**
+  these for context but must **never create or modify** them; flag needed
+  changes for the maintainer instead.
 
 The `AGENT_` prefix is the contract: it marks a file as safe for agents to
 maintain. Any human-authored doc added without the prefix is automatically

@@ -47,6 +47,17 @@ struct LimitEnforcement {
     func handleUsageMinutes(
         _ minutes: Int, ruleID: UUID, now: Date = .now, calendar: Calendar = .current
     ) {
+        // A `minutes-k` checkpoint reports k minutes of *today's* usage, which
+        // cannot have accrued before k minutes have elapsed since local
+        // midnight. A larger value means the callback is stale — typically
+        // yesterday's spent budget delivered late across midnight, since Screen
+        // Time batches threshold events and fires them when it next wakes the
+        // monitor (e.g. as another rule's window opens). Recording it would
+        // re-block apps the user never opened today, so drop it.
+        let minutesSinceMidnight = Int(
+            now.timeIntervalSince(calendar.startOfDay(for: now)) / 60)
+        guard minutes <= minutesSinceMidnight else { return }
+
         ledger.recordMinutesUsed(minutes, for: ruleID, onDayContaining: now, calendar: calendar)
         guard let snapshot = snapshots.snapshot(for: ruleID), snapshot.isEnabled,
               snapshot.kind == .timeLimit,

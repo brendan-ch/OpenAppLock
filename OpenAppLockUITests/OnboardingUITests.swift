@@ -17,17 +17,16 @@ final class OnboardingUITests: XCTestCase {
         app.staticTexts["OpenAppLock"].waitToAppear()
         app.buttons["onboardingContinueButton"].waitToAppear().tap()
 
-        // Permission step: granting (mocked) lands on the tabbed home screen.
+        // Permission step: granting (mocked) lands on the main app, in whichever
+        // navigation chrome the device uses (tab bar on iPhone, sidebar on iPad).
         app.buttons["allowScreenTimeButton"].waitToAppear().tap()
-        app.tabBars.buttons["Home"].waitToAppear()
-        XCTAssertTrue(app.tabBars.buttons["Rules"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Settings"].exists)
-        XCTAssertTrue(app.staticTexts["Currently Blocking"].exists)
+        app.waitForMainUI()
+        XCTAssertTrue(app.staticTexts["Currently Blocking"].waitToAppear().exists)
     }
 
     func testCompletedOnboardingIsSkipped() throws {
         let app = XCUIApplication.launchOpenAppLock(onboardingCompleted: true)
-        app.tabBars.buttons["Home"].waitToAppear()
+        app.waitForMainUI()
         XCTAssertFalse(app.buttons["onboardingContinueButton"].exists)
     }
 }

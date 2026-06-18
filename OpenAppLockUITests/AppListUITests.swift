@@ -37,10 +37,12 @@ final class AppListUITests: XCTestCase {
             "Time-limit rules are always Block; the mode picker must not appear"
         )
 
-        // Back to the rule-type list, then check the open-limit editor too.
-        let edge = app.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.5))
-        let middle = app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
-        edge.press(forDuration: 0.05, thenDragTo: middle)
+        // Back to the rule-type list, then check the open-limit editor too. Use
+        // the nav back button rather than an edge-swipe, which assumes a full-width
+        // sheet and misses iPad's centered form sheet. Target the back button by
+        // its identifier ("BackButton") — its "New Rule" label collides with the
+        // Rules tab's "New Rule" (+) button sitting behind the sheet.
+        app.navigationBars.buttons["BackButton"].waitToAppear().tap()
 
         app.buttons["ruleKind-openLimit"].waitToAppear().tap()
         app.element("selectedAppsRow").waitToAppear()

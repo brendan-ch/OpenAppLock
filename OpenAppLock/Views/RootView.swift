@@ -15,7 +15,7 @@ struct RootView: View {
     var body: some View {
         Group {
             if hasCompletedOnboarding {
-                MainTabView()
+                MainView()
             } else {
                 OnboardingView {
                     hasCompletedOnboarding = true

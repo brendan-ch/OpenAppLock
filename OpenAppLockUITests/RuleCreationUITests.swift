@@ -72,15 +72,21 @@ final class RuleCreationUITests: XCTestCase {
 
         let first = app.buttons["dayToggle-1"].waitToAppear()
         let last = app.buttons["dayToggle-7"].waitToAppear()
-        let span = last.frame.maxX - first.frame.minX
-        XCTAssertGreaterThan(
-            span, app.frame.width * 0.75,
-            "Day toggles should span the full row width, got \(span) of \(app.frame.width)"
-        )
         XCTAssertGreaterThanOrEqual(
             first.frame.height, 44,
             "Day toggle tap target should be at least 44pt tall"
         )
+        // The "fill the row" guarantee is measured against the window width, which
+        // only holds where the editor sheet spans the full width (iPhone). On iPad
+        // the editor is a centered form sheet narrower than the window, so that
+        // comparison doesn't apply; the toggles still fill their (narrower) row.
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            let span = last.frame.maxX - first.frame.minX
+            XCTAssertGreaterThan(
+                span, app.frame.width * 0.75,
+                "Day toggles should span the full row width, got \(span) of \(app.frame.width)"
+            )
+        }
     }
 
     func testDayTogglesUpdateSummary() throws {
@@ -177,6 +183,15 @@ final class RuleCreationUITests: XCTestCase {
     }
 
     func testEditorSupportsNativeSwipeBack() throws {
+        // The edge-swipe starts at the window's left edge, which only lands on the
+        // editor when the sheet spans the full width (iPhone). On iPad the editor
+        // is a centered form sheet, so the equivalent back navigation is covered by
+        // AppListUITests.testLimitEditorsAreBlockOnly (nav back button) instead.
+        try XCTSkipUnless(
+            UIDevice.current.userInterfaceIdiom == .phone,
+            "Edge-swipe-back is an iPhone full-width-sheet gesture; iPad back nav is covered elsewhere"
+        )
+
         let app = XCUIApplication.launchOpenAppLock()
         app.goToRulesTab()
         app.buttons["newRuleButton"].waitToAppear().tap()

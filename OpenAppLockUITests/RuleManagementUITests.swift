@@ -37,7 +37,13 @@ final class RuleManagementUITests: XCTestCase {
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
         app.buttons["editRuleButton"].waitToAppear().tap()
 
-        let hardMode = app.switches["hardModeToggle"].waitToAppear()
+        // On iPad the editor is a shorter, centered form sheet; the Hard Mode row
+        // can start below the fold and isn't rendered until scrolled into view.
+        let hardMode = app.switches["hardModeToggle"]
+        if !hardMode.waitForExistence(timeout: 2) {
+            app.swipeUp()
+        }
+        hardMode.waitToAppear()
         XCTAssertEqual(hardMode.label, "Hard Mode", "The Hard Mode switch must carry its label for VoiceOver")
         // A labeled Toggle fills the row, so a centered `.tap()` lands on the
         // label; tap the switch itself at the trailing edge to flip it.

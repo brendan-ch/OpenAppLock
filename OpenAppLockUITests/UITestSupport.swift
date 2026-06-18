@@ -33,13 +33,40 @@ extension XCUIApplication {
 }
 
 extension XCUIApplication {
-    /// Switches to the Home tab (Currently Blocking + Usage). Home is the
-    /// default selection, so most Home-tab tests don't need to call this.
-    func goToHomeTab() { tabBars.buttons["Home"].waitToAppear().tap() }
-    /// Switches to the Rules tab (the rule list + New Rule button).
-    func goToRulesTab() { tabBars.buttons["Rules"].waitToAppear().tap() }
-    /// Switches to the Settings tab (Uninstall Protection + Manage App Lists).
-    func goToSettingsTab() { tabBars.buttons["Settings"].waitToAppear().tap() }
+    /// Switches to the Home section (Currently Blocking + Usage). Home is the
+    /// default selection, so most Home tests don't need to call this.
+    func goToHomeTab() { goToSection(tabLabel: "Home", sidebarIdentifier: "sidebarItem-home") }
+    /// Switches to the Rules section (the rule list + New Rule button).
+    func goToRulesTab() { goToSection(tabLabel: "Rules", sidebarIdentifier: "sidebarItem-rules") }
+    /// Switches to the Settings section (Uninstall Protection + Manage App Lists).
+    func goToSettingsTab() { goToSection(tabLabel: "Settings", sidebarIdentifier: "sidebarItem-settings") }
+
+    /// Navigates to a top-level section regardless of the current navigation
+    /// chrome: the bottom tab bar in compact width (iPhone, iPad multitasking) or
+    /// the left sidebar in regular width (full-screen iPad). Keeps the rest of the
+    /// UI suite agnostic to which device it runs on.
+    private func goToSection(tabLabel: String, sidebarIdentifier: String) {
+        let tab = tabBars.buttons[tabLabel]
+        if tab.waitForExistence(timeout: 2) {
+            tab.tap()
+        } else {
+            element(sidebarIdentifier).waitToAppear().tap()
+        }
+    }
+
+    /// Waits for the post-onboarding shell to appear in whichever chrome the
+    /// device presents — the bottom tab bar on iPhone, the left sidebar on
+    /// full-screen iPad — so tests can confirm "we reached the main app" without
+    /// hard-coding one device's navigation.
+    @discardableResult
+    func waitForMainUI() -> XCUIApplication {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            element("sidebarItem-home").waitToAppear()
+        } else {
+            tabBars.buttons["Home"].waitToAppear()
+        }
+        return self
+    }
 }
 
 extension XCUIElement {

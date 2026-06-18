@@ -523,20 +523,32 @@ iOS design language, keeping the backend (models, logic, services), the
 flows, and the accessibility identifiers intact. Sections 1–5 remain as the
 spec for *what* the feature does; presentation now maps as follows.
 
-After onboarding the app is a three-tab `TabView` (`MainTabView`), each tab its
-own `NavigationStack`:
+After onboarding the app is an **adaptive shell** (`MainView`) holding the same
+three sections (Home / Rules / Settings), each its own `NavigationStack`. The
+navigation chrome is chosen from the horizontal size class
+(`MainLayout.resolve`), reusing identical section views in both layouts:
+
+- **Compact width** (iPhone, and iPad multitasking / Slide Over): a bottom
+  `TabView` (`MainTabView`).
+- **Regular width** (full-screen iPad): a left sidebar `NavigationSplitView`
+  (`MainSidebarView`) — sections listed in the sidebar (`sidebarItem-<section>`),
+  the selected one filling the detail column. This is the iPad-idiomatic
+  presentation; a bottom tab bar is an iPhone idiom (Apple HIG).
 
 ```
-TabView: [Home] [Rules] [Settings]
+MainView (adaptive):  compact ─▶ TabView      [Home] [Rules] [Settings]   (bottom tabs)
+                      regular ─▶ NavigationSplitView  sidebar │ detail     (left sidebar)
    │        │        └── "Uninstall Protection" toggle + "Manage App Lists" ─▶ App List library (management mode)
    │        └── rules grouped into Schedule / Time Limit / Open Limit sections; "+" ─▶ New Rule sheet
    │                 └── tap a rule row ─▶ Rule Detail sheet ─▶ "Edit Rule" ─▶ Rule Editor
    └── "Currently Blocking" section + "Usage" section
 ```
 
-The app-level **enforcement lifecycle** (the `enforcer.refresh` 30 s loop, the
-rule-change reconcile, and a scene-active reconcile) lives on `MainTabView`, so
-it runs regardless of the selected tab.
+Section labels and icons come from one source of truth, the `AppSection` enum,
+so the tab bar and the sidebar can't drift. The app-level **enforcement
+lifecycle** (the `enforcer.refresh` 30 s loop, the rule-change reconcile, and a
+scene-active reconcile) lives on `MainView`, so it runs regardless of the active
+layout or selected section.
 
 | Spec element | Native presentation |
 |---|---|

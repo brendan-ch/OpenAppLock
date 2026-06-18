@@ -82,8 +82,9 @@ off-limits to agent edits.
 - Shields: one `ManagedSettingsStore` per rule (`rule-<uuid>`), tracked in
   UserDefaults for stray cleanup. `blockAdultContent` engages
   `webContent.blockedByFilter = .auto()` alongside the shield.
-- `RuleEnforcer.refresh` is the only place shields change; the home view runs
-  it on rule changes and a 30s loop while visible.
+- `RuleEnforcer.refresh` is the only place shields change; the post-onboarding
+  shell (`MainView`) runs it on rule changes and a 30s loop while the app is open,
+  regardless of the active layout (compact `TabView` vs regular-width sidebar).
 
 ## Build & test
 
@@ -155,7 +156,8 @@ them): `newRuleButton`, `ruleCard-<name>`, `ruleStatus-<name>`,
 `maxOpensStepper(+Value)`, `commitRuleButton`, `doneButton`,
 `toggleEnabledButton`, `deleteRuleButton`, `closeDetailButton`,
 `detailRuleName`, `detailStatusLabel`, `detailRow-<label>`,
-`hardModeLockedNotice`, onboarding: `onboardingContinueButton`,
+`hardModeLockedNotice`, `sidebarItem-<section>` (iPad sidebar rows: `home` /
+`rules` / `settings`), onboarding: `onboardingContinueButton`,
 `allowScreenTimeButton`, `permissionDeniedLabel`, `openSettingsButton`.
 
 Gotchas learned the hard way:
@@ -177,6 +179,13 @@ Gotchas learned the hard way:
   `Color.primary`/`Color.secondary`/`Color(.tertiaryLabel)`.
 - The unblock confirmation dialog is queried via `app.sheets.buttons[...]`
   (a bare `buttons["Unblock"]` is ambiguous with the row label).
+- **iPad presentation differs and the UI suite runs on both** (CI matrix:
+  iPhone + iPad). On iPad the shell is a sidebar, not a tab bar — navigate with
+  the idiom-aware `goToHomeTab()/…` and `waitForMainUI()` helpers, never bare
+  `tabBars`. Sheets present as *centered, shorter* form sheets, so: a window-edge
+  swipe-back misses them (use the nav `BackButton`); rows can start below the
+  fold (scroll into view); and span/width assertions measured against the full
+  window only hold on iPhone (gate with `UIDevice.current.userInterfaceIdiom`).
 
 ## Known gaps / next steps
 

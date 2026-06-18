@@ -7,9 +7,20 @@ on:
 
 jobs:
   test:
-    name: Run all tests on iOS
+    name: Test on ${{ matrix.device }}
     runs-on: macos-26
     timeout-minutes: 30
+
+    strategy:
+      # Run every device leg to completion: an iPad failure shouldn't hide the
+      # iPhone result (or vice versa).
+      fail-fast: false
+      matrix:
+        include:
+          - device: iPhone 17 Pro
+            slug: iphone
+          - device: iPad Pro 13-inch (M4)
+            slug: ipad
 
     steps:
       - name: Checkout current repository
@@ -24,7 +35,7 @@ jobs:
           xcodebuild build-for-testing \
             -project OpenAppLock.xcodeproj \
             -scheme OpenAppLock \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -destination 'platform=iOS Simulator,name=${{ matrix.device }}' \
             -xcconfig Config/CI.xcconfig
 
       - name: Run tests
@@ -34,7 +45,7 @@ jobs:
           xcodebuild test-without-building \
             -project OpenAppLock.xcodeproj \
             -scheme OpenAppLock \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -destination 'platform=iOS Simulator,name=${{ matrix.device }}' \
             -resultBundlePath ./output/test-result.xcresult \
             -xcconfig Config/CI.xcconfig
 
@@ -45,11 +56,11 @@ jobs:
       - name: Upload test result
         uses: actions/upload-artifact@v4
         with:
-          name: test-result
+          name: test-result-${{ matrix.slug }}
           path: output/test-result.zip
 
       - name: Check for test failure
         if: steps.tests.outcome == 'failure'
         run: |
-          echo "Tests failed. Check the uploaded artifacts for details."
+          echo "Tests failed on ${{ matrix.device }}. Check the uploaded artifacts for details."
           exit 1

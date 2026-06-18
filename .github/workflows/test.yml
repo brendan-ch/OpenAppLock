@@ -19,7 +19,7 @@ jobs:
         include:
           - device: iPhone 17 Pro
             slug: iphone
-          - device: iPad Pro 13-inch (M4)
+          - device: iPad Pro 11-inch (M5)
             slug: ipad
 
     steps:

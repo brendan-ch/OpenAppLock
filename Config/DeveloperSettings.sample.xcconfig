@@ -22,7 +22,7 @@
 // Note: the app and its Screen Time extensions are registered under the
 // `dev.bchen.OpenAppLock` bundle-ID prefix and the `group.dev.bchen.OpenAppLock`
 // App Group, which belong to the maintainer's team. To run on your own device
-// you must also change those identifiers to your own — see CONTRIBUTING.md.
+// you must also change those identifiers to your own.
 // Building and running the tests in the simulator needs no signing at all.
 
 DEVELOPMENT_TEAM = YOUR_TEAM_ID

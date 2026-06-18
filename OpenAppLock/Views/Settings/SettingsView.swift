@@ -16,6 +16,23 @@ struct SettingsView: View {
     /// it through to the store and re-enforces in one step.
     @State private var uninstallProtectionOn = false
 
+    /// UI-test only: the destination of the most recent link tap, captured by
+    /// the `openURL` interceptor so a test can assert it (see `linkSection`).
+    @State private var lastOpenedLink: URL?
+
+    private let launch = LaunchConfiguration.current
+
+    /// The GitHub destination: a UI-test override when present, otherwise the
+    /// configured build-setting value read centrally through `AppLinks`.
+    private var gitHubURL: URL? {
+        AppLinks.url(from: launch.gitHubURLOverride) ?? AppLinks.gitHub
+    }
+
+    /// The website destination, resolved like ``gitHubURL``.
+    private var websiteURL: URL? {
+        AppLinks.url(from: launch.websiteURLOverride) ?? AppLinks.website
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -61,11 +78,42 @@ struct SettingsView: View {
                 } header: {
                     Text("App Lists").textCase(nil)
                 }
+                linkSection
+                if launch.isUITesting {
+                    // Test-only probe: the destination of the last intercepted
+                    // link tap, so a UI test can assert the buttons open the
+                    // configured URLs without launching Safari.
+                    Section {
+                        Text(lastOpenedLink?.absoluteString ?? "none")
+                            .accessibilityIdentifier("openedLinkProbe")
+                    }
+                }
             }
             .navigationTitle("Settings")
+            .captureLinkTaps(when: launch.isUITesting) { lastOpenedLink = $0 }
         }
         .onAppear {
             uninstallProtectionOn = settings.uninstallProtectionEnabled
+        }
+    }
+
+    /// "About" section: external links (GitHub repo, marketing site). A link is
+    /// omitted when its destination is unconfigured; the whole section is
+    /// dropped when neither is set, so no stray header appears.
+    @ViewBuilder private var linkSection: some View {
+        if gitHubURL != nil || websiteURL != nil {
+            Section {
+                if let gitHubURL {
+                    Link("GitHub", destination: gitHubURL)
+                        .accessibilityIdentifier("githubLinkButton")
+                }
+                if let websiteURL {
+                    Link("Website", destination: websiteURL)
+                        .accessibilityIdentifier("websiteLinkButton")
+                }
+            } header: {
+                Text("About").textCase(nil)
+            }
         }
     }
 
@@ -90,5 +138,22 @@ struct SettingsView: View {
                 enforcer.refresh(rules: rules)
             }
         )
+    }
+}
+
+private extension View {
+    /// In UI-testing mode, swallow `Link` activations and report the destination
+    /// instead of opening Safari, so a UI test can assert which URL was opened.
+    /// A no-op otherwise, so production links open normally.
+    @ViewBuilder
+    func captureLinkTaps(when active: Bool, perform: @escaping (URL) -> Void) -> some View {
+        if active {
+            environment(\.openURL, OpenURLAction { url in
+                perform(url)
+                return .handled
+            })
+        } else {
+            self
+        }
     }
 }

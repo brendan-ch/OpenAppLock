@@ -43,10 +43,10 @@ struct RuleSnapshot: Codable, Equatable {
     }
 
     /// Whether the given usage exhausts this rule's daily budget.
-    func limitReached(given usage: RuleUsage) -> Bool {
+    func limitReached(given usage: RuleUsage, at now: Date = .now) -> Bool {
         switch kind {
         case .schedule: false
-        case .timeLimit: usage.minutesUsed >= dailyLimitMinutes
+        case .timeLimit: usage.effectiveMinutesUsed(asOf: now) >= dailyLimitMinutes
         case .openLimit: usage.opensUsed >= maxOpens
         }
     }

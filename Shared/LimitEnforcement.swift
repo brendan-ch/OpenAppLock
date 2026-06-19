@@ -37,7 +37,7 @@ struct LimitEnforcement {
                 shields.clearShield(ruleID: ruleID)
             }
         case .timeLimit:
-            if snapshot.limitReached(given: usage),
+            if snapshot.limitReached(given: usage, at: now),
                snapshot.isScheduledToday(at: now, calendar: calendar) {
                 shield(snapshot)
             } else {
@@ -89,7 +89,7 @@ struct LimitEnforcement {
         else { return }
         ledger.recordMinutesUsed(minutes, for: ruleID, onDayContaining: now, calendar: calendar)
         let usage = ledger.usage(for: ruleID, onDayContaining: now, calendar: calendar)
-        if snapshot.limitReached(given: usage) {
+        if snapshot.limitReached(given: usage, at: now) {
             shield(snapshot)
         }
     }
@@ -119,7 +119,7 @@ struct LimitEnforcement {
               !snapshot.isPaused(at: now)
         else { return false }
         let usage = ledger.usage(for: ruleID, onDayContaining: now, calendar: calendar)
-        guard !snapshot.limitReached(given: usage) else { return false }
+        guard !snapshot.limitReached(given: usage, at: now) else { return false }
         ledger.recordOpen(for: ruleID, onDayContaining: now, calendar: calendar)
         shields.clearShield(ruleID: ruleID)
         // Mark the session so neither enforcement path re-shields the app until

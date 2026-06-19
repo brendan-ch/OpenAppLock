@@ -57,7 +57,7 @@ extension BlockingRule {
 
         guard kind == .schedule else {
             if let usage, isScheduledToday(at: now, calendar: calendar),
-               limitReached(given: usage),
+               limitReached(given: usage, at: now),
                let midnight = calendar.nextMidnight(after: now) {
                 if let pausedUntil, pausedUntil > now {
                     return .paused(until: min(pausedUntil, midnight))
@@ -120,10 +120,10 @@ extension BlockingRule {
 
     /// Whether the given usage exhausts this rule's daily budget.
     /// Always false for schedule rules — they block by the clock.
-    func limitReached(given usage: RuleUsage) -> Bool {
+    func limitReached(given usage: RuleUsage, at now: Date = .now) -> Bool {
         switch configuration {
         case .schedule: false
-        case .timeLimit(let config): usage.minutesUsed >= config.dailyLimitMinutes
+        case .timeLimit(let config): usage.effectiveMinutesUsed(asOf: now) >= config.dailyLimitMinutes
         case .openLimit(let config): usage.opensUsed >= config.maxOpens
         }
     }

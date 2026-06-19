@@ -58,12 +58,14 @@ struct LimitEnforcement {
             now.timeIntervalSince(calendar.startOfDay(for: now)) / 60)
         guard minutes <= minutesSinceMidnight else { return }
 
-        ledger.recordMinutesUsed(minutes, for: ruleID, onDayContaining: now, calendar: calendar)
+        // Record only for a rule that can actually be active today, so a stale or
+        // irrelevant event can't corrupt today's ledger for a rule that isn't.
         guard let snapshot = snapshots.snapshot(for: ruleID), snapshot.isEnabled,
               snapshot.kind == .timeLimit,
               !snapshot.isPaused(at: now),
               snapshot.isScheduledToday(at: now, calendar: calendar)
         else { return }
+        ledger.recordMinutesUsed(minutes, for: ruleID, onDayContaining: now, calendar: calendar)
         let usage = ledger.usage(for: ruleID, onDayContaining: now, calendar: calendar)
         if snapshot.limitReached(given: usage) {
             shield(snapshot)

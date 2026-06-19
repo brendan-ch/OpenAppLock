@@ -394,15 +394,30 @@ struct LimitEnforcementTests {
     }
 
     private func snapshot(
-        kind: RuleKind, limit: Int = 45, maxOpens: Int = 5, pausedUntil: Date? = nil
+        kind: RuleKind, limit: Int = 45, maxOpens: Int = 5,
+        days: Set<Weekday> = Weekday.everyDay, pausedUntil: Date? = nil
     ) -> RuleSnapshot {
         RuleSnapshot(
             id: UUID(), name: "Rule", kindRaw: kind.rawValue, isEnabled: true,
             hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
-            selectionData: Data([1]), dayNumbers: Weekday.everyDay.map(\.rawValue),
+            selectionData: Data([1]), dayNumbers: days.map(\.rawValue),
             startMinutes: 0, endMinutes: 0,
             dailyLimitMinutes: limit, maxOpens: maxOpens, pausedUntil: pausedUntil
         )
+    }
+
+    @Test("An ineligible rule does not accrue usage from a checkpoint")
+    func ineligibleRuleDoesNotAccrue() {
+        let (enforcement, _, ledger, store) = makeEnforcement()
+        // Weekday-only rule; a checkpoint arrives on a Saturday (not scheduled).
+        let snap = snapshot(kind: .timeLimit, days: Weekday.weekdays)
+        store.save([snap])
+        let saturday = date(2025, 1, 11, 10, 0) // 2025-01-11 is a Saturday
+
+        enforcement.handleUsageMinutes(20, ruleID: snap.id, now: saturday, calendar: utc)
+
+        #expect(
+            ledger.usage(for: snap.id, onDayContaining: saturday, calendar: utc).minutesUsed == 0)
     }
 
     @Test("Day start shields open-limit rules so opens can be counted")

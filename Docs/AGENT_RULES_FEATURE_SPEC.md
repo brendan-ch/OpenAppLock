@@ -259,8 +259,12 @@ Full-height sheet:
 > named "<rule name> Apps". Lists in use by a rule cannot be deleted from the
 > picker. While any **Hard Mode** rule is actively blocking, all lists are
 > read-only — the picker hides Edit/Delete and shows a lock notice — because
-> editing a list would be a back door out of the hard block. Creating new
-> lists and selecting lists for other rules remain available.
+> editing a list would be a back door out of the hard block. A locked list can
+> still be **opened to view its apps** (the picker swaps "Edit" for "View",
+> management rows still push in): the read-only `AppListDetailView` shows the
+> list's apps with no name field, "Edit Apps", or Save — viewing is never an
+> escape hatch. Creating new lists and selecting lists for other rules remain
+> available.
 
 ---
 

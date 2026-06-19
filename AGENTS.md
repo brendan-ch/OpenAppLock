@@ -21,7 +21,8 @@ OpenAppLock/                    App target (iOS 26, SwiftUI + SwiftData)
                             RuleScheduler (rules → DeviceActivity monitoring),
                             AppListMigration, LaunchConfiguration +
                             SampleRules (UI-test harness)
-  Views/                    Native SwiftUI screens (see Docs spec §6)
+  Views/                    Native SwiftUI screens (spec in each view's doc
+                            comment; see Docs/RULES_SPEC.md §2)
 Shared/                     Compiled into the app AND all three extensions:
                             RuleKind, Weekday, RuleSchedule, AppGroup,
                             UsageLedger (per-day minutes/opens),
@@ -39,11 +40,12 @@ OpenAppLockShieldAction/    ShieldAction extension: Open press spends an open,
 OpenAppLockTests/               Swift Testing unit suites (@MainActor — the app
                             target defaults to MainActor isolation)
 OpenAppLockUITests/             XCUITest flows (see harness below)
-Docs/AGENT_RULES_FEATURE_SPEC.md
-                            Feature spec for the rules behavior; §6 maps it to
-                            the native presentation. Source of truth — review
-                            BEFORE behavior changes, keep current after them
-                            (agent-managed; see Documentation).
+Docs/RULES_SPEC.md          Rules feature spec index: concept, navigation map,
+                            cross-cutting invariants, and a topic → source map.
+                            The detailed spec lives as doc comments on the source
+                            each topic owns — review BEFORE behavior changes, keep
+                            current after them, in the same commit (human-owned,
+                            co-maintained; see Documentation).
 Docs/AGENT_SWIFT_GUIDELINES.md
                             Swift coding/testing/patterns/security standards
                             agents must follow on this project (agent-managed).
@@ -51,21 +53,25 @@ Docs/AGENT_SWIFT_GUIDELINES.md
 
 ## Documentation
 
-Documentation splits into two buckets, distinguished by **filename**, not by
-directory:
+Documentation falls into three buckets:
 
 - **Agent-managed** — this `AGENTS.md`, `CLAUDE.md`, and any file whose name is
-  prefixed with `AGENT_` (currently `Docs/AGENT_RULES_FEATURE_SPEC.md` and
-  `Docs/AGENT_SWIFT_GUIDELINES.md`). Agents may **read, create, and edit** these
-  and are expected to keep them accurate. Treat the feature spec as the source
-  of truth for behavior, and update it when a behavior change makes it stale.
+  prefixed with `AGENT_` (currently `Docs/AGENT_SWIFT_GUIDELINES.md`). Agents may
+  **read, create, and edit** these and are expected to keep them accurate.
+- **Shared (human + agent)** — the rules feature spec. It lives as doc comments
+  **on the source each behavior owns**, with `Docs/RULES_SPEC.md` as a
+  human-owned index/map. The doc comments are the source of truth for behavior;
+  both humans and agents maintain them. When you change a behavior, update the
+  owning file's doc comment in the same commit (and the `RULES_SPEC.md` map if a
+  topic moves to a different file).
 - **Human-authored** — every other doc, e.g. `README.md`. Agents may **read**
   these for context but must **never create or modify** them; flag needed
   changes for the maintainer instead.
 
-The `AGENT_` prefix is the contract: it marks a file as safe for agents to
-maintain. Any human-authored doc added without the prefix is automatically
-off-limits to agent edits.
+The `AGENT_` prefix still marks a file as safe for agents to maintain.
+`RULES_SPEC.md` is deliberately un-prefixed but explicitly shared, so agents may
+update it (and the code doc comments it maps to) as part of a behavior change.
+Any *other* un-prefixed doc remains off-limits to agent edits.
 
 ## Domain facts worth knowing
 
@@ -107,12 +113,12 @@ when reminded:
 - **Always plan before execution.** Think through and lay out the approach (a
   written plan / plan mode for anything non-trivial) and confirm scope before
   editing code. Do not start changing files until the plan is clear.
-- **Always use red-green TDD.** Consult `Docs/AGENT_RULES_FEATURE_SPEC.md`
-  first for behavior changes — it is the source of truth. If a behavior change
-  makes the spec inaccurate, keep it current (it is agent-managed; see
-  Documentation above). Then write the failing test, run it (compile failure
-  counts as red), implement, re-run focused tests, then the full suite. Run
-  tests often and fail fast.
+- **Always use red-green TDD.** Consult the feature spec first for behavior
+  changes — the doc comment on the file you're changing is the source of truth,
+  with `Docs/RULES_SPEC.md` as the map. If a change makes a doc comment
+  inaccurate, update it in the same commit (see Documentation above). Then write
+  the failing test, run it (compile failure counts as red), implement, re-run
+  focused tests, then the full suite. Run tests often and fail fast.
 - **Always attempt to validate the UI manually before committing.** Build and
   run the app (simulator/device) and visually confirm the change behaves as
   intended. This step **may be skipped only when such tooling is unavailable**

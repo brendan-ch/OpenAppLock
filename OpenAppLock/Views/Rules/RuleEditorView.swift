@@ -127,7 +127,7 @@ struct RuleEditorView: View {
             }
             hardModeSection
             // Block Adult Content is a Schedule-only option: a usage budget
-            // does not pair with a web-content filter (see spec §1).
+            // does not pair with a web-content filter (see `RuleConfiguration`).
             adultContentSection
         case .timeLimit:
             Section {

@@ -654,3 +654,29 @@ struct ScheduleEnforcementTests {
         #expect(shields.shieldedRuleIDs.isEmpty)
     }
 }
+
+@MainActor
+@Suite("Day-start store")
+struct DayStartStoreTests {
+    private func makeStore() -> DayStartStore {
+        let name = "daystart-tests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defaults.removePersistentDomain(forName: name)
+        return DayStartStore(defaults: defaults)
+    }
+
+    @Test("Confirmed start round-trips and is day-scoped")
+    func roundTrip() {
+        let store = makeStore()
+        let id = UUID()
+        let monday = date(2025, 1, 6, 10, 0)
+        #expect(store.confirmedStart(for: id) == nil)
+        #expect(!store.hasConfirmedStart(for: id, onDayContaining: monday, calendar: utc))
+
+        store.setConfirmedStart(utc.startOfDay(for: monday), for: id)
+        #expect(store.confirmedStart(for: id) == utc.startOfDay(for: monday))
+        #expect(store.hasConfirmedStart(for: id, onDayContaining: monday, calendar: utc))
+        // A different day is not confirmed.
+        #expect(!store.hasConfirmedStart(for: id, onDayContaining: date(2025, 1, 7, 1, 0), calendar: utc))
+    }
+}

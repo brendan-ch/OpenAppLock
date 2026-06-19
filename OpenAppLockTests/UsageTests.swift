@@ -102,6 +102,22 @@ struct UsageLedgerTests {
         #expect(decoded.authoritativeMinutesUsed == nil)
         #expect(decoded.authoritativeAsOf == nil)
     }
+
+    @Test("Authoritative minutes overwrite without disturbing the threshold count")
+    func recordAuthoritative() {
+        let ledger = makeLedger()
+        let id = UUID()
+        ledger.recordMinutesUsed(40, for: id, onDayContaining: monday, calendar: utc)
+
+        ledger.recordAuthoritativeMinutes(
+            12, for: id, onDayContaining: monday, asOf: monday, calendar: utc)
+        let read = ledger.usage(for: id, onDayContaining: monday, calendar: utc)
+        #expect(read.minutesUsed == 40)               // threshold untouched
+        #expect(read.authoritativeMinutesUsed == 12)  // authoritative recorded
+        #expect(read.authoritativeAsOf == monday)
+        // Effective prefers the (fresh) authoritative figure.
+        #expect(read.effectiveMinutesUsed(asOf: monday) == 12)
+    }
 }
 
 @MainActor

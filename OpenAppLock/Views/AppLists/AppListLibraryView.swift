@@ -84,16 +84,15 @@ struct AppListLibraryView: View {
                 }
             }
         }
-        .navigationDestination(isPresented: $creatingList) {
+        // The editor pops out as its own sheet overlay (with Close + confirm and
+        // a discard prompt); it dismisses itself, which clears these bindings.
+        .sheet(isPresented: $creatingList) {
             AppListEditorView(list: nil) { created in
                 selection?.wrappedValue = created
-                creatingList = false
             }
         }
-        .navigationDestination(item: $editingList) { list in
-            AppListEditorView(list: list) { _ in
-                editingList = nil
-            }
+        .sheet(item: $editingList) { list in
+            AppListEditorView(list: list) { _ in }
         }
         .alert("This list is in use", isPresented: $deletionBlocked) {
             Button("OK", role: .cancel) {}

@@ -44,4 +44,9 @@ final class AppList {
         )
         return ((try? context.fetchCount(descriptor)) ?? 0) > 0
     }
+
+    /// "4 Apps" / "1 App" label shared by the library, editor, and detail rows.
+    var appCountLabel: String {
+        selectionCount == 1 ? "1 App" : "\(selectionCount) Apps"
+    }
 }

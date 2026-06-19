@@ -66,7 +66,7 @@ Tab bar: [Home] [My Apps] [Timer]
             │        │                                 └── tap preset card ───▶ Rule Editor (pre-filled)
             │        └── tap rule card ─▶ Rule Detail sheet
             │                               └── "Edit Rule" ─▶ Rule Editor (edit mode)
-            │                                                    └── "Selected Apps >" ─▶ App Picker
+            │                                                    └── "App List >" ─▶ App List selection (pushed) ─▶ Edit/New ─▶ List editor (sheet overlay) ─▶ "Edit Apps" ─▶ FamilyActivityPicker
             └── "Apps" section (folders: Distracting / Always Allowed / Never Allowed)
 ```
 
@@ -249,18 +249,28 @@ Full-height sheet:
 >
 > **App Lists (OpenAppLock):** the selection itself lives on a reusable
 > **App List** (`@Model AppList`: name + encoded `FamilyActivitySelection`).
-> The editor's App List row presents a picker sheet listing saved lists
-> (checkmark on the rule's current list; tap to select), an Edit affordance
-> per list, and a "New List" flow — a name field plus an embedded
-> `FamilyActivityPicker`. The `Block`/`Allow Only` segmented control lives in
+> The editor's App List row **pushes** the selection screen onto the editor's
+> own navigation stack (the back button returns) — the saved lists with a
+> checkmark on the rule's current one, an Edit affordance per list, and a "New
+> List" entry. Tapping a list selects it and pops back to the editor.
+> **Editing or creating a list opens it as a sheet overlay** with a **Close**
+> button (top-left ✕) and a **checkmark** confirm (top-right): a name field
+> plus an "Edit Apps" row that pushes an embedded `FamilyActivityPicker`.
+> Selecting/deselecting in that picker **applies immediately** to the list's
+> working selection — it has no Save of its own — so the editor's checkmark is
+> the single commit point. Closing the overlay with **outstanding edits**
+> (name or selection changed) first raises the standard iOS **"Discard
+> Changes?"** confirmation (a destructive *Discard Changes* action); the
+> swipe-to-dismiss is disabled while edits are outstanding so the prompt can't
+> be bypassed. The `Block`/`Allow Only` segmented control lives in
 > the Schedule rule editor (it is rule state, not list state). Legacy rules
 > that stored an inline selection are migrated at launch: one list per
 > distinct selection (rules sharing identical selection data share a list),
 > named "<rule name> Apps". Lists in use by a rule cannot be deleted from the
-> picker. While any **Hard Mode** rule is actively blocking, all lists are
-> read-only — the picker hides Edit/Delete and shows a lock notice — because
-> editing a list would be a back door out of the hard block. Creating new
-> lists and selecting lists for other rules remain available.
+> selection screen. While any **Hard Mode** rule is actively blocking, all
+> lists are read-only — the selection screen hides Edit/Delete and shows a lock
+> notice — because editing a list would be a back door out of the hard block.
+> Creating new lists and selecting lists for other rules remain available.
 
 ---
 
@@ -554,7 +564,7 @@ layout or selected section.
 |---|---|
 | Home tab | `NavigationStack` + `List`. Every row carries a **leading kind icon**, the name, and a `<Type> · <context>` subtitle, where *context* is the rule's live status: a schedule reads its countdown (`Schedule · 6h left`), a limit reads its usage once used today (`Time Limit · 18m of 45m used`) or its plain budget while untouched (`Time Limit · 45m / day`). **"Currently Blocking"** section (renamed from "Blocked Apps") — the *rules* blocking right now: a Hard Mode rule shows a trailing `lock.fill` (the block can't be lifted), a soft rule shows a trailing "Unblock" button; tapping a hard row shows the "Hard Mode is on" alert, a soft row the unblock dialog. A limit rule whose budget is **spent** appears here (moved out of Usage). **"Usage"** section: every enabled limit rule scheduled today that is *not* currently blocking; rows have **no trailing label** (the context lives in the subtitle). |
 | Rules tab | `NavigationStack` + `List` split into **Schedule / Time Limit / Open Limit** sections (empty sections hidden); **rules are list rows** (leading kind icon, name, and a `<context>` subtitle — the same live status/countdown/usage as Home, but **without the type prefix** since the section header already conveys the kind, and **without a separate trailing status label**; the `ruleStatus-<name>` identifier lives on this subtitle); "+" toolbar button opens the New Rule sheet; tapping a row opens the Rule Detail sheet. |
-| Settings tab | `NavigationStack` + `Form`. **Uninstall Protection** toggle — while on, the device's app-removal is denied (`ManagedSettingsStore.application.denyAppRemoval`) whenever any Hard Mode rule is actively blocking. The toggle itself is **locked while any Hard Mode rule is actively blocking**: the switch is replaced by a trailing red `lock.fill` (same treatment as a Home "Currently Blocking" hard row) so the protection can't be turned off mid-block — its whole purpose. **Manage App Lists** pushes the shared App List library in management mode (create / edit / delete, honoring the Hard Mode lock — same flow as the rule editor's picker, minus selection). An **About** section holds outbound `Link` rows — **GitHub** and **Website** — each shown only when its destination is configured (see §6.2). |
+| Settings tab | `NavigationStack` + `Form`. **Uninstall Protection** toggle — while on, the device's app-removal is denied (`ManagedSettingsStore.application.denyAppRemoval`) whenever any Hard Mode rule is actively blocking. The toggle itself is **locked while any Hard Mode rule is actively blocking**: the switch is replaced by a trailing red `lock.fill` (same treatment as a Home "Currently Blocking" hard row) so the protection can't be turned off mid-block — its whole purpose. **Manage App Lists** pushes the shared App List library in management mode (create / edit / delete, the list editor opening as a sheet overlay with a Close/confirm pair and the discard-changes prompt; honoring the Hard Mode lock — the same library the rule editor's App List row pushes, minus selection). An **About** section holds outbound `Link` rows — **GitHub** and **Website** — each shown only when its destination is configured (see §6.2). |
 | Rule detail | Sheet with inline nav title (name + "Schedule, 6h left" caption), `LabeledContent` rows, "Edit Rule" row pushes the editor; hard-locked rules show a lock row instead |
 | New Rule | `List` with a "Rule Type" section and preset sections as plain rows; editor pushed via `navigationDestination(item:)` |
 | Rule editor | Native `Form`: an inline **Name text field** at the top (no separate rename button; empty names fall back to the kind default), `DatePicker` rows, full-width day-circle row (≥44pt tap targets) with the summary in the section header, toggle rows with footers, stepper rows. Both modes commit via a **checkmark** in the navigation bar (labels: "Add Rule" / "Done"; replaces Hold to Commit). In edit mode an **ellipsis menu** ("Rule Actions") next to the checkmark holds Disable Rule and the destructive Delete Rule |

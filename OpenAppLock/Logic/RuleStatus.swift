@@ -102,9 +102,9 @@ extension BlockingRule {
             case .disabled, .dormant, .paused:
                 return status.label(relativeTo: now)
             case .active, .upcoming:
-                let usedToday = usage.minutesUsed > 0 || usage.opensUsed > 0
+                let usedToday = usage.effectiveMinutesUsed(asOf: now) > 0 || usage.opensUsed > 0
                 return usedToday
-                    ? UsageDisplay.usagePhrase(for: self, usage: usage)
+                    ? UsageDisplay.usagePhrase(for: self, usage: usage, asOf: now)
                     : UsageDisplay.budgetPhrase(for: self)
             }
         }

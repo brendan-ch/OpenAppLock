@@ -320,13 +320,21 @@ struct UsageDisplayTests {
     @Test("Time-limit rows show minutes used of the budget")
     func timeLimitStrings() {
         let usage = RuleUsage(minutesUsed: 18)
-        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: usage) == "18m of 45m used")
+        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: usage, asOf: now) == "18m of 45m used")
+    }
+
+    @Test("Usage phrase reflects a fresh authoritative reading")
+    func usagePhrasePrefersFreshAuthoritative() {
+        var usage = RuleUsage(minutesUsed: 5)
+        usage.authoritativeMinutesUsed = 18
+        usage.authoritativeAsOf = now.addingTimeInterval(-10)
+        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: usage, asOf: now) == "18m of 45m used")
     }
 
     @Test("Open-limit rows show opens used of the budget")
     func openLimitStrings() {
         let usage = RuleUsage(opensUsed: 2)
-        #expect(UsageDisplay.usagePhrase(for: openRule, usage: usage) == "2 of 5 opens")
+        #expect(UsageDisplay.usagePhrase(for: openRule, usage: usage, asOf: now) == "2 of 5 opens")
     }
 
     /// Limit context adapts: the daily budget while untouched, live usage once
@@ -356,7 +364,7 @@ struct UsageDisplayTests {
     @Test("Overshoot clamps to the budget")
     func overshootClamps() {
         let over = RuleUsage(minutesUsed: 60)
-        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: over) == "45m of 45m used")
+        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: over, asOf: now) == "45m of 45m used")
     }
 
     @Test("Home subtitles prefix the rule kind so the type reads without the icon")

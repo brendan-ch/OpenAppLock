@@ -15,6 +15,8 @@ struct LimitEnforcement {
     let shields: ShieldApplying
     /// Granted-open session bookkeeping shared with the foreground enforcer.
     var sessions = OpenSessionStore()
+    /// Confirmed daily-activity starts, used to reject pre-boundary stale flushes.
+    var dayStarts = DayStartStore()
 
     /// Midnight (or monitoring start): fresh budgets. Open-limit rules are
     /// proactively shielded on enabled days so the shield can count opens;
@@ -23,6 +25,7 @@ struct LimitEnforcement {
         guard let snapshot = snapshots.snapshot(for: ruleID), snapshot.isEnabled,
               !snapshot.isPaused(at: now)
         else { return }
+        confirmDayStart(ruleID: ruleID, kind: snapshot.kind, now: now, calendar: calendar)
         let usage = ledger.usage(for: ruleID, onDayContaining: now, calendar: calendar)
         switch snapshot.kind {
         case .schedule:
@@ -43,6 +46,21 @@ struct LimitEnforcement {
         }
     }
 
+    /// Records today as the confirmed interval start for `ruleID`. On a genuine
+    /// new-day transition for a time-limit rule, zeroes today's ledger once so a
+    /// stale pre-boundary checkpoint cannot survive; a spurious same-day re-fire
+    /// must not erase legitimate usage.
+    private func confirmDayStart(
+        ruleID: UUID, kind: RuleKind, now: Date, calendar: Calendar
+    ) {
+        let today = calendar.startOfDay(for: now)
+        guard dayStarts.confirmedStart(for: ruleID) != today else { return }
+        dayStarts.setConfirmedStart(today, for: ruleID)
+        if kind == .timeLimit {
+            ledger.setUsage(RuleUsage(), for: ruleID, onDayContaining: now, calendar: calendar)
+        }
+    }
+
     /// A cumulative usage checkpoint fired for a time-limit rule.
     func handleUsageMinutes(
         _ minutes: Int, ruleID: UUID, now: Date = .now, calendar: Calendar = .current
@@ -57,6 +75,10 @@ struct LimitEnforcement {
         let minutesSinceMidnight = Int(
             now.timeIntervalSince(calendar.startOfDay(for: now)) / 60)
         guard minutes <= minutesSinceMidnight else { return }
+        // Reject events that arrive before today's interval boundary has been
+        // observed — yesterday's batched checkpoints flushed late across midnight.
+        guard dayStarts.hasConfirmedStart(for: ruleID, onDayContaining: now, calendar: calendar)
+        else { return }
 
         // Record only for a rule that can actually be active today, so a stale or
         // irrelevant event can't corrupt today's ledger for a rule that isn't.

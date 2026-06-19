@@ -389,7 +389,8 @@ struct LimitEnforcementTests {
         return (
             LimitEnforcement(
                 snapshots: store, ledger: ledger, shields: shields,
-                sessions: OpenSessionStore(defaults: freshDefaults())),
+                sessions: OpenSessionStore(defaults: freshDefaults()),
+                dayStarts: DayStartStore(defaults: freshDefaults())),
             shields, ledger, store)
     }
 
@@ -449,6 +450,7 @@ struct LimitEnforcementTests {
         let (enforcement, shields, ledger, store) = makeEnforcement()
         let snap = snapshot(kind: .timeLimit, limit: 45)
         store.save([snap])
+        enforcement.handleDayStart(ruleID: snap.id, now: monday, calendar: utc)
 
         enforcement.handleUsageMinutes(20, ruleID: snap.id, now: monday, calendar: utc)
         #expect(ledger.usage(for: snap.id, onDayContaining: monday, calendar: utc).minutesUsed == 20)
@@ -469,6 +471,7 @@ struct LimitEnforcementTests {
         // late across midnight. It must not be recorded as today's usage, and
         // must not re-shield apps the user hasn't touched today.
         let earlyMorning = date(2025, 1, 6, 0, 30)
+        enforcement.handleDayStart(ruleID: snap.id, now: earlyMorning, calendar: utc)
         enforcement.handleUsageMinutes(45, ruleID: snap.id, now: earlyMorning, calendar: utc)
 
         #expect(
@@ -485,11 +488,47 @@ struct LimitEnforcementTests {
         // 00:45 — 45 minutes have elapsed, so a 45-minute checkpoint is
         // physically possible today and must be honoured (boundary case).
         let quarterToOne = date(2025, 1, 6, 0, 45)
+        enforcement.handleDayStart(ruleID: snap.id, now: quarterToOne, calendar: utc)
         enforcement.handleUsageMinutes(45, ruleID: snap.id, now: quarterToOne, calendar: utc)
 
         #expect(
             ledger.usage(for: snap.id, onDayContaining: quarterToOne, calendar: utc).minutesUsed == 45)
         #expect(shields.shieldedRuleIDs == [snap.id])
+    }
+
+    @Test("A checkpoint before a confirmed day-start is dropped")
+    func checkpointBeforeConfirmedStartDropped() {
+        let (enforcement, shields, ledger, store) = makeEnforcement()
+        let snap = snapshot(kind: .timeLimit, limit: 45)
+        store.save([snap])
+        // No handleDayStart → no confirmed start for today, so the event is a
+        // pre-boundary residual and must be dropped.
+        enforcement.handleUsageMinutes(20, ruleID: snap.id, now: monday, calendar: utc)
+
+        #expect(ledger.usage(for: snap.id, onDayContaining: monday, calendar: utc).minutesUsed == 0)
+        #expect(shields.shieldedRuleIDs.isEmpty)
+    }
+
+    @Test("Day start zeroes today's time-limit ledger once, only on a transition")
+    func dayStartZeroesOnceOnTransition() {
+        let (enforcement, _, ledger, store) = makeEnforcement()
+        let snap = snapshot(kind: .timeLimit)
+        store.save([snap])
+        // A stale value sitting in today's key (e.g. a pre-boundary write).
+        ledger.setUsage(
+            RuleUsage(minutesUsed: 45), for: snap.id, onDayContaining: monday, calendar: utc)
+
+        // First day-start of the day: transition → zeroed.
+        enforcement.handleDayStart(ruleID: snap.id, now: monday, calendar: utc)
+        #expect(ledger.usage(for: snap.id, onDayContaining: monday, calendar: utc).minutesUsed == 0)
+
+        // A legitimate accrual after the transition...
+        enforcement.handleUsageMinutes(20, ruleID: snap.id, now: monday, calendar: utc)
+        #expect(ledger.usage(for: snap.id, onDayContaining: monday, calendar: utc).minutesUsed == 20)
+
+        // ...survives a spurious same-day re-fire (no second zero).
+        enforcement.handleDayStart(ruleID: snap.id, now: monday, calendar: utc)
+        #expect(ledger.usage(for: snap.id, onDayContaining: monday, calendar: utc).minutesUsed == 20)
     }
 
     @Test("An Open press spends one open and lifts the shield")

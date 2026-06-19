@@ -47,6 +47,9 @@ Docs/AGENT_RULES_FEATURE_SPEC.md
 Docs/AGENT_SWIFT_GUIDELINES.md
                             Swift coding/testing/patterns/security standards
                             agents must follow on this project (agent-managed).
+Docs/Agents/                Agent working docs — the whole folder is
+                            agent-modifiable. Design specs live under
+                            Docs/Agents/Specs/ (agent-managed).
 ```
 
 ## Documentation
@@ -54,11 +57,14 @@ Docs/AGENT_SWIFT_GUIDELINES.md
 Documentation splits into two buckets, distinguished by **filename**, not by
 directory:
 
-- **Agent-managed** — this `AGENTS.md`, `CLAUDE.md`, and any file whose name is
+- **Agent-managed** — this `AGENTS.md`, `CLAUDE.md`, any file whose name is
   prefixed with `AGENT_` (currently `Docs/AGENT_RULES_FEATURE_SPEC.md` and
-  `Docs/AGENT_SWIFT_GUIDELINES.md`). Agents may **read, create, and edit** these
-  and are expected to keep them accurate. Treat the feature spec as the source
-  of truth for behavior, and update it when a behavior change makes it stale.
+  `Docs/AGENT_SWIFT_GUIDELINES.md`), and **anything under `Docs/Agents/`**
+  (e.g. design specs in `Docs/Agents/Specs/`) — the folder marks ownership by
+  location, so files inside it need no `AGENT_` prefix. Agents may **read,
+  create, and edit** these and are expected to keep them accurate. Treat the
+  feature spec as the source of truth for behavior, and update it when a
+  behavior change makes it stale.
 - **Human-authored** — every other doc, e.g. `README.md`. Agents may **read**
   these for context but must **never create or modify** them; flag needed
   changes for the maintainer instead.

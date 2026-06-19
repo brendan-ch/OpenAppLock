@@ -22,7 +22,7 @@ OpenAppLock/                    App target (iOS 26, SwiftUI + SwiftData)
                             AppListMigration, LaunchConfiguration +
                             SampleRules (UI-test harness)
   Views/                    Native SwiftUI screens (spec in each view's doc
-                            comment; see Docs/RULES_SPEC.md §2)
+                            comment; see "Rules feature map" below)
 Shared/                     Compiled into the app AND all three extensions:
                             RuleKind, Weekday, RuleSchedule, AppGroup,
                             UsageLedger (per-day minutes/opens),
@@ -40,12 +40,6 @@ OpenAppLockShieldAction/    ShieldAction extension: Open press spends an open,
 OpenAppLockTests/               Swift Testing unit suites (@MainActor — the app
                             target defaults to MainActor isolation)
 OpenAppLockUITests/             XCUITest flows (see harness below)
-Docs/RULES_SPEC.md          Rules feature spec index: concept, navigation map,
-                            cross-cutting invariants, and a topic → source map.
-                            The detailed spec lives as doc comments on the source
-                            each topic owns — review BEFORE behavior changes, keep
-                            current after them, in the same commit (human-owned,
-                            co-maintained; see Documentation).
 Docs/AGENT_SWIFT_GUIDELINES.md
                             Swift coding/testing/patterns/security standards
                             agents must follow on this project (agent-managed).
@@ -59,19 +53,17 @@ Documentation falls into three buckets:
   prefixed with `AGENT_` (currently `Docs/AGENT_SWIFT_GUIDELINES.md`). Agents may
   **read, create, and edit** these and are expected to keep them accurate.
 - **Shared (human + agent)** — the rules feature spec. It lives as doc comments
-  **on the source each behavior owns**, with `Docs/RULES_SPEC.md` as a
-  human-owned index/map. The doc comments are the source of truth for behavior;
-  both humans and agents maintain them. When you change a behavior, update the
-  owning file's doc comment in the same commit (and the `RULES_SPEC.md` map if a
-  topic moves to a different file).
+  **on the source each behavior owns**; both humans and agents maintain it. The
+  doc comments are the source of truth for behavior — when you change a behavior,
+  update the owning file's doc comment in the same commit. The "Rules feature
+  map" section below indexes where each topic lives; keep it current when a topic
+  moves to a different file.
 - **Human-authored** — every other doc, e.g. `README.md`. Agents may **read**
   these for context but must **never create or modify** them; flag needed
   changes for the maintainer instead.
 
-The `AGENT_` prefix still marks a file as safe for agents to maintain.
-`RULES_SPEC.md` is deliberately un-prefixed but explicitly shared, so agents may
-update it (and the code doc comments it maps to) as part of a behavior change.
-Any *other* un-prefixed doc remains off-limits to agent edits.
+The `AGENT_` prefix marks a file as safe for agents to maintain; any other
+un-prefixed doc remains off-limits to agent edits.
 
 ## Domain facts worth knowing
 
@@ -91,6 +83,50 @@ Any *other* un-prefixed doc remains off-limits to agent edits.
 - `RuleEnforcer.refresh` is the only place shields change; the post-onboarding
   shell (`MainView`) runs it on rule changes and a 30s loop while the app is open,
   regardless of the active layout (compact `TabView` vs regular-width sidebar).
+
+## Rules feature map
+
+The feature behaves as documented in `///` doc comments **on the source each
+topic owns** — this section is the map to them, not a second copy of the spec.
+Concept and per-kind options live in `RuleConfiguration` / `RuleKind` /
+`BlockingRule`; the load-bearing invariants are in "Domain facts" above.
+
+Screens — post-onboarding adaptive shell (`MainView`: a tab bar in compact
+width, a sidebar in regular-width iPad; section labels from one `AppSection`):
+
+```
+Home      Currently Blocking + Usage               HomeView
+Rules     rules grouped by kind; + opens New Rule   RulesListView
+            New Rule → editor                         NewRuleSheet → RuleEditorView
+            tap a rule → detail → editor              RuleDetailSheet → RuleEditorView
+Settings  Uninstall Protection, App Lists, About    SettingsView → ManageAppListsView
+```
+
+Where each topic is documented:
+
+| Topic | Source (doc comment) |
+|---|---|
+| Rule kinds, sum-type options, Schedule-only rationale | `Shared/RuleConfiguration.swift`, `Shared/RuleKind.swift` |
+| Persisted rule + common attributes; editor draft; cross-process mirror | `OpenAppLock/Models/BlockingRule.swift`, `OpenAppLock/Models/RuleDraft.swift`, `Shared/RuleSnapshot.swift` |
+| Derived status & countdown labels | `OpenAppLock/Logic/RuleStatus.swift` |
+| Day-of-week picker & summary | `OpenAppLock/Views/Components/DayOfWeekPicker.swift`, `Shared/Weekday.swift` |
+| Presets; editors (all kinds); detail | `OpenAppLock/Models/RulePreset.swift`, `OpenAppLock/Views/Rules/RuleEditorView.swift`, `OpenAppLock/Views/Rules/RuleDetailSheet.swift` |
+| App lists (model, picker, library, edit) + legacy migration | `OpenAppLock/Models/AppList.swift`, `OpenAppLock/Views/AppLists/*`, `OpenAppLock/Services/AppListMigration.swift` |
+| Home: Currently Blocking + Usage, row strings | `OpenAppLock/Views/Home/HomeView.swift`, `OpenAppLock/Logic/UsageDisplay.swift` |
+| Schedule activation / time-window math (incl. midnight crossing) | `Shared/RuleSchedule.swift`, `Shared/ScheduleEnforcement.swift` |
+| Unblock / disable / delete / Hard Mode gating | `OpenAppLock/Logic/RulePolicy.swift` |
+| Foreground reconciliation; **overlapping rules → strictest wins** | `OpenAppLock/Services/RuleEnforcer.swift`, `Shared/ShieldController.swift` |
+| Time/open-limit behavior, granted opens, proactive gate | `Shared/LimitEnforcement.swift`, `Shared/UsageLedger.swift`, `Shared/OpenSessionStore.swift` |
+| Shield text + "Open" button / press handling | `Shared/ShieldPresentation.swift`, `OpenAppLockShieldConfig/ShieldConfigurationExtension.swift`, `OpenAppLockShieldAction/ShieldActionExtension.swift` |
+| DeviceActivity scheduling, naming; background monitor | `OpenAppLock/Services/RuleScheduler.swift`, `Shared/MonitoringPlan.swift`, `OpenAppLockMonitor/DeviceActivityMonitorExtension.swift` |
+| Uninstall Protection | `OpenAppLock/Views/Settings/SettingsView.swift`, `Shared/UninstallProtectionPolicy.swift`, `Shared/UninstallProtectionEnforcer.swift`, `OpenAppLock/Services/AppSettings.swift` |
+| About links (GitHub / Website) | `OpenAppLock/Services/AppLinks.swift`, `OpenAppLock/Services/LaunchConfiguration.swift` |
+
+Not part of the feature: paywall, the Home gem/score UI, a Timer tab (one-off
+sessions), notification nudges. Onboarding exists (`OpenAppLock/Views/Onboarding/`)
+but is out of scope. The pre-reskin custom-themed design (Hold-to-Commit, rule
+cards, photo preset gallery) is recoverable from git history
+(`Docs/AGENT_RULES_FEATURE_SPEC.md`, removed when the spec was folded into code).
 
 ## Build & test
 
@@ -115,7 +151,7 @@ when reminded:
   editing code. Do not start changing files until the plan is clear.
 - **Always use red-green TDD.** Consult the feature spec first for behavior
   changes — the doc comment on the file you're changing is the source of truth,
-  with `Docs/RULES_SPEC.md` as the map. If a change makes a doc comment
+  indexed by the "Rules feature map" above. If a change makes a doc comment
   inaccurate, update it in the same commit (see Documentation above). Then write
   the failing test, run it (compile failure counts as red), implement, re-run
   focused tests, then the full suite. Run tests often and fail fast.

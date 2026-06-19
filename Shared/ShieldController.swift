@@ -53,7 +53,8 @@ final class ManagedSettingsShieldController: ShieldApplying {
             // `.all(except:)` is itself a *shield* directive ("block everything
             // except these"), not a whitelist — it cannot lift another store's
             // shield on a shared app. So an Allow-Only rule never punches a hole
-            // through a block another rule applies (spec §4.8, strictest wins).
+            // through a block another rule applies (strictest wins — see
+            // `RuleEnforcer`).
             store.shield.applicationCategories = .all(except: selection.applicationTokens)
             store.shield.webDomainCategories = .all(except: selection.webDomainTokens)
         }

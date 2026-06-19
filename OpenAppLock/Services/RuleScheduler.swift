@@ -67,7 +67,7 @@ final class RuleScheduler {
                 desiredNames.insert(name)
                 let events =
                     rule.kind == .timeLimit
-                    ? MonitoringPlan.minuteEvents(forLimit: rule.dailyLimitMinutes)
+                    ? MonitoringPlan.blockEvent(forLimit: rule.dailyLimitMinutes)
                     : [:]
                 let fingerprint = "\(rule.kindRaw)|\(rule.dailyLimitMinutes)|"
                     + Self.selectionFingerprint(selectionData)

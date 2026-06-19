@@ -114,13 +114,13 @@ struct MonitoringPlanTests {
         #expect(MonitoringPlan.ruleID(fromDailyActivityName: late) == nil)
     }
 
-    @Test("Minute checkpoints cover every minute up to the budget")
-    func minuteEvents() {
-        let events = MonitoringPlan.minuteEvents(forLimit: 45)
-        #expect(events.count == 45)
-        #expect(events[MonitoringPlan.minuteEventName(for: 1)] == 1)
+    @Test("A time limit registers a single block event at the budget")
+    func blockEvent() {
+        let events = MonitoringPlan.blockEvent(forLimit: 45)
+        #expect(events.count == 1)
         #expect(events[MonitoringPlan.minuteEventName(for: 45)] == 45)
-        #expect(MonitoringPlan.minutes(fromEventName: MonitoringPlan.minuteEventName(for: 17)) == 17)
+        #expect(
+            MonitoringPlan.minutes(fromEventName: MonitoringPlan.minuteEventName(for: 45)) == 45)
         #expect(MonitoringPlan.minutes(fromEventName: "nope") == nil)
     }
 }
@@ -172,7 +172,10 @@ struct RuleSchedulerTests {
 
         let name = MonitoringPlan.dailyActivityName(for: rule.id)
         #expect(monitor.monitoredNames == [name])
-        #expect(monitor.startedEvents[name]?.count == rule.dailyLimitMinutes)
+        #expect(monitor.startedEvents[name]?.count == 1)
+        #expect(
+            monitor.startedEvents[name]?[MonitoringPlan.minuteEventName(for: rule.dailyLimitMinutes)]
+                == rule.dailyLimitMinutes)
         #expect(store.snapshot(for: rule.id) != nil)
     }
 

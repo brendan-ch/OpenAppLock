@@ -71,6 +71,37 @@ struct UsageLedgerTests {
         #expect(ledger.usage(for: first, onDayContaining: tuesday, calendar: utc) == RuleUsage())
         #expect(ledger.usage(for: second, onDayContaining: monday, calendar: utc) == RuleUsage())
     }
+
+    @Test("Effective minutes prefer a fresh authoritative reading, else fall back")
+    func effectiveMinutes() {
+        let now = date(2025, 1, 6, 10, 0)
+        var usage = RuleUsage(minutesUsed: 12)
+        // No authoritative reading → threshold count.
+        #expect(usage.effectiveMinutesUsed(asOf: now) == 12)
+        // Fresh authoritative → wins.
+        usage.authoritativeMinutesUsed = 20
+        usage.authoritativeAsOf = now.addingTimeInterval(-30)
+        #expect(usage.effectiveMinutesUsed(asOf: now) == 20)
+        // Stale authoritative → threshold fallback.
+        usage.authoritativeAsOf = now.addingTimeInterval(-600)
+        #expect(usage.effectiveMinutesUsed(asOf: now) == 12)
+    }
+
+    @Test("Usage round-trips authoritative fields and decodes legacy blobs")
+    func authoritativeCodable() throws {
+        var usage = RuleUsage(minutesUsed: 5, opensUsed: 2)
+        usage.authoritativeMinutesUsed = 30
+        usage.authoritativeAsOf = date(2025, 1, 6, 10, 0)
+        let data = try JSONEncoder().encode(usage)
+        #expect(try JSONDecoder().decode(RuleUsage.self, from: data) == usage)
+
+        // A blob written before the authoritative fields existed still decodes.
+        let legacy = Data(#"{"minutesUsed":7,"opensUsed":1}"#.utf8)
+        let decoded = try JSONDecoder().decode(RuleUsage.self, from: legacy)
+        #expect(decoded.minutesUsed == 7)
+        #expect(decoded.authoritativeMinutesUsed == nil)
+        #expect(decoded.authoritativeAsOf == nil)
+    }
 }
 
 @MainActor

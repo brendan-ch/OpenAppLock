@@ -7,15 +7,18 @@ import SwiftData
 import SwiftUI
 
 /// The reusable app-list library: the saved lists, per-row Edit/View
-/// affordances, the New List flow, swipe-to-delete, and the Hard Mode lock.
-/// Used in two modes:
+/// affordances, the New List flow, swipe-to-delete, and the Hard Mode lock. It
+/// is always **pushed** onto a navigation stack — by the rule editor's App List
+/// row (picker mode) or by Settings ▸ Manage App Lists (management mode). Two
+/// modes:
 ///
 /// - **Picker** (`selection` non-nil): each row shows a checkmark and tapping it
-///   selects the list and calls `onPick` (the rule editor uses this to dismiss).
-///   A trailing button opens the list — "Edit" when unlocked, "View" (read-only)
-///   while a Hard Mode rule blocks. Creating a list selects it without dismissing.
+///   selects the list and calls `onPick`, which pops back to the rule editor. A
+///   trailing button opens the list — "Edit" (the full editor as a **sheet
+///   overlay**) when unlocked, "View" (the read-only `AppListDetailView`) while
+///   a Hard Mode rule blocks. Creating a list selects it without popping.
 /// - **Management** (`selection` nil): no checkmark; tapping the row opens it —
-///   the full editor when unlocked, the read-only `AppListDetailView` while
+///   the editor sheet when unlocked, the read-only `AppListDetailView` while
 ///   locked. Used by Settings ▸ Manage App Lists.
 ///
 /// Editing and deletion are disabled in both modes while any Hard Mode rule is
@@ -24,7 +27,8 @@ import SwiftUI
 struct AppListLibraryView: View {
     /// Picker mode when non-nil; management mode when nil.
     var selection: Binding<AppList?>?
-    /// Called after a row is tapped in picker mode (e.g. to dismiss the sheet).
+    /// Called after a row is tapped in picker mode — the rule editor uses this
+    /// to pop the pushed selection screen back to itself.
     var onPick: (() -> Void)?
 
     @Environment(\.modelContext) private var modelContext
@@ -89,16 +93,15 @@ struct AppListLibraryView: View {
                 }
             }
         }
-        .navigationDestination(isPresented: $creatingList) {
+        // The editor pops out as its own sheet overlay (with Close + confirm and
+        // a discard prompt); it dismisses itself, which clears these bindings.
+        .sheet(isPresented: $creatingList) {
             AppListEditorView(list: nil) { created in
                 selection?.wrappedValue = created
-                creatingList = false
             }
         }
-        .navigationDestination(item: $editingList) { list in
-            AppListEditorView(list: list) { _ in
-                editingList = nil
-            }
+        .sheet(item: $editingList) { list in
+            AppListEditorView(list: list) { _ in }
         }
         .navigationDestination(item: $viewingList) { list in
             AppListDetailView(list: list)

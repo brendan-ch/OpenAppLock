@@ -55,32 +55,87 @@ final class AppListUITests: XCTestCase {
         app.buttons["newRuleButton"].waitToAppear().tap()
         app.buttons["ruleKind-timeLimit"].waitToAppear().tap()
 
+        // The App List row pushes the selection screen onto the editor's stack.
         app.element("selectedAppsRow").waitToAppear().tap()
 
-        // Fresh install: no lists yet, so the picker offers creation.
+        // Fresh install: no lists yet, so the selection screen offers creation.
         app.element("emptyAppListsLabel").waitToAppear()
         app.buttons["newAppListButton"].tap()
 
+        // The list editor pops out as its own sheet overlay.
         let nameField = app.textFields["appListNameField"].waitToAppear()
         nameField.tap()
         nameField.typeText("Focus Apps\n")
 
-        // Screen 1 lists the (empty) selection; Edit Apps pushes the Screen
-        // Time picker, whose Save returns here.
+        // Edit Apps pushes the Screen Time picker; selections apply live, so it
+        // has no Save of its own — the nav back button returns to the editor.
         app.element("emptySelectionLabel").waitToAppear()
         app.buttons["editAppsButton"].tap()
-        app.element("selectionCountLabel").waitToAppear()
-        app.buttons["confirmSelectionButton"].tap()
+        let appsBar = app.navigationBars["Edit Apps"].waitToAppear()
+        appsBar.buttons["BackButton"].tap()
 
+        // The editor's checkmark saves the list and dismisses the overlay.
         app.buttons["saveAppListButton"].waitToAppear().tap()
 
-        // Saving pops back to the picker with the new list selected.
-        app.element("appListRow-Focus Apps").waitToAppear()
-        app.buttons["closeAppListPickerButton"].tap()
+        // Back on the selection screen with the new list present; tapping it
+        // selects the list and pops back to the rule editor.
+        app.element("appListRow-Focus Apps").waitToAppear().tap()
 
         // The editor row now reports the chosen list.
         let row = app.element("selectedAppsRow").waitToAppear()
         XCTAssertTrue(row.label.contains("Focus Apps"), "Got: \(row.label)")
+    }
+
+    func testClosingListEditorWithEditsPromptsToDiscard() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToRulesTab()
+        app.buttons["ruleCard-Sleep"].waitToAppear().tap()
+        app.buttons["editRuleButton"].waitToAppear().tap()
+
+        // Open the "Distractions" list for editing (a sheet overlay).
+        app.element("selectedAppsRow").waitToAppear().tap()
+        app.buttons["editAppListButton-Distractions"].waitToAppear().tap()
+
+        // Make an outstanding edit by renaming the list (submit to drop the
+        // keyboard, which otherwise interferes with resolving the dialog).
+        let nameField = app.textFields["appListNameField"].waitToAppear()
+        nameField.tap()
+        nameField.typeText(" Edited\n")
+
+        // Closing with unsaved edits raises the standard discard confirmation.
+        app.buttons["closeAppListButton"].tap()
+        XCTAssertTrue(
+            app.buttons["Discard Changes"].waitToAppear().exists,
+            "Closing with unsaved edits should confirm before discarding"
+        )
+
+        // Discarding dismisses the editor; the rename is dropped.
+        app.buttons["Discard Changes"].tap()
+
+        // Back on the selection screen with the original list name intact.
+        app.element("appListRow-Distractions").waitToAppear()
+        XCTAssertFalse(
+            app.textFields["appListNameField"].exists,
+            "Discarding should close the editor overlay"
+        )
+    }
+
+    func testClosingUneditedListEditorDismissesWithoutPrompt() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToSettingsTab()
+        app.element("manageAppListsButton").waitToAppear().tap()
+
+        // Open the list and close it again without touching anything.
+        app.element("appListRow-Distractions").waitToAppear().tap()
+        app.textFields["appListNameField"].waitToAppear()
+        app.buttons["closeAppListButton"].tap()
+
+        // No outstanding edits, so it closes straight away — no discard prompt.
+        XCTAssertFalse(
+            app.buttons["Discard Changes"].waitForExistence(timeout: 1.5),
+            "Closing an unedited list must not prompt to discard"
+        )
+        app.element("appListRow-Distractions").waitToAppear()
     }
 
     func testDetailShowsAppListName() throws {

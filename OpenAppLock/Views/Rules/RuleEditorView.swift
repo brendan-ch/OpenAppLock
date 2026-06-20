@@ -73,8 +73,12 @@ struct RuleEditorView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingAppPicker) {
-            AppListPickerSheet(selected: $draft.appList)
+        // Push the app-list selection onto the editor's own stack (the back
+        // button returns here); the library presents its editor as a sheet.
+        .navigationDestination(isPresented: $showingAppPicker) {
+            AppListLibraryView(selection: $draft.appList, onPick: { showingAppPicker = false })
+                .navigationTitle("App List")
+                .navigationBarTitleDisplayMode(.inline)
         }
     }
 

@@ -49,21 +49,19 @@ final class SettingsUITests: XCTestCase {
         app.element("emptyAppListsLabel").waitToAppear()
         app.buttons["newAppListButton"].tap()
 
+        // The list editor opens as a sheet overlay.
         let nameField = app.textFields["appListNameField"].waitToAppear()
         nameField.tap()
         nameField.typeText("Distractions\n")
-
         app.element("emptySelectionLabel").waitToAppear()
-        app.buttons["editAppsButton"].tap()
-        app.element("selectionCountLabel").waitToAppear()
-        app.buttons["confirmSelectionButton"].tap()
 
+        // The editor's checkmark saves and dismisses the overlay.
         app.buttons["saveAppListButton"].waitToAppear().tap()
 
         // Saving returns to the management list with the new list present.
         app.element("appListRow-Distractions").waitToAppear()
 
-        // Management rows open for editing on tap (no separate Edit button).
+        // Management rows open the editor overlay on tap (no separate Edit button).
         app.element("appListRow-Distractions").tap()
         XCTAssertTrue(
             app.textFields["appListNameField"].waitToAppear().exists,

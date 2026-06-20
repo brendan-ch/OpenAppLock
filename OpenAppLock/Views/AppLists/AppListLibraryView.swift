@@ -7,11 +7,14 @@ import SwiftData
 import SwiftUI
 
 /// The reusable app-list library: the saved lists, an Edit affordance, the New
-/// List flow, swipe-to-delete, and the Hard Mode lock. Used in two modes:
+/// List flow, swipe-to-delete, and the Hard Mode lock. It is always **pushed**
+/// onto a navigation stack — by the rule editor's App List row (picker mode) or
+/// by Settings ▸ Manage App Lists (management mode) — and opens the list editor
+/// (`AppListEditorView`) as a **sheet overlay** for both Edit and New. Two modes:
 ///
 /// - **Picker** (`selection` non-nil): each row shows a checkmark and tapping it
-///   selects the list and calls `onPick` (the rule editor uses this to dismiss).
-///   Creating a list selects it without dismissing.
+///   selects the list and calls `onPick`, which pops back to the rule editor.
+///   Creating a list selects it without popping (its editor sheet just closes).
 /// - **Management** (`selection` nil): no checkmark; tapping a row (when unlocked)
 ///   opens it for editing. Used by Settings ▸ Manage App Lists.
 ///
@@ -20,7 +23,8 @@ import SwiftUI
 struct AppListLibraryView: View {
     /// Picker mode when non-nil; management mode when nil.
     var selection: Binding<AppList?>?
-    /// Called after a row is tapped in picker mode (e.g. to dismiss the sheet).
+    /// Called after a row is tapped in picker mode — the rule editor uses this
+    /// to pop the pushed selection screen back to itself.
     var onPick: (() -> Void)?
 
     @Environment(\.modelContext) private var modelContext

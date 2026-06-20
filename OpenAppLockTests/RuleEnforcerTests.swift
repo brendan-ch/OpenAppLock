@@ -184,9 +184,9 @@ struct RuleEnforcerTests {
 }
 
 /// Validates the "strictest enforcement wins" model for rules that target the
-/// same apps (spec §4.8). Each rule shields its own store and Screen Time
-/// unions them, so the unit-level invariant is: every rule that should block
-/// applies its own shield, and no rule's shield is suppressed by another.
+/// same apps (see `RuleEnforcer`). Each rule shields its own store and Screen
+/// Time unions them, so the unit-level invariant is: every rule that should
+/// block applies its own shield, and no rule's shield is suppressed by another.
 @MainActor
 @Suite("Overlapping rules → strictest enforcement")
 struct OverlappingRuleEnforcementTests {

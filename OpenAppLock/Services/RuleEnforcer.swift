@@ -60,10 +60,18 @@ final class RuleEnforcer {
     /// Recomputes shields from scratch. Call on launch, on any rule change,
     /// and periodically while the app is visible. Also expires stale pauses.
     ///
-    /// Each rule shields its *own* `ManagedSettingsStore`, and Screen Time
-    /// unions shields across stores, so overlapping rules enforce strictly:
-    /// an app is blocked if *any* covering rule blocks it (see spec §4.8). A
-    /// rule is shielded when it is actively blocking (a schedule window is
+    /// **Overlapping rules — strictest enforcement wins.** Each rule shields its
+    /// *own* `ManagedSettingsStore`, Screen Time unions shields across stores,
+    /// and a rule only ever writes/clears its own store, so an app is blocked if
+    /// *any* covering rule blocks it and rules never cancel each other out:
+    /// whichever limit's budget is spent first blocks the app regardless of the
+    /// other's remaining budget; an Allow-Only schedule cannot punch a hole
+    /// through another rule's block (see `ShieldController`); and a soft unblock
+    /// pauses only the rule it was invoked on. There is deliberately no central
+    /// merge of selections — that would be the one place a block could be
+    /// accidentally dropped.
+    ///
+    /// A rule is shielded when it is actively blocking (a schedule window is
     /// open, or a limit budget is spent) *or* when it is an open-limit rule
     /// that must gate its apps so opens can be counted.
     func refresh(rules: [BlockingRule], at now: Date = .now, calendar: Calendar = .current) {

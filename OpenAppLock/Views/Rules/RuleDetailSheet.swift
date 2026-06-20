@@ -105,7 +105,7 @@ struct RuleDetailSheet: View {
             row("During this time", rule.schedule.timeRangeLabel)
             row("On these days", rule.days.summary)
             row(config.selectionMode.displayName, appCountLabel)
-            // Adult websites is a Schedule-only option (see spec §1).
+            // Adult websites is a Schedule-only option (see `RuleConfiguration`).
             row("Adult websites", config.blockAdultContent ? "Blocked" : "Allowed")
             row("Unblocks allowed", rule.hardMode ? "No" : "Yes")
         case .timeLimit(let config):

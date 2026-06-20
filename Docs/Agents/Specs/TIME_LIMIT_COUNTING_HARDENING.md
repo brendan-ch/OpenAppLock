@@ -1,9 +1,10 @@
 # Time-Limit Counting Hardening
 
 Design spec for making time-limit enforcement robust against unreliable Screen
-Time threshold events. Agent-managed (lives under `Docs/Agents/`). Pairs with
-`Docs/AGENT_RULES_FEATURE_SPEC.md` (the behavior source of truth) and updates
-its §5.5 "Reliability posture" once shipped.
+Time threshold events. Agent-managed (lives under `Docs/Agents/`). The behavior
+source of truth is the doc comments on the owning source files (indexed by the
+"Rules feature map" in `AGENTS.md`); this spec is the design rationale behind
+those changes.
 
 ## 1. Problem
 
@@ -276,8 +277,8 @@ delivers no DeviceActivity data and does not render custom report extensions.
 1. Part A (4a, 4b, 4c) — self-contained, shippable.
 2. Part B shared logic (5a, 5b, 5c) — TDD.
 3. Part B extension + pbxproj + host view (5d) — build-verified.
-4. Update `Docs/AGENT_RULES_FEATURE_SPEC.md` §5.5 and AGENTS.md "Known gaps",
-   and the `openapplock-issue2-usage-counter` memory.
+4. Update the owning source doc comments and AGENTS.md ("Rules feature map" +
+   "Known gaps"), and the `openapplock-issue2-usage-counter` memory.
 
 Build and test via the Xcode MCP on the simulator (no raw `xcodebuild`).
 

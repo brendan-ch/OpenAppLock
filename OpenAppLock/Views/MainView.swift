@@ -3,6 +3,9 @@
 //  OpenAppLock
 //
 
+import DeviceActivity
+import FamilyControls
+import ManagedSettings
 import SwiftData
 import SwiftUI
 
@@ -24,6 +27,7 @@ struct MainView: View {
 
     var body: some View {
         layout
+            .background(ruleUsageReport)
             .task {
                 await enforcementLoop()
             }
@@ -43,6 +47,41 @@ struct MainView: View {
         case .sidebar:
             MainSidebarView()
         }
+    }
+
+    // MARK: - Authoritative usage report
+
+    /// An invisible `DeviceActivityReport` so the report extension recomputes
+    /// each time-limit rule's true daily usage whenever the app is foreground;
+    /// the 30 s refresh loop then reads the authoritative totals it writes.
+    private var ruleUsageReport: some View {
+        DeviceActivityReport(.ruleUsage, filter: usageFilter)
+            .frame(width: 0, height: 0)
+            .opacity(0)
+            .accessibilityHidden(true)
+    }
+
+    /// Today's `.daily` filter over the union of all enabled time-limit rules'
+    /// selections — the data the report scene attributes back to each rule.
+    private var usageFilter: DeviceActivityFilter {
+        let calendar = Calendar.current
+        let interval = DateInterval(start: calendar.startOfDay(for: .now), end: .now)
+        var applications: Set<ApplicationToken> = []
+        var categories: Set<ActivityCategoryToken> = []
+        var webDomains: Set<WebDomainToken> = []
+        for rule in rules where rule.kind == .timeLimit && rule.isEnabled {
+            let selection = AppSelectionCodec.decode(rule.appList?.selectionData)
+            applications.formUnion(selection.applicationTokens)
+            categories.formUnion(selection.categoryTokens)
+            webDomains.formUnion(selection.webDomainTokens)
+        }
+        return DeviceActivityFilter(
+            segment: .daily(during: interval),
+            users: .all,
+            devices: .init([.iPhone, .iPad]),
+            applications: applications,
+            categories: categories,
+            webDomains: webDomains)
     }
 
     // MARK: - Enforcement

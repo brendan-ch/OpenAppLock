@@ -23,12 +23,14 @@ OpenAppLock/                    App target (iOS 26, SwiftUI + SwiftData)
                             SampleRules (UI-test harness)
   Views/                    Native SwiftUI screens (spec in each view's doc
                             comment; see "Rules feature map" below)
-Shared/                     Compiled into the app AND all three extensions:
+Shared/                     Compiled into the app AND all four extensions:
                             RuleKind, Weekday, RuleSchedule, AppGroup,
-                            UsageLedger (per-day minutes/opens),
+                            UsageLedger (per-day minutes/opens + the report's
+                            authoritative daily total),
                             RuleSnapshot(+Store) (rule mirror in the app
                             group), MonitoringPlan (activity/event naming),
                             LimitEnforcement (shared event reactions),
+                            DayStartStore (confirmed daily-activity starts),
                             ShieldController, ShieldLookup
 OpenAppLockMonitor/         DeviceActivityMonitor extension: midnight resets,
                             usage-minute checkpoints → shield at the limit,
@@ -37,21 +39,31 @@ OpenAppLockShieldConfig/    ShieldConfiguration extension: "Opened X of N" +
                             Open button on open-limit shields
 OpenAppLockShieldAction/    ShieldAction extension: Open press spends an open,
                             lifts the shield, starts the ~15-min session
+OpenAppLockReport/          DeviceActivityReport extension: computes each
+                            time-limit rule's true daily usage (foreground only)
+                            and writes it to UsageLedger as the authoritative
+                            figure
 OpenAppLockTests/               Swift Testing unit suites (@MainActor — the app
                             target defaults to MainActor isolation)
 OpenAppLockUITests/             XCUITest flows (see harness below)
 Docs/AGENT_SWIFT_GUIDELINES.md
                             Swift coding/testing/patterns/security standards
                             agents must follow on this project (agent-managed).
+Docs/Agents/                Agent working docs — the whole folder is
+                            agent-modifiable. Design specs live under
+                            Docs/Agents/Specs/ (agent-managed).
 ```
 
 ## Documentation
 
 Documentation falls into three buckets:
 
-- **Agent-managed** — this `AGENTS.md`, `CLAUDE.md`, and any file whose name is
-  prefixed with `AGENT_` (currently `Docs/AGENT_SWIFT_GUIDELINES.md`). Agents may
-  **read, create, and edit** these and are expected to keep them accurate.
+- **Agent-managed** — this `AGENTS.md`, `CLAUDE.md`, any file whose name is
+  prefixed with `AGENT_` (currently `Docs/AGENT_SWIFT_GUIDELINES.md`), and
+  **anything under `Docs/Agents/`** (e.g. design specs in `Docs/Agents/Specs/`,
+  plans in `Docs/Agents/Plans/`) — the folder marks ownership by location, so
+  files inside it need no `AGENT_` prefix. Agents may **read, create, and edit**
+  these and are expected to keep them accurate.
 - **Shared (human + agent)** — the rules feature spec. It lives as doc comments
   **on the source each behavior owns**; both humans and agents maintain it. The
   doc comments are the source of truth for behavior — when you change a behavior,
@@ -119,6 +131,7 @@ Where each topic is documented:
 | Time/open-limit behavior, granted opens, proactive gate | `Shared/LimitEnforcement.swift`, `Shared/UsageLedger.swift`, `Shared/OpenSessionStore.swift` |
 | Shield text + "Open" button / press handling | `Shared/ShieldPresentation.swift`, `OpenAppLockShieldConfig/ShieldConfigurationExtension.swift`, `OpenAppLockShieldAction/ShieldActionExtension.swift` |
 | DeviceActivity scheduling, naming; background monitor | `OpenAppLock/Services/RuleScheduler.swift`, `Shared/MonitoringPlan.swift`, `OpenAppLockMonitor/DeviceActivityMonitorExtension.swift` |
+| Authoritative time-limit usage report; confirmed day-start gate | `OpenAppLockReport/RuleUsageReport.swift`, `Shared/DayStartStore.swift`, `OpenAppLock/Views/MainView.swift` |
 | Uninstall Protection | `OpenAppLock/Views/Settings/SettingsView.swift`, `Shared/UninstallProtectionPolicy.swift`, `Shared/UninstallProtectionEnforcer.swift`, `OpenAppLock/Services/AppSettings.swift` |
 | About links (GitHub / Website) | `OpenAppLock/Services/AppLinks.swift`, `OpenAppLock/Services/LaunchConfiguration.swift` |
 
@@ -240,6 +253,21 @@ Gotchas learned the hard way:
   limits accrue in the Usage section and block at the budget; open-limit
   apps shield immediately with an "Open (N left)" button; an open lasts
   ~15 minutes (DeviceActivity's minimum interval) before re-shielding.
+- **Time-limit counting hardening** (see
+  `Docs/Agents/Specs/TIME_LIMIT_COUNTING_HARDENING.md`) is implemented but
+  device-verification is pending. Time limits now register a **single**
+  `minutes-<budget>` block event (not a per-minute chain); the monitor records
+  usage only for rules eligible today and only after a **confirmed**
+  daily-activity start (`DayStartStore`), dropping stale cross-midnight
+  flushes. The new **`OpenAppLockReport`** DeviceActivityReport extension
+  computes each rule's true daily total while the app is foreground and writes
+  it to `UsageLedger`; display and the foreground block decision prefer that
+  authoritative figure when fresh. Verify on device: the Usage counter shows
+  the true total on app open (no "stalls at ~14/15m" lag); a maxed-out day
+  does not re-block unused apps the next morning (or clears within one
+  foreground refresh); report attribution covers category/web-domain
+  selections (currently only application tokens are summed); and tune
+  `RuleUsage.authoritativeFreshness` (120s) so the foreground stays fresh.
 - **Schedule-rule background transitions** are now backed by DeviceActivity:
   `RuleScheduler` registers a repeating window activity per schedule rule
   (`sched-<uuid>`, plus `sched2-<uuid>` for midnight-crossing windows) and the

@@ -71,15 +71,12 @@ enum MonitoringPlan {
         return Int(name.dropFirst(minutePrefix.count))
     }
 
-    /// Cumulative-usage checkpoints for a time-limit rule: one event per
-    /// minute up to the budget so remaining time can be displayed live; the
-    /// final one doubles as the block trigger. (Budgets cap at 240 minutes,
-    /// comfortably inside DeviceActivity's event capacity.)
-    static func minuteEvents(forLimit limitMinutes: Int) -> [String: Int] {
-        Dictionary(
-            uniqueKeysWithValues: (1...max(1, limitMinutes)).map {
-                (minuteEventName(for: $0), $0)
-            }
-        )
+    /// The single cumulative-usage checkpoint for a time-limit rule: one event
+    /// at the budget, used by the monitor as the background block trigger. Live
+    /// sub-budget progress comes from the DeviceActivityReport extension, not a
+    /// per-minute chain (Screen Time batches sub-budget thresholds unreliably).
+    static func blockEvent(forLimit limitMinutes: Int) -> [String: Int] {
+        let minutes = max(1, limitMinutes)
+        return [minuteEventName(for: minutes): minutes]
     }
 }

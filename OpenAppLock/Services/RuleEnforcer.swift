@@ -30,18 +30,23 @@ final class RuleEnforcer {
     /// App-wide settings (currently just Uninstall Protection) consulted on
     /// every refresh.
     private let settings: any AppSettingsReading
+    /// Confirmed daily-activity starts; the foreground establishes today's start
+    /// so a skipped monitor callback can't block usage recording all day.
+    private let dayStarts: DayStartStore
 
     init(
         shields: ShieldApplying, usage: UsageReading = UsageLedger(),
         scheduler: RuleScheduler? = nil,
         openSessions: OpenSessionReading = OpenSessionStore(),
-        settings: any AppSettingsReading = AppSettingsStore()
+        settings: any AppSettingsReading = AppSettingsStore(),
+        dayStarts: DayStartStore = DayStartStore()
     ) {
         self.shields = shields
         self.usageReader = usage
         self.scheduler = scheduler
         self.openSessions = openSessions
         self.settings = settings
+        self.dayStarts = dayStarts
     }
 
     /// The day's usage for a rule (nil for schedule rules, which don't track).
@@ -75,6 +80,13 @@ final class RuleEnforcer {
         for rule in rules {
             if let pausedUntil = rule.pausedUntil, pausedUntil <= now {
                 rule.pausedUntil = nil
+            }
+            // 4c safety net: a skipped monitor `intervalDidStart` would block
+            // usage recording all day; establish today's confirmed start from the
+            // foreground (no zeroing — preserve any legitimate accrual).
+            if rule.kind == .timeLimit, rule.isEnabled,
+               dayStarts.confirmedStart(for: rule.id) != calendar.startOfDay(for: now) {
+                dayStarts.setConfirmedStart(calendar.startOfDay(for: now), for: rule.id)
             }
             let usage = usage(for: rule, at: now, calendar: calendar)
             let isBlocking = rule.status(at: now, calendar: calendar, usage: usage).isActive

@@ -58,7 +58,7 @@ enum UninstallProtectionPolicy {
             guard let usage, snapshot.isScheduledToday(at: now, calendar: calendar) else {
                 return false
             }
-            return snapshot.limitReached(given: usage)
+            return snapshot.limitReached(given: usage, at: now)
         }
     }
 }

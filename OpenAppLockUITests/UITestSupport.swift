@@ -57,13 +57,37 @@ extension XCUIApplication {
     /// chrome: the bottom tab bar in compact width (iPhone, iPad multitasking) or
     /// the left sidebar in regular width (full-screen iPad). Keeps the rest of the
     /// UI suite agnostic to which device it runs on.
-    private func goToSection(tabLabel: String, sidebarIdentifier: String) {
+    ///
+    /// Each section's detail names its navigation bar after the same label as the
+    /// tab/row (`navigationTitle("Rules")` → `navigationBars["Rules"]`), giving a
+    /// device-agnostic "we actually landed" post-condition.
+    private func goToSection(
+        tabLabel: String, sidebarIdentifier: String,
+        file: StaticString = #filePath, line: UInt = #line
+    ) {
         let tab = tabBars.buttons[tabLabel]
         if tab.waitForExistence(timeout: 2) {
             tab.tap()
-        } else {
-            element(sidebarIdentifier).waitToAppear().tap()
+            return
         }
+
+        // iPad sidebar (NavigationSplitView). A single synthesized tap on a
+        // selection-driven sidebar row is occasionally dropped before the app has
+        // quiesced — the row never becomes selected and the detail stays on the
+        // previous section, so a following content assertion flakes. Confirm the
+        // target section's detail actually appeared and re-tap if it didn't,
+        // rather than assuming the first tap took.
+        let item = element(sidebarIdentifier).waitToAppear(file: file, line: line)
+        let sectionBar = navigationBars[tabLabel]
+        for _ in 0..<5 {
+            item.tap()
+            if sectionBar.waitForExistence(timeout: 2) { return }
+        }
+        XCTAssertTrue(
+            sectionBar.exists,
+            "Sidebar navigation to \(tabLabel) never landed after repeated taps",
+            file: file, line: line
+        )
     }
 
     /// Waits for the post-onboarding shell to appear in whichever chrome the

@@ -71,6 +71,53 @@ struct UsageLedgerTests {
         #expect(ledger.usage(for: first, onDayContaining: tuesday, calendar: utc) == RuleUsage())
         #expect(ledger.usage(for: second, onDayContaining: monday, calendar: utc) == RuleUsage())
     }
+
+    @Test("Effective minutes prefer a fresh authoritative reading, else fall back")
+    func effectiveMinutes() {
+        let now = date(2025, 1, 6, 10, 0)
+        var usage = RuleUsage(minutesUsed: 12)
+        // No authoritative reading → threshold count.
+        #expect(usage.effectiveMinutesUsed(asOf: now) == 12)
+        // Fresh authoritative → wins.
+        usage.authoritativeMinutesUsed = 20
+        usage.authoritativeAsOf = now.addingTimeInterval(-30)
+        #expect(usage.effectiveMinutesUsed(asOf: now) == 20)
+        // Stale authoritative → threshold fallback.
+        usage.authoritativeAsOf = now.addingTimeInterval(-600)
+        #expect(usage.effectiveMinutesUsed(asOf: now) == 12)
+    }
+
+    @Test("Usage round-trips authoritative fields and decodes legacy blobs")
+    func authoritativeCodable() throws {
+        var usage = RuleUsage(minutesUsed: 5, opensUsed: 2)
+        usage.authoritativeMinutesUsed = 30
+        usage.authoritativeAsOf = date(2025, 1, 6, 10, 0)
+        let data = try JSONEncoder().encode(usage)
+        #expect(try JSONDecoder().decode(RuleUsage.self, from: data) == usage)
+
+        // A blob written before the authoritative fields existed still decodes.
+        let legacy = Data(#"{"minutesUsed":7,"opensUsed":1}"#.utf8)
+        let decoded = try JSONDecoder().decode(RuleUsage.self, from: legacy)
+        #expect(decoded.minutesUsed == 7)
+        #expect(decoded.authoritativeMinutesUsed == nil)
+        #expect(decoded.authoritativeAsOf == nil)
+    }
+
+    @Test("Authoritative minutes overwrite without disturbing the threshold count")
+    func recordAuthoritative() {
+        let ledger = makeLedger()
+        let id = UUID()
+        ledger.recordMinutesUsed(40, for: id, onDayContaining: monday, calendar: utc)
+
+        ledger.recordAuthoritativeMinutes(
+            12, for: id, onDayContaining: monday, asOf: monday, calendar: utc)
+        let read = ledger.usage(for: id, onDayContaining: monday, calendar: utc)
+        #expect(read.minutesUsed == 40)               // threshold untouched
+        #expect(read.authoritativeMinutesUsed == 12)  // authoritative recorded
+        #expect(read.authoritativeAsOf == monday)
+        // Effective prefers the (fresh) authoritative figure.
+        #expect(read.effectiveMinutesUsed(asOf: monday) == 12)
+    }
 }
 
 @MainActor
@@ -144,6 +191,35 @@ struct UsageStatusTests {
             !RulePolicy.canEditAppLists(
                 rules: [rule], usageFor: { _ in usage }, at: mondayMorning, calendar: utc))
     }
+
+    @Test("A fresh authoritative reading below budget keeps a rule inactive")
+    func freshAuthoritativeBelowBudgetInactive() {
+        let rule = timeLimitRule(limit: 45)
+        var usage = RuleUsage(minutesUsed: 45)        // threshold says spent (phantom)
+        usage.authoritativeMinutesUsed = 5            // report says 5
+        usage.authoritativeAsOf = mondayMorning.addingTimeInterval(-10)
+        #expect(!rule.status(at: mondayMorning, calendar: utc, usage: usage).isActive)
+    }
+
+    @Test("A fresh authoritative reading at budget blocks even if threshold lags")
+    func freshAuthoritativeAtBudgetBlocks() {
+        let rule = timeLimitRule(limit: 45)
+        var usage = RuleUsage(minutesUsed: 10)
+        usage.authoritativeMinutesUsed = 45
+        usage.authoritativeAsOf = mondayMorning.addingTimeInterval(-10)
+        #expect(
+            rule.status(at: mondayMorning, calendar: utc, usage: usage)
+                == .active(until: date(2025, 1, 7, 0, 0)))
+    }
+
+    @Test("A stale authoritative reading falls back to the threshold count")
+    func staleAuthoritativeUsesThreshold() {
+        let rule = timeLimitRule(limit: 45)
+        var usage = RuleUsage(minutesUsed: 45)
+        usage.authoritativeMinutesUsed = 5
+        usage.authoritativeAsOf = mondayMorning.addingTimeInterval(-600) // stale
+        #expect(rule.status(at: mondayMorning, calendar: utc, usage: usage).isActive)
+    }
 }
 
 @MainActor
@@ -206,6 +282,25 @@ struct UsageEnforcementTests {
 
         #expect(shields.shieldedRuleIDs.isEmpty)
     }
+
+    @Test("A fresh authoritative reading below budget clears a phantom block")
+    func freshAuthoritativeClearsPhantomBlock() {
+        let shields = MockShieldController()
+        let ledger = MockUsageLedger()
+        let enforcer = RuleEnforcer(shields: shields, usage: ledger)
+        let rule = BlockingRule(
+            name: "Time Keeper",
+            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 45)),
+            days: Weekday.everyDay)
+        var usage = RuleUsage(minutesUsed: 45)       // threshold phantom
+        usage.authoritativeMinutesUsed = 5
+        usage.authoritativeAsOf = mondayMorning.addingTimeInterval(-10)
+        ledger.usageByRule[rule.id] = usage
+
+        enforcer.refresh(rules: [rule], at: mondayMorning, calendar: utc)
+
+        #expect(shields.shieldedRuleIDs.isEmpty)     // authoritative wins → not blocked
+    }
 }
 
 @MainActor
@@ -225,13 +320,21 @@ struct UsageDisplayTests {
     @Test("Time-limit rows show minutes used of the budget")
     func timeLimitStrings() {
         let usage = RuleUsage(minutesUsed: 18)
-        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: usage) == "18m of 45m used")
+        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: usage, asOf: now) == "18m of 45m used")
+    }
+
+    @Test("Usage phrase reflects a fresh authoritative reading")
+    func usagePhrasePrefersFreshAuthoritative() {
+        var usage = RuleUsage(minutesUsed: 5)
+        usage.authoritativeMinutesUsed = 18
+        usage.authoritativeAsOf = now.addingTimeInterval(-10)
+        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: usage, asOf: now) == "18m of 45m used")
     }
 
     @Test("Open-limit rows show opens used of the budget")
     func openLimitStrings() {
         let usage = RuleUsage(opensUsed: 2)
-        #expect(UsageDisplay.usagePhrase(for: openRule, usage: usage) == "2 of 5 opens")
+        #expect(UsageDisplay.usagePhrase(for: openRule, usage: usage, asOf: now) == "2 of 5 opens")
     }
 
     /// Limit context adapts: the daily budget while untouched, live usage once
@@ -261,7 +364,7 @@ struct UsageDisplayTests {
     @Test("Overshoot clamps to the budget")
     func overshootClamps() {
         let over = RuleUsage(minutesUsed: 60)
-        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: over) == "45m of 45m used")
+        #expect(UsageDisplay.usagePhrase(for: timeRule, usage: over, asOf: now) == "45m of 45m used")
     }
 
     @Test("Home subtitles prefix the rule kind so the type reads without the icon")

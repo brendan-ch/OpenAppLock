@@ -114,13 +114,13 @@ struct MonitoringPlanTests {
         #expect(MonitoringPlan.ruleID(fromDailyActivityName: late) == nil)
     }
 
-    @Test("Minute checkpoints cover every minute up to the budget")
-    func minuteEvents() {
-        let events = MonitoringPlan.minuteEvents(forLimit: 45)
-        #expect(events.count == 45)
-        #expect(events[MonitoringPlan.minuteEventName(for: 1)] == 1)
+    @Test("A time limit registers a single block event at the budget")
+    func blockEvent() {
+        let events = MonitoringPlan.blockEvent(forLimit: 45)
+        #expect(events.count == 1)
         #expect(events[MonitoringPlan.minuteEventName(for: 45)] == 45)
-        #expect(MonitoringPlan.minutes(fromEventName: MonitoringPlan.minuteEventName(for: 17)) == 17)
+        #expect(
+            MonitoringPlan.minutes(fromEventName: MonitoringPlan.minuteEventName(for: 45)) == 45)
         #expect(MonitoringPlan.minutes(fromEventName: "nope") == nil)
     }
 }
@@ -172,7 +172,10 @@ struct RuleSchedulerTests {
 
         let name = MonitoringPlan.dailyActivityName(for: rule.id)
         #expect(monitor.monitoredNames == [name])
-        #expect(monitor.startedEvents[name]?.count == rule.dailyLimitMinutes)
+        #expect(monitor.startedEvents[name]?.count == 1)
+        #expect(
+            monitor.startedEvents[name]?[MonitoringPlan.minuteEventName(for: rule.dailyLimitMinutes)]
+                == rule.dailyLimitMinutes)
         #expect(store.snapshot(for: rule.id) != nil)
     }
 
@@ -389,20 +392,36 @@ struct LimitEnforcementTests {
         return (
             LimitEnforcement(
                 snapshots: store, ledger: ledger, shields: shields,
-                sessions: OpenSessionStore(defaults: freshDefaults())),
+                sessions: OpenSessionStore(defaults: freshDefaults()),
+                dayStarts: DayStartStore(defaults: freshDefaults())),
             shields, ledger, store)
     }
 
     private func snapshot(
-        kind: RuleKind, limit: Int = 45, maxOpens: Int = 5, pausedUntil: Date? = nil
+        kind: RuleKind, limit: Int = 45, maxOpens: Int = 5,
+        days: Set<Weekday> = Weekday.everyDay, pausedUntil: Date? = nil
     ) -> RuleSnapshot {
         RuleSnapshot(
             id: UUID(), name: "Rule", kindRaw: kind.rawValue, isEnabled: true,
             hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
-            selectionData: Data([1]), dayNumbers: Weekday.everyDay.map(\.rawValue),
+            selectionData: Data([1]), dayNumbers: days.map(\.rawValue),
             startMinutes: 0, endMinutes: 0,
             dailyLimitMinutes: limit, maxOpens: maxOpens, pausedUntil: pausedUntil
         )
+    }
+
+    @Test("An ineligible rule does not accrue usage from a checkpoint")
+    func ineligibleRuleDoesNotAccrue() {
+        let (enforcement, _, ledger, store) = makeEnforcement()
+        // Weekday-only rule; a checkpoint arrives on a Saturday (not scheduled).
+        let snap = snapshot(kind: .timeLimit, days: Weekday.weekdays)
+        store.save([snap])
+        let saturday = date(2025, 1, 11, 10, 0) // 2025-01-11 is a Saturday
+
+        enforcement.handleUsageMinutes(20, ruleID: snap.id, now: saturday, calendar: utc)
+
+        #expect(
+            ledger.usage(for: snap.id, onDayContaining: saturday, calendar: utc).minutesUsed == 0)
     }
 
     @Test("Day start shields open-limit rules so opens can be counted")
@@ -434,6 +453,7 @@ struct LimitEnforcementTests {
         let (enforcement, shields, ledger, store) = makeEnforcement()
         let snap = snapshot(kind: .timeLimit, limit: 45)
         store.save([snap])
+        enforcement.handleDayStart(ruleID: snap.id, now: monday, calendar: utc)
 
         enforcement.handleUsageMinutes(20, ruleID: snap.id, now: monday, calendar: utc)
         #expect(ledger.usage(for: snap.id, onDayContaining: monday, calendar: utc).minutesUsed == 20)
@@ -454,6 +474,7 @@ struct LimitEnforcementTests {
         // late across midnight. It must not be recorded as today's usage, and
         // must not re-shield apps the user hasn't touched today.
         let earlyMorning = date(2025, 1, 6, 0, 30)
+        enforcement.handleDayStart(ruleID: snap.id, now: earlyMorning, calendar: utc)
         enforcement.handleUsageMinutes(45, ruleID: snap.id, now: earlyMorning, calendar: utc)
 
         #expect(
@@ -470,11 +491,47 @@ struct LimitEnforcementTests {
         // 00:45 — 45 minutes have elapsed, so a 45-minute checkpoint is
         // physically possible today and must be honoured (boundary case).
         let quarterToOne = date(2025, 1, 6, 0, 45)
+        enforcement.handleDayStart(ruleID: snap.id, now: quarterToOne, calendar: utc)
         enforcement.handleUsageMinutes(45, ruleID: snap.id, now: quarterToOne, calendar: utc)
 
         #expect(
             ledger.usage(for: snap.id, onDayContaining: quarterToOne, calendar: utc).minutesUsed == 45)
         #expect(shields.shieldedRuleIDs == [snap.id])
+    }
+
+    @Test("A checkpoint before a confirmed day-start is dropped")
+    func checkpointBeforeConfirmedStartDropped() {
+        let (enforcement, shields, ledger, store) = makeEnforcement()
+        let snap = snapshot(kind: .timeLimit, limit: 45)
+        store.save([snap])
+        // No handleDayStart → no confirmed start for today, so the event is a
+        // pre-boundary residual and must be dropped.
+        enforcement.handleUsageMinutes(20, ruleID: snap.id, now: monday, calendar: utc)
+
+        #expect(ledger.usage(for: snap.id, onDayContaining: monday, calendar: utc).minutesUsed == 0)
+        #expect(shields.shieldedRuleIDs.isEmpty)
+    }
+
+    @Test("Day start zeroes today's time-limit ledger once, only on a transition")
+    func dayStartZeroesOnceOnTransition() {
+        let (enforcement, _, ledger, store) = makeEnforcement()
+        let snap = snapshot(kind: .timeLimit)
+        store.save([snap])
+        // A stale value sitting in today's key (e.g. a pre-boundary write).
+        ledger.setUsage(
+            RuleUsage(minutesUsed: 45), for: snap.id, onDayContaining: monday, calendar: utc)
+
+        // First day-start of the day: transition → zeroed.
+        enforcement.handleDayStart(ruleID: snap.id, now: monday, calendar: utc)
+        #expect(ledger.usage(for: snap.id, onDayContaining: monday, calendar: utc).minutesUsed == 0)
+
+        // A legitimate accrual after the transition...
+        enforcement.handleUsageMinutes(20, ruleID: snap.id, now: monday, calendar: utc)
+        #expect(ledger.usage(for: snap.id, onDayContaining: monday, calendar: utc).minutesUsed == 20)
+
+        // ...survives a spurious same-day re-fire (no second zero).
+        enforcement.handleDayStart(ruleID: snap.id, now: monday, calendar: utc)
+        #expect(ledger.usage(for: snap.id, onDayContaining: monday, calendar: utc).minutesUsed == 20)
     }
 
     @Test("An Open press spends one open and lifts the shield")
@@ -652,5 +709,31 @@ struct ScheduleEnforcementTests {
         enforcement.reconcile(ruleID: snap.id, now: date(2025, 1, 11, 10, 0), calendar: utc)
 
         #expect(shields.shieldedRuleIDs.isEmpty)
+    }
+}
+
+@MainActor
+@Suite("Day-start store")
+struct DayStartStoreTests {
+    private func makeStore() -> DayStartStore {
+        let name = "daystart-tests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: name)!
+        defaults.removePersistentDomain(forName: name)
+        return DayStartStore(defaults: defaults)
+    }
+
+    @Test("Confirmed start round-trips and is day-scoped")
+    func roundTrip() {
+        let store = makeStore()
+        let id = UUID()
+        let monday = date(2025, 1, 6, 10, 0)
+        #expect(store.confirmedStart(for: id) == nil)
+        #expect(!store.hasConfirmedStart(for: id, onDayContaining: monday, calendar: utc))
+
+        store.setConfirmedStart(utc.startOfDay(for: monday), for: id)
+        #expect(store.confirmedStart(for: id) == utc.startOfDay(for: monday))
+        #expect(store.hasConfirmedStart(for: id, onDayContaining: monday, calendar: utc))
+        // A different day is not confirmed.
+        #expect(!store.hasConfirmedStart(for: id, onDayContaining: date(2025, 1, 7, 1, 0), calendar: utc))
     }
 }

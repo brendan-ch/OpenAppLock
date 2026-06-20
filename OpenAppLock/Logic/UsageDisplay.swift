@@ -20,12 +20,12 @@ enum UsageDisplay {
 
     /// "18m of 45m used" / "2 of 5 opens". Empty for schedule rules, which have
     /// no usage budget. ("today" is implied — usage always covers the current day.)
-    static func usagePhrase(for rule: BlockingRule, usage: RuleUsage) -> String {
+    static func usagePhrase(for rule: BlockingRule, usage: RuleUsage, asOf now: Date) -> String {
         switch rule.configuration {
         case .schedule:
             ""
         case .timeLimit(let config):
-            "\(min(usage.minutesUsed, config.dailyLimitMinutes))m of "
+            "\(min(usage.effectiveMinutesUsed(asOf: now), config.dailyLimitMinutes))m of "
                 + "\(config.dailyLimitMinutes)m used"
         case .openLimit(let config):
             "\(min(usage.opensUsed, config.maxOpens)) of \(config.maxOpens) opens"

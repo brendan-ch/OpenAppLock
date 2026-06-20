@@ -27,6 +27,21 @@ struct RuleEnforcerTests {
         #expect(enforcer.blockingRuleIDs == [active.id])
     }
 
+    @Test("Refresh establishes today's confirmed day-start for a time-limit rule")
+    func refreshEstablishesConfirmedStart() {
+        let shields = MockShieldController()
+        let suite = "enforcer-daystart-\(UUID().uuidString)"
+        let dayStarts = DayStartStore(defaults: UserDefaults(suiteName: suite)!)
+        let enforcer = RuleEnforcer(shields: shields, dayStarts: dayStarts)
+        let rule = BlockingRule(
+            name: "Time Keeper",
+            configuration: .timeLimit(TimeLimitConfig()), days: Weekday.everyDay)
+
+        #expect(dayStarts.confirmedStart(for: rule.id) == nil)
+        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        #expect(dayStarts.confirmedStart(for: rule.id) == utc.startOfDay(for: mondayDuringWork))
+    }
+
     @Test("Disabled rules are never shielded")
     func skipsDisabledRules() {
         let shields = MockShieldController()

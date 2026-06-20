@@ -2,10 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSExtension</key>
+	<!-- DeviceActivityReport extensions use the com.apple.deviceactivityui.report-extension
+	     extension point, which Apple treats as an ExtensionKit extension. App Store
+	     validation REJECTS the legacy NSExtension/NSExtensionPointIdentifier packaging for
+	     this point (error 91179) and demands EXAppExtensionAttributes/EXExtensionPointIdentifier
+	     in the Extensions folder instead. The target is therefore built as an
+	     extensionkit-extension and embedded via the "Embed ExtensionKit Extensions" copy
+	     phase (see project.pbxproj). Do not revert this to NSExtension. -->
+	<key>EXAppExtensionAttributes</key>
 	<dict>
-		<key>NSExtensionPointIdentifier</key>
-		<string>com.apple.deviceactivity.report-extension</string>
+		<key>EXExtensionPointIdentifier</key>
+		<string>com.apple.deviceactivityui.report-extension</string>
 	</dict>
 </dict>
 </plist>

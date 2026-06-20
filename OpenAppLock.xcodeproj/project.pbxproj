@@ -10,7 +10,7 @@
 		F10000000000000000000001 /* OpenAppLockMonitor.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B10000000000000000000001 /* OpenAppLockMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F10000000000000000000002 /* OpenAppLockShieldConfig.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B10000000000000000000002 /* OpenAppLockShieldConfig.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F10000000000000000000003 /* OpenAppLockShieldAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* OpenAppLockShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		F10000000000000000000004 /* OpenAppLockReport.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B10000000000000000000004 /* OpenAppLockReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F10000000000000000000004 /* OpenAppLockReport.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = B10000000000000000000004 /* OpenAppLockReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,9 +68,19 @@
 				F10000000000000000000001 /* OpenAppLockMonitor.appex in Embed Foundation Extensions */,
 				F10000000000000000000002 /* OpenAppLockShieldConfig.appex in Embed Foundation Extensions */,
 				F10000000000000000000003 /* OpenAppLockShieldAction.appex in Embed Foundation Extensions */,
-				F10000000000000000000004 /* OpenAppLockReport.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E10000000000000000000002 /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolderSpec = 16;
+			files = (
+				F10000000000000000000004 /* OpenAppLockReport.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -82,7 +92,7 @@
 		B10000000000000000000001 /* OpenAppLockMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OpenAppLockMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000000000000000000002 /* OpenAppLockShieldConfig.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OpenAppLockShieldConfig.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000000000000000000003 /* OpenAppLockShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OpenAppLockShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		B10000000000000000000004 /* OpenAppLockReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OpenAppLockReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10000000000000000000004 /* OpenAppLockReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = OpenAppLockReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E60000000000000000000001 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
 		E60000000000000000000002 /* CI.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CI.xcconfig; sourceTree = "<group>"; };
 		E60000000000000000000003 /* DeveloperSettings.sample.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = DeveloperSettings.sample.xcconfig; sourceTree = "<group>"; };
@@ -288,6 +298,7 @@
 				20A7EDCB2E47B7CD0097608D /* Frameworks */,
 				20A7EDCC2E47B7CD0097608D /* Resources */,
 				E10000000000000000000001 /* Embed Foundation Extensions */,
+				E10000000000000000000002 /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
 			);
@@ -444,7 +455,7 @@
 			);
 			productName = OpenAppLockReport;
 			productReference = B10000000000000000000004 /* OpenAppLockReport.appex */;
-			productType = "com.apple.product-type.app-extension";
+			productType = "com.apple.product-type.extensionkit-extension";
 		};
 /* End PBXNativeTarget section */
 

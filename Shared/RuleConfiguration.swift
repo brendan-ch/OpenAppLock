@@ -9,7 +9,11 @@ import Foundation
 /// only carry the options that belong to its kind. This makes illegal states
 /// unrepresentable: an Open Limit rule cannot hold a time window, a Time Limit
 /// rule cannot hold a Block/Allow-Only mode, and neither limit kind can hold
-/// Block Adult Content — those are Schedule-only options.
+/// Block Adult Content — those are Schedule-only options. The reasoning: a
+/// usage budget over "everything except X" (Allow Only) is not meaningful, and
+/// engaging a web-content filter because a *usage* budget is spent does not fit
+/// the feature. Selection mode also belongs to the *rule*, not its app list, so
+/// it lives in `ScheduleConfig` rather than on `AppList`.
 ///
 /// Kind-common attributes (name, days, hardMode, isEnabled, appList,
 /// pausedUntil) live on the owning `BlockingRule` / `RuleDraft`, not here.

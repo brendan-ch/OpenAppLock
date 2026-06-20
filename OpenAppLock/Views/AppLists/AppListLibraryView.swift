@@ -6,19 +6,21 @@
 import SwiftData
 import SwiftUI
 
-/// The reusable app-list library: the saved lists, an Edit affordance, the New
-/// List flow, swipe-to-delete, and the Hard Mode lock. Used in two modes:
+/// The reusable app-list library: the saved lists, per-row Edit/View
+/// affordances, the New List flow, swipe-to-delete, and the Hard Mode lock.
+/// Used in two modes:
 ///
 /// - **Picker** (`selection` non-nil): each row shows a checkmark and tapping it
 ///   selects the list and calls `onPick` (the rule editor uses this to dismiss).
-///   Creating a list selects it without dismissing.
-/// - **Management** (`selection` nil): no checkmark; tapping a row (when unlocked)
-///   opens it for editing. Used by Settings ▸ Manage App Lists.
+///   A trailing button opens the list — "Edit" when unlocked, "View" (read-only)
+///   while a Hard Mode rule blocks. Creating a list selects it without dismissing.
+/// - **Management** (`selection` nil): no checkmark; tapping the row opens it —
+///   the full editor when unlocked, the read-only `AppListDetailView` while
+///   locked. Used by Settings ▸ Manage App Lists.
 ///
-/// In both modes editing and deletion are disabled while any Hard Mode rule is
-/// actively blocking — changing a list would be a back door out of the block.
-/// Viewing is always allowed, though: a locked row still opens, in a read-only
-/// `AppListDetailView`, so the user can see which apps a list includes.
+/// Editing and deletion are disabled in both modes while any Hard Mode rule is
+/// actively blocking — changing a list would be a back door out of the block —
+/// but viewing a list's apps stays allowed, since reading can't weaken a block.
 struct AppListLibraryView: View {
     /// Picker mode when non-nil; management mode when nil.
     var selection: Binding<AppList?>?

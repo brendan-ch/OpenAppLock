@@ -6,17 +6,21 @@
 import SwiftData
 import SwiftUI
 
-/// The reusable app-list library: the saved lists, an Edit affordance, the New
-/// List flow, swipe-to-delete, and the Hard Mode lock. Used in two modes:
+/// The reusable app-list library: the saved lists, per-row Edit/View
+/// affordances, the New List flow, swipe-to-delete, and the Hard Mode lock.
+/// Used in two modes:
 ///
 /// - **Picker** (`selection` non-nil): each row shows a checkmark and tapping it
 ///   selects the list and calls `onPick` (the rule editor uses this to dismiss).
-///   Creating a list selects it without dismissing.
-/// - **Management** (`selection` nil): no checkmark; tapping a row (when unlocked)
-///   opens it for editing. Used by Settings ▸ Manage App Lists.
+///   A trailing button opens the list — "Edit" when unlocked, "View" (read-only)
+///   while a Hard Mode rule blocks. Creating a list selects it without dismissing.
+/// - **Management** (`selection` nil): no checkmark; tapping the row opens it —
+///   the full editor when unlocked, the read-only `AppListDetailView` while
+///   locked. Used by Settings ▸ Manage App Lists.
 ///
-/// In both modes editing and deletion are disabled while any Hard Mode rule is
-/// actively blocking — changing a list would be a back door out of the block.
+/// Editing and deletion are disabled in both modes while any Hard Mode rule is
+/// actively blocking — changing a list would be a back door out of the block —
+/// but viewing a list's apps stays allowed, since reading can't weaken a block.
 struct AppListLibraryView: View {
     /// Picker mode when non-nil; management mode when nil.
     var selection: Binding<AppList?>?
@@ -29,6 +33,7 @@ struct AppListLibraryView: View {
     @Query private var rules: [BlockingRule]
 
     @State private var editingList: AppList?
+    @State private var viewingList: AppList?
     @State private var creatingList = false
     @State private var deletionBlocked = false
 
@@ -95,6 +100,9 @@ struct AppListLibraryView: View {
                 editingList = nil
             }
         }
+        .navigationDestination(item: $viewingList) { list in
+            AppListDetailView(list: list)
+        }
         .alert("This list is in use", isPresented: $deletionBlocked) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -123,7 +131,15 @@ struct AppListLibraryView: View {
                 }
                 .accessibilityIdentifier("appListRow-\(list.name)")
                 Spacer()
-                if !listsLocked {
+                // Locked lists stay read-only (no "Edit"), but can still be
+                // opened to view their apps; unlocked lists open the editor.
+                if listsLocked {
+                    Button("View") {
+                        viewingList = list
+                    }
+                    .font(.subheadline)
+                    .accessibilityIdentifier("viewAppListButton-\(list.name)")
+                } else {
                     Button("Edit") {
                         editingList = list
                     }
@@ -134,19 +150,18 @@ struct AppListLibraryView: View {
             .buttonStyle(.borderless)
             .swipeActions { deleteAction(list) }
         } else {
-            // Management mode: the whole row taps to edit (a full-width target),
-            // with a disclosure chevron instead of a redundant Edit button.
+            // Management mode: the whole row taps in (a full-width target) with
+            // a disclosure chevron. Unlocked, it opens the editor; locked, it
+            // opens the read-only detail so the apps stay viewable.
             Button {
-                if !listsLocked { editingList = list }
+                if listsLocked { viewingList = list } else { editingList = list }
             } label: {
                 HStack {
                     rowText(list)
                     Spacer()
-                    if !listsLocked {
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(Color(.tertiaryLabel))
-                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color(.tertiaryLabel))
                 }
                 .contentShape(Rectangle())
             }

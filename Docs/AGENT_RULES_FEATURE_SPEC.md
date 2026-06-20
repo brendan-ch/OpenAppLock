@@ -440,16 +440,22 @@ Xh", "Xh left") is **derived**, not stored.
 
 ### 5.5 Background enforcement architecture (implemented)
 
-- **App group** `group.dev.bchen.OpenAppLock` shares four stores between the
+- **App group** `group.dev.bchen.OpenAppLock` shares five stores between the
   app and its extensions: `RuleSnapshotStore` (Codable rule mirror, written
   by `RuleScheduler` on every enforcement refresh), `UsageLedger` (per-rule,
-  per-day minutes/opens), `OpenSessionStore` (per-rule expiry of a granted
-  "Open" session), and the shield-store tracking list.
+  per-day minutes/opens, plus the authoritative daily minutes the
+  DeviceActivityReport extension writes), `OpenSessionStore` (per-rule expiry
+  of a granted "Open" session), `DayStartStore` (per-rule last confirmed
+  daily-activity start), and the shield-store tracking list.
 - **`RuleScheduler` (app)** reconciles DeviceActivity monitoring with the
   enabled rules:
   - **Limit rules** — one repeating 00:00–23:59 activity per rule
-    (`rule-<uuid>`); time-limit rules carry one cumulative usage-threshold
-    event per budget minute (`minutes-<k>`) over the rule's app list.
+    (`rule-<uuid>`); time-limit rules carry a **single** cumulative
+    usage-threshold event at the budget (`minutes-<budget>`) over the rule's
+    app list, used as the background block trigger. Live sub-budget progress
+    comes from the DeviceActivityReport extension, not a per-minute chain,
+    because Screen Time batches sub-budget thresholds unreliably (and reusing
+    per-minute names across days widened the cross-midnight stale surface).
   - **Schedule rules** — one (or, for windows that cross midnight, two)
     repeating window activit(ies) per rule matching the rule's
     `From…To` window (`sched-<uuid>` and, for the post-midnight half,
@@ -466,12 +472,15 @@ Xh", "Xh left") is **derived**, not stored.
 - **`OpenAppLockMonitor`** (DeviceActivityMonitor extension): interval start
   = midnight reset for limit rules (open-limit rules re-shield so opens can
   be counted; time-limit shields clear for the fresh budget); each
-  `minutes-<k>` event records usage and shields at the budget — **but a
-  checkpoint whose minute count exceeds the minutes elapsed since local
-  midnight is dropped**, since it cannot be today's usage (it is yesterday's
-  spent budget delivered late across midnight, which would otherwise re-block
-  unused apps); a finished `open-session-<uuid>` one-shot re-shields after a
-  granted open. For
+  `minutes-<budget>` event records usage and shields at the budget — but only
+  for a rule eligible today (enabled, time-limit, un-paused, scheduled today)
+  and only once today's interval start has been **confirmed**
+  (`DayStartStore`). A checkpoint whose minute count exceeds the minutes
+  elapsed since local midnight, **or** that arrives before today's confirmed
+  start, is dropped as a stale cross-midnight flush that would otherwise
+  re-block unused apps. Interval start records the confirmed day-start and
+  zeroes today's time-limit ledger once on the new-day transition. A finished
+  `open-session-<uuid>` one-shot re-shields after a granted open. For
   schedule-window activities (`sched-`/`sched2-`), **both** interval start
   and interval end **recompute** the rule's live schedule state from its
   snapshot (`RuleSchedule.isActive`, honouring enabled days, pause and the
@@ -491,7 +500,18 @@ Xh", "Xh left") is **derived**, not stored.
   open-limit rule is shielded even before its budget is spent, *unless* the
   `OpenSessionStore` reports a still-running granted open for it — so the
   foreground loop establishes the turnstile for newly created rules and never
-  re-locks an app mid-session.
+  re-locks an app mid-session. For **time limits**, the `OpenAppLockReport`
+  DeviceActivityReport extension computes each rule's true daily total while
+  the app is foreground and writes it to `UsageLedger` as the authoritative
+  figure; display and the foreground block decision prefer it (when fresh)
+  over the threshold count, which fixes the sub-budget display lag and clears a
+  residual background false-block the moment the app is opened. `refresh` also
+  establishes today's confirmed day-start when the monitor's interval callback
+  was skipped, so the confirmed-start gate cannot silently suppress a whole
+  day's usage recording. A residual background false-block (a stale
+  `minutes-<budget>` flush delivered after the interval boundary) is **not**
+  prevented in pure background — it is corrected on the next foreground
+  refresh; fully preventing it would require per-day event names.
 - **`OpenAppLockShieldConfig`** (ShieldConfiguration extension): every shield
   carries the same generic **"App Blocked"** title — rule names are never shown,
   since the rule a shield is attributed to cannot be determined reliably when

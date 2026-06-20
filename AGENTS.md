@@ -204,6 +204,21 @@ Gotchas learned the hard way:
   limits accrue in the Usage section and block at the budget; open-limit
   apps shield immediately with an "Open (N left)" button; an open lasts
   ~15 minutes (DeviceActivity's minimum interval) before re-shielding.
+- **Time-limit counting hardening** (see
+  `Docs/Agents/Specs/TIME_LIMIT_COUNTING_HARDENING.md`) is implemented but
+  device-verification is pending. Time limits now register a **single**
+  `minutes-<budget>` block event (not a per-minute chain); the monitor records
+  usage only for rules eligible today and only after a **confirmed**
+  daily-activity start (`DayStartStore`), dropping stale cross-midnight
+  flushes. The new **`OpenAppLockReport`** DeviceActivityReport extension
+  computes each rule's true daily total while the app is foreground and writes
+  it to `UsageLedger`; display and the foreground block decision prefer that
+  authoritative figure when fresh. Verify on device: the Usage counter shows
+  the true total on app open (no "stalls at ~14/15m" lag); a maxed-out day
+  does not re-block unused apps the next morning (or clears within one
+  foreground refresh); report attribution covers category/web-domain
+  selections (currently only application tokens are summed); and tune
+  `RuleUsage.authoritativeFreshness` (120s) so the foreground stays fresh.
 - **Schedule-rule background transitions** are now backed by DeviceActivity:
   `RuleScheduler` registers a repeating window activity per schedule rule
   (`sched-<uuid>`, plus `sched2-<uuid>` for midnight-crossing windows) and the

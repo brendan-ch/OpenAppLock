@@ -58,7 +58,7 @@ struct AppListEditorView: View {
                             .foregroundStyle(.secondary)
                             .accessibilityIdentifier("emptySelectionLabel")
                     } else {
-                        selectionRows
+                        AppSelectionRows(selection: selection)
                     }
                     Button {
                         pickingApps = true
@@ -111,21 +111,6 @@ struct AppListEditorView: View {
             Button("Keep Editing", role: .cancel) {}
         } message: {
             Text("Your edits to this list haven't been saved.")
-        }
-    }
-
-    /// Rows for everything the selection contains. FamilyControls' Label
-    /// initializers resolve the opaque tokens to icon + name.
-    @ViewBuilder
-    private var selectionRows: some View {
-        ForEach(Array(selection.applicationTokens), id: \.self) { token in
-            Label(token)
-        }
-        ForEach(Array(selection.categoryTokens), id: \.self) { token in
-            Label(token)
-        }
-        ForEach(Array(selection.webDomainTokens), id: \.self) { token in
-            Label(token)
         }
     }
 

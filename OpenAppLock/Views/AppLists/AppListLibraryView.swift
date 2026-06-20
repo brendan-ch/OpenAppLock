@@ -6,20 +6,24 @@
 import SwiftData
 import SwiftUI
 
-/// The reusable app-list library: the saved lists, an Edit affordance, the New
-/// List flow, swipe-to-delete, and the Hard Mode lock. It is always **pushed**
-/// onto a navigation stack — by the rule editor's App List row (picker mode) or
-/// by Settings ▸ Manage App Lists (management mode) — and opens the list editor
-/// (`AppListEditorView`) as a **sheet overlay** for both Edit and New. Two modes:
+/// The reusable app-list library: the saved lists, per-row Edit/View
+/// affordances, the New List flow, swipe-to-delete, and the Hard Mode lock. It
+/// is always **pushed** onto a navigation stack — by the rule editor's App List
+/// row (picker mode) or by Settings ▸ Manage App Lists (management mode). Two
+/// modes:
 ///
 /// - **Picker** (`selection` non-nil): each row shows a checkmark and tapping it
-///   selects the list and calls `onPick`, which pops back to the rule editor.
-///   Creating a list selects it without popping (its editor sheet just closes).
-/// - **Management** (`selection` nil): no checkmark; tapping a row (when unlocked)
-///   opens it for editing. Used by Settings ▸ Manage App Lists.
+///   selects the list and calls `onPick`, which pops back to the rule editor. A
+///   trailing button opens the list — "Edit" (the full editor as a **sheet
+///   overlay**) when unlocked, "View" (the read-only `AppListDetailView`) while
+///   a Hard Mode rule blocks. Creating a list selects it without popping.
+/// - **Management** (`selection` nil): no checkmark; tapping the row opens it —
+///   the editor sheet when unlocked, the read-only `AppListDetailView` while
+///   locked. Used by Settings ▸ Manage App Lists.
 ///
-/// In both modes editing and deletion are disabled while any Hard Mode rule is
-/// actively blocking — changing a list would be a back door out of the block.
+/// Editing and deletion are disabled in both modes while any Hard Mode rule is
+/// actively blocking — changing a list would be a back door out of the block —
+/// but viewing a list's apps stays allowed, since reading can't weaken a block.
 struct AppListLibraryView: View {
     /// Picker mode when non-nil; management mode when nil.
     var selection: Binding<AppList?>?
@@ -33,6 +37,7 @@ struct AppListLibraryView: View {
     @Query private var rules: [BlockingRule]
 
     @State private var editingList: AppList?
+    @State private var viewingList: AppList?
     @State private var creatingList = false
     @State private var deletionBlocked = false
 
@@ -98,6 +103,9 @@ struct AppListLibraryView: View {
         .sheet(item: $editingList) { list in
             AppListEditorView(list: list) { _ in }
         }
+        .navigationDestination(item: $viewingList) { list in
+            AppListDetailView(list: list)
+        }
         .alert("This list is in use", isPresented: $deletionBlocked) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -126,7 +134,15 @@ struct AppListLibraryView: View {
                 }
                 .accessibilityIdentifier("appListRow-\(list.name)")
                 Spacer()
-                if !listsLocked {
+                // Locked lists stay read-only (no "Edit"), but can still be
+                // opened to view their apps; unlocked lists open the editor.
+                if listsLocked {
+                    Button("View") {
+                        viewingList = list
+                    }
+                    .font(.subheadline)
+                    .accessibilityIdentifier("viewAppListButton-\(list.name)")
+                } else {
                     Button("Edit") {
                         editingList = list
                     }
@@ -137,19 +153,18 @@ struct AppListLibraryView: View {
             .buttonStyle(.borderless)
             .swipeActions { deleteAction(list) }
         } else {
-            // Management mode: the whole row taps to edit (a full-width target),
-            // with a disclosure chevron instead of a redundant Edit button.
+            // Management mode: the whole row taps in (a full-width target) with
+            // a disclosure chevron. Unlocked, it opens the editor; locked, it
+            // opens the read-only detail so the apps stay viewable.
             Button {
-                if !listsLocked { editingList = list }
+                if listsLocked { viewingList = list } else { editingList = list }
             } label: {
                 HStack {
                     rowText(list)
                     Spacer()
-                    if !listsLocked {
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(Color(.tertiaryLabel))
-                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color(.tertiaryLabel))
                 }
                 .contentShape(Rectangle())
             }

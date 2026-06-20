@@ -162,6 +162,39 @@ final class AppListUITests: XCTestCase {
             app.buttons["editAppListButton-Distractions"].exists,
             "App lists must be read-only while a Hard Mode rule is blocking"
         )
+        // Editing is locked, but the list can still be opened to view its apps.
+        XCTAssertTrue(
+            app.buttons["viewAppListButton-Distractions"].exists,
+            "Locked lists must still offer a read-only View affordance"
+        )
+    }
+
+    func testHardModeAllowsViewingAppListAppsReadOnly() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "hard-mode-active")
+        app.goToSettingsTab()
+        app.buttons["manageAppListsButton"].waitToAppear().tap()
+
+        // The library is locked while "Locked In" hard-blocks ...
+        app.element("appListsLockedNotice").waitToAppear()
+        // ... yet tapping a list opens it for read-only viewing.
+        app.element("appListRow-Distractions").waitToAppear().tap()
+
+        assertReadOnlyDetail(app)
+    }
+
+    func testHardModeViewFromPickerOpensReadOnlyDetail() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "hard-mode-active")
+        app.goToRulesTab()
+
+        // Soft "Sleep" is still editable, so its app-list picker is reachable
+        // while "Locked In" hard-blocks — but every list inside it is locked.
+        app.buttons["ruleCard-Sleep"].waitToAppear().tap()
+        app.buttons["editRuleButton"].waitToAppear().tap()
+        app.element("selectedAppsRow").waitToAppear().tap()
+
+        // The picker offers "View" (not "Edit"); it opens the read-only detail.
+        app.buttons["viewAppListButton-Distractions"].waitToAppear().tap()
+        assertReadOnlyDetail(app)
     }
 
     func testAppListsEditableWithoutHardSession() throws {
@@ -172,7 +205,44 @@ final class AppListUITests: XCTestCase {
         app.buttons["editRuleButton"].waitToAppear().tap()
         app.element("selectedAppsRow").waitToAppear().tap()
 
-        app.buttons["editAppListButton-Distractions"].waitToAppear()
         XCTAssertFalse(app.element("appListsLockedNotice").exists)
+        // With no hard block, "Edit" (not "View") opens the full editor.
+        XCTAssertFalse(app.buttons["viewAppListButton-Distractions"].exists)
+        app.buttons["editAppListButton-Distractions"].waitToAppear().tap()
+        app.element("appListNameField").waitToAppear()
+        app.buttons["editAppsButton"].waitToAppear()
+    }
+
+    func testManageAppListsOpensEditorWhenUnlocked() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToSettingsTab()
+        app.buttons["manageAppListsButton"].waitToAppear().tap()
+
+        // No hard block: a management row taps straight into the full editor,
+        // not the read-only detail.
+        XCTAssertFalse(app.element("appListsLockedNotice").exists)
+        app.element("appListRow-Distractions").waitToAppear().tap()
+
+        app.element("appListNameField").waitToAppear()
+        app.buttons["editAppsButton"].waitToAppear()
+        XCTAssertFalse(
+            app.element("appListReadOnlyNotice").exists,
+            "An unlocked list opens the editor, not the read-only detail"
+        )
+    }
+
+    /// Asserts the read-only `AppListDetailView` is showing: its lock notice is
+    /// present and neither edit affordance (the apps picker, the Save button)
+    /// exists — the "no editing" rule holds while a list is merely viewable.
+    private func assertReadOnlyDetail(_ app: XCUIApplication) {
+        app.element("appListReadOnlyNotice").waitToAppear()
+        XCTAssertFalse(
+            app.buttons["editAppsButton"].exists,
+            "The app selection must stay locked in Hard Mode"
+        )
+        XCTAssertFalse(
+            app.buttons["saveAppListButton"].exists,
+            "Saving list changes must stay locked in Hard Mode"
+        )
     }
 }

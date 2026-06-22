@@ -71,11 +71,35 @@ final class RuleScheduler {
                     : [:]
                 let fingerprint = "\(rule.kindRaw)|\(rule.dailyLimitMinutes)|"
                     + Self.selectionFingerprint(selectionData)
-                guard needsRestart(name, fingerprint, in: fingerprints) else { continue }
-                start(name: name) {
-                    try monitor.startDailyMonitoring(
-                        name: name, selectionData: selectionData, eventMinutes: events)
-                } onStarted: { fingerprints[name] = fingerprint }
+                if needsRestart(name, fingerprint, in: fingerprints) {
+                    start(name: name) {
+                        try monitor.startDailyMonitoring(
+                            name: name, selectionData: selectionData, eventMinutes: events)
+                    } onStarted: { fingerprints[name] = fingerprint }
+                }
+
+                // Opt-in "time limit almost up" warn activity, registered in its
+                // OWN activity. Keeping it separate from the enforcement activity
+                // above means enabling/disabling the nudge (or its absence) never
+                // restarts — and so never resets the usage threshold accounting
+                // of — the activity that actually blocks. Absent from
+                // `desiredNames` when off, so the stale sweep below stops it.
+                if rule.kind == .timeLimit,
+                    NotificationPreferences(defaults: defaults).timeLimitEndingEnabled,
+                    let warnEvents = MonitoringPlan.warnEvent(forLimit: rule.dailyLimitMinutes)
+                {
+                    let warnName = MonitoringPlan.warnActivityName(for: rule.id)
+                    desiredNames.insert(warnName)
+                    let warnFingerprint = "tlwarn|\(rule.dailyLimitMinutes)|"
+                        + Self.selectionFingerprint(selectionData)
+                    if needsRestart(warnName, warnFingerprint, in: fingerprints) {
+                        start(name: warnName) {
+                            try monitor.startDailyMonitoring(
+                                name: warnName, selectionData: selectionData,
+                                eventMinutes: warnEvents)
+                        } onStarted: { fingerprints[warnName] = warnFingerprint }
+                    }
+                }
 
             case .schedule:
                 // A window activity encodes only its interval (no events, no
@@ -97,7 +121,8 @@ final class RuleScheduler {
 
         let stale = monitor.monitoredNames.filter {
             (MonitoringPlan.ruleID(fromDailyActivityName: $0) != nil
-                || MonitoringPlan.ruleID(fromScheduleWindowName: $0) != nil)
+                || MonitoringPlan.ruleID(fromScheduleWindowName: $0) != nil
+                || MonitoringPlan.ruleID(fromWarnActivityName: $0) != nil)
                 && !desiredNames.contains($0)
         }
         if !stale.isEmpty {

@@ -111,7 +111,8 @@ Home      Currently Blocking + Usage               HomeView
 Rules     rules grouped by kind; + opens New Rule   RulesListView
             New Rule → editor                         NewRuleSheet → RuleEditorView
             tap a rule → detail → editor              RuleDetailSheet → RuleEditorView
-Settings  Uninstall Protection, App Lists, About    SettingsView → ManageAppListsView
+Settings  Uninstall Protection, App Lists,           SettingsView → ManageAppListsView
+            Notifications, About                       SettingsView → NotificationSettingsView
 ```
 
 Where each topic is documented:
@@ -133,10 +134,11 @@ Where each topic is documented:
 | DeviceActivity scheduling, naming; background monitor | `OpenAppLock/Services/RuleScheduler.swift`, `Shared/MonitoringPlan.swift`, `OpenAppLockMonitor/DeviceActivityMonitorExtension.swift` |
 | Authoritative time-limit usage report; confirmed day-start gate | `OpenAppLockReport/RuleUsageReport.swift`, `Shared/DayStartStore.swift`, `OpenAppLock/Views/MainView.swift` |
 | Uninstall Protection | `OpenAppLock/Views/Settings/SettingsView.swift`, `Shared/UninstallProtectionPolicy.swift`, `Shared/UninstallProtectionEnforcer.swift`, `OpenAppLock/Services/AppSettings.swift` |
+| Notifications (permission + schedule-start & time-limit nudges) | `OpenAppLock/Views/Settings/NotificationSettingsView.swift`, `OpenAppLock/Services/NotificationAuthorization.swift`, `OpenAppLock/Services/NotificationScheduler.swift` (+ `ScheduleStartNotificationPlan.swift`), `Shared/NotificationPreferences.swift`, `Shared/LimitWarningDecision.swift`, `OpenAppLockMonitor/LimitWarningNotifier.swift`, `Shared/MonitoringPlan.swift` (`tlwarn-`/`warn-`); design spec `Docs/Agents/Specs/NOTIFICATIONS.md` |
 | About links (GitHub / Website) | `OpenAppLock/Services/AppLinks.swift`, `OpenAppLock/Services/LaunchConfiguration.swift` |
 
 Not part of the feature: paywall, the Home gem/score UI, a Timer tab (one-off
-sessions), notification nudges. Onboarding exists (`OpenAppLock/Views/Onboarding/`)
+sessions). Onboarding exists (`OpenAppLock/Views/Onboarding/`)
 but is out of scope. The pre-reskin custom-themed design (Hold-to-Commit, rule
 cards, photo preset gallery) is recoverable from git history
 (`Docs/AGENT_RULES_FEATURE_SPEC.md`, removed when the spec was folded into code).
@@ -276,6 +278,17 @@ Gotchas learned the hard way:
   because interval callbacks are unreliable. On-device verification of the
   background transition is still pending (the simulator does not deliver
   DeviceActivity callbacks).
+- **Notifications: on-device verification pending.** The Settings →
+  Notifications UI, permission flow, schedule-start scheduling, and warn-activity
+  registration are unit/UI-tested, but two delivery paths are device-only: that a
+  pre-scheduled `UNCalendarNotificationTrigger` actually fires ~5 min before a
+  schedule window, and that the `DeviceActivityMonitor` extension can post the
+  time-limit warn notification from its background process (the simulator
+  delivers no DeviceActivity callbacks). Verify on device: enable both nudges;
+  confirm the schedule warning arrives ~5 min before a window; confirm the
+  "5 minutes left" warning arrives near a time-limit's budget; confirm toggling
+  the time-limit nudge does not reset a partially-used budget (the warn lives in
+  a separate `tlwarn-` activity, so the enforcement activity is never restarted).
 - `FamilyActivityPicker` shows few apps on the simulator; fine on device.
 - `FamilyActivityPicker` **silently ignores selections** (binding never
   updates, rows still show checkmarks) unless real FamilyControls

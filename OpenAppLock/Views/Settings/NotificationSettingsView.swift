@@ -109,3 +109,29 @@ struct NotificationSettingsView: View {
             })
     }
 }
+
+#Preview("Authorized") {
+    NavigationStack {
+        NotificationSettingsView()
+    }
+    .environment(
+        NotificationAuthorization(
+            provider: MockNotificationAuthorizationProvider(status: .authorized),
+            initialStatus: .authorized))
+    .environment(AppSettingsStore())
+    .environment(RuleEnforcer(shields: MockShieldController()))
+    .modelContainer(for: [BlockingRule.self, AppList.self], inMemory: true)
+}
+
+#Preview("Permission not yet granted") {
+    NavigationStack {
+        NotificationSettingsView()
+    }
+    .environment(
+        NotificationAuthorization(
+            provider: MockNotificationAuthorizationProvider(status: .notDetermined),
+            initialStatus: .notDetermined))
+    .environment(AppSettingsStore())
+    .environment(RuleEnforcer(shields: MockShieldController()))
+    .modelContainer(for: [BlockingRule.self, AppList.self], inMemory: true)
+}

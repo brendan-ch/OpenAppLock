@@ -1,6 +1,7 @@
 # Notifications — Design Spec
 
-Status: **reviewed (adversarial pass incorporated)** · Branch: `feat/notifications`
+Status: **implemented** (unit/UI-tested; two delivery paths device-verification
+pending — see AGENTS.md "Known gaps") · Branch: `feat/notifications`
 
 ## Goal
 

@@ -21,6 +21,10 @@ final class RuleEnforcer {
     /// Mirrors rules to the app group and keeps DeviceActivity monitoring in
     /// step; nil in UI-test launches.
     private let scheduler: RuleScheduler?
+    /// Keeps the pre-scheduled "a schedule rule starts in 5 minutes"
+    /// notifications in step with the rules; nil in UI-test launches (and when
+    /// the feature isn't wired). Driven off the same refresh funnel.
+    private let notificationScheduler: NotificationScheduler?
     /// Day-usage source consulted for limit rules; also exposed to views for
     /// the Usage section.
     let usageReader: UsageReading
@@ -37,6 +41,7 @@ final class RuleEnforcer {
     init(
         shields: ShieldApplying, usage: UsageReading = UsageLedger(),
         scheduler: RuleScheduler? = nil,
+        notificationScheduler: NotificationScheduler? = nil,
         openSessions: OpenSessionReading = OpenSessionStore(),
         settings: any AppSettingsReading = AppSettingsStore(),
         dayStarts: DayStartStore = DayStartStore()
@@ -44,6 +49,7 @@ final class RuleEnforcer {
         self.shields = shields
         self.usageReader = usage
         self.scheduler = scheduler
+        self.notificationScheduler = notificationScheduler
         self.openSessions = openSessions
         self.settings = settings
         self.dayStarts = dayStarts
@@ -118,6 +124,14 @@ final class RuleEnforcer {
                 usageFor: { usage(for: $0, at: now, calendar: calendar) },
                 at: now, calendar: calendar))
         scheduler?.sync(rules: rules, at: now)
+        // Re-sync the "starting soon" notifications off the same funnel. The
+        // scheduler is an actor (overlapping fire-and-forget calls from the 30 s
+        // loop serialize) and fingerprint-gated, so this is cheap when unchanged.
+        if let notificationScheduler {
+            let snapshots = rules.map(RuleSnapshot.init)
+            let enabled = NotificationPreferences().scheduleStartEnabled
+            Task { await notificationScheduler.sync(snapshots: snapshots, enabled: enabled) }
+        }
     }
 
     /// Whether an open-limit rule should carry its proactive gate right now:

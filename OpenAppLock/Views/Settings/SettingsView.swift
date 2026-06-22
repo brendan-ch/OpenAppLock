@@ -78,6 +78,16 @@ struct SettingsView: View {
                 } header: {
                     Text("App Lists").textCase(nil)
                 }
+                Section {
+                    NavigationLink {
+                        NotificationSettingsView()
+                    } label: {
+                        Label("Notifications", systemImage: "bell.badge")
+                    }
+                    .accessibilityIdentifier("notificationSettingsButton")
+                } header: {
+                    Text("Notifications").textCase(nil)
+                }
                 linkSection
                 if launch.isUITesting {
                     // Test-only probe: the destination of the last intercepted

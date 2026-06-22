@@ -12,6 +12,7 @@ import SwiftUI
 struct OpenAppLockApp: App {
     private let container: ModelContainer
     @State private var authorization: ScreenTimeAuthorization
+    @State private var notificationAuthorization: NotificationAuthorization
     @State private var enforcer: RuleEnforcer
     @State private var settings: AppSettingsStore
 
@@ -58,16 +59,31 @@ struct OpenAppLockApp: App {
             : FamilyControlsAuthorizationProvider()
         _authorization = State(initialValue: ScreenTimeAuthorization(provider: authProvider))
 
+        let notificationProvider: NotificationAuthorizationProviding =
+            config.isUITesting
+            ? MockNotificationAuthorizationProvider(
+                status: config.notificationsAuthorized ? .authorized : .notDetermined)
+            : UserNotificationAuthorizationProvider()
+        _notificationAuthorization = State(
+            initialValue: NotificationAuthorization(
+                provider: notificationProvider,
+                initialStatus: config.isUITesting && config.notificationsAuthorized
+                    ? .authorized : .notDetermined))
+
         let shields: ShieldApplying =
             config.isUITesting ? MockShieldController() : ManagedSettingsShieldController()
         let scheduler =
             config.isUITesting
             ? nil : RuleScheduler(monitor: DeviceActivityCenterMonitor())
+        // Like the DeviceActivity scheduler, the notification scheduler is real
+        // only outside UI tests (which must not schedule system notifications).
+        let notificationScheduler = config.isUITesting ? nil : NotificationScheduler()
         let openSessions: OpenSessionReading =
             config.isUITesting ? MockOpenSessionStore() : OpenSessionStore()
         _enforcer = State(
             initialValue: RuleEnforcer(
                 shields: shields, usage: usageLedger, scheduler: scheduler,
+                notificationScheduler: notificationScheduler,
                 openSessions: openSessions, settings: appSettings))
     }
 
@@ -75,6 +91,7 @@ struct OpenAppLockApp: App {
         WindowGroup {
             RootView()
                 .environment(authorization)
+                .environment(notificationAuthorization)
                 .environment(enforcer)
                 .environment(settings)
         }

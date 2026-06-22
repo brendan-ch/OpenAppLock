@@ -16,7 +16,8 @@ extension XCUIApplication {
         onboardingCompleted: Bool = true,
         seedScenario: String? = nil,
         gitHubURL: String? = nil,
-        websiteURL: String? = nil
+        websiteURL: String? = nil,
+        notificationsAuthorized: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
         var arguments = ["-ui-testing"]
@@ -29,6 +30,9 @@ extension XCUIApplication {
         }
         if let websiteURL {
             arguments.append("-website-url=\(websiteURL)")
+        }
+        if notificationsAuthorized {
+            arguments.append("-notifications-authorized")
         }
         app.launchArguments = arguments
         app.launch()

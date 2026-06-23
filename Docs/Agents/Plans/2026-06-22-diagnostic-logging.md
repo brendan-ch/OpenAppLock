@@ -617,7 +617,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 **Interfaces:**
 - Consumes: everything from Tasks 1 & 3.
 - Produces:
-  - `enum Diag { static func configure(directory: URL, source: LogSource); static func log(_ category: LogCategory, _ level: LogLevel = .info, _ message: String, file: String = #fileID, function: String = #function, line: Int = #line); static func error(_ category: LogCategory, _ message: String, file: String = #fileID, function: String = #function, line: Int = #line) }` — `log`/`error` capture the call site and pass it into `LogEntry`; the os.Logger message also gets a `[File.swift:line]` suffix.
+  - `enum Diag { static func configure(directory: URL, source: LogSource); static func log(_ category: LogCategory, _ message: String, …site…); static func log(_ category: LogCategory, _ level: LogLevel, _ message: String, …site…); static func error(_ category: LogCategory, _ message: String, …site…) }` where `…site…` is `file: String = #fileID, function: String = #function, line: Int = #line`. **Two `log` overloads** (info-default vs explicit level) — a defaulted *positional* `level` cannot be skipped, so `Diag.log(.cat, "msg")` needs its own overload. `log`/`error` capture the call site into `LogEntry`; the os.Logger message also gets a `[File.swift:line]` suffix.
   - `extension LogLevel { var osType: OSLogType }`
 
 - [ ] **Step 1: Write the failing test**

@@ -36,8 +36,17 @@ enum Diag {
         writer = LogFileWriter(directory: directory, source: source)
     }
 
+    /// Logs at `.info`. A separate overload (not a defaulted positional `level`,
+    /// which Swift cannot skip) keeps `Diag.log(.cat, "msg")` unambiguous.
     nonisolated static func log(
-        _ category: LogCategory, _ level: LogLevel = .info, _ message: String,
+        _ category: LogCategory, _ message: String,
+        file: String = #fileID, function: String = #function, line: Int = #line
+    ) {
+        log(category, .info, message, file: file, function: function, line: line)
+    }
+
+    nonisolated static func log(
+        _ category: LogCategory, _ level: LogLevel, _ message: String,
         file: String = #fileID, function: String = #function, line: Int = #line
     ) {
         let date = Date()

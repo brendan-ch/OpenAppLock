@@ -56,6 +56,16 @@ final class NotificationSettingsUITests: XCTestCase {
         let scheduleToggle = app.switches["scheduleStartNotificationToggle"].waitToAppear()
         let limitToggle = app.switches["timeLimitNotificationToggle"].waitToAppear()
 
+        // Existence isn't interactivity: on a loaded runner a switch can be on
+        // screen but not yet hit-testable, so the coordinate tap lands before it
+        // is live and gets dropped (leaving the value at "0"). Wait for the
+        // authorized state to enable both toggles before flipping — same barrier
+        // `testGrantingPermissionEnablesAndFlipsToggles` uses after granting.
+        let enabled = NSPredicate(format: "isEnabled == true")
+        expectation(for: enabled, evaluatedWith: scheduleToggle)
+        expectation(for: enabled, evaluatedWith: limitToggle)
+        waitForExpectations(timeout: 3)
+
         XCTAssertEqual(scheduleToggle.value as? String, "0", "Type toggles default off")
         XCTAssertEqual(limitToggle.value as? String, "0", "Type toggles default off")
 

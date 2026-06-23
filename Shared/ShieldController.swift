@@ -63,7 +63,7 @@ final class ManagedSettingsShieldController: ShieldApplying {
         track(ruleID: ruleID)
         Diag.log(
             .shield, .event,
-            "apply rule-\(ruleID.uuidString.prefix(8)) mode=\(mode) adult=\(blockAdultContent) selCount=\(AppSelectionCodec.count(of: selection))")
+            "apply rule-\(ruleID.uuidString.prefix(8)) mode=\(mode) adult=\(blockAdultContent) apps=\(selection.applicationTokens.count) cats=\(selection.categoryTokens.count) web=\(selection.webDomainTokens.count)")
     }
 
     func clearShield(ruleID: UUID) {

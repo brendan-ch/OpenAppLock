@@ -103,6 +103,26 @@ final class RuleEnforcer {
             let status = rule.status(at: now, calendar: calendar, usage: usage)
             let isBlocking = status.isActive
             if isBlocking { blocking.insert(rule.id) }
+            // EC4/EC9: surface the authoritative-vs-threshold decision for time
+            // limits — which source the block decision used, its freshness, and a
+            // WARN when the report's (app-token-only) authoritative figure has
+            // lifted a block the threshold count says is real.
+            if rule.kind == .timeLimit, let usage {
+                let limit = rule.dailyLimitMinutes
+                let effective = usage.effectiveMinutesUsed(asOf: now)
+                let asOfAge = usage.authoritativeAsOf.map { Int(now.timeIntervalSince($0)) }
+                let usingAuthoritative =
+                    usage.authoritativeMinutesUsed != nil
+                    && (asOfAge.map { abs($0) <= Int(RuleUsage.authoritativeFreshness) } ?? false)
+                Diag.log(
+                    .usage,
+                    "timeLimit rule-\(rid) threshold=\(usage.minutesUsed) auth=\(usage.authoritativeMinutesUsed.map(String.init) ?? "-")@\(asOfAge.map { "\($0)s" } ?? "-") effective=\(effective)/\(limit) source=\(usingAuthoritative ? "authoritative" : "threshold")")
+                if !isBlocking, usage.minutesUsed >= limit, effective < limit {
+                    Diag.log(
+                        .usage, .error,
+                        "WARN rule-\(rid): authoritative lifted a real block (threshold=\(usage.minutesUsed)>=\(limit) but effective=\(effective)) — possible category/web undercount (EC4)")
+                }
+            }
             let gating = !isBlocking && shouldGateOpenLimit(rule, at: now, calendar: calendar)
             guard isBlocking || gating else {
                 Diag.log(

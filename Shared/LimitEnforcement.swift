@@ -62,7 +62,14 @@ struct LimitEnforcement {
         ruleID: UUID, kind: RuleKind, now: Date, calendar: Calendar
     ) {
         let today = calendar.startOfDay(for: now)
-        guard dayStarts.confirmedStart(for: ruleID) != today else { return }
+        guard dayStarts.confirmedStart(for: ruleID) != today else {
+            // EC6: a same-day re-fire must NOT zero today's accrual; log that it
+            // was correctly skipped (vs the new-day zero below).
+            Diag.log(
+                .dayStart,
+                "confirm rule-\(ruleID.uuidString.prefix(8)): skipped (same-day re-fire, start already \(LogTimestamp.string(from: today)))")
+            return
+        }
         dayStarts.setConfirmedStart(today, for: ruleID)
         Diag.log(
             .dayStart, .event,

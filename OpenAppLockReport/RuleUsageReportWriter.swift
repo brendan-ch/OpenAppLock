@@ -35,13 +35,23 @@ struct RuleUsageReportWriter {
         }
 
         let ledger = UsageLedger()
-        for (snapshot, _) in selections {
+        for (snapshot, selection) in selections {
             let minutes = Int((secondsByRule[snapshot.id] ?? 0) / 60)
             ledger.recordAuthoritativeMinutes(
                 minutes, for: snapshot.id, onDayContaining: now, asOf: now)
+            let rid = snapshot.id.uuidString.prefix(8)
+            let unattributed = selection.categoryTokens.count + selection.webDomainTokens.count
             Diag.log(
                 .report, .event,
-                "authoritative rule-\(snapshot.id.uuidString.prefix(8)) minutes=\(minutes) (Screen Time foreground total)")
+                "authoritative rule-\(rid) minutes=\(minutes) apps=\(selection.applicationTokens.count) (Screen Time foreground total)")
+            // EC4 root cause: only application tokens are summed. A rule that
+            // selects categories or web domains has a known-incomplete
+            // authoritative figure — which can under-count and lift a real block.
+            if unattributed > 0 {
+                Diag.log(
+                    .report, .error,
+                    "WARN rule-\(rid): \(unattributed) category/web tokens NOT summed — authoritative total is incomplete (EC4)")
+            }
         }
     }
 }

@@ -187,6 +187,28 @@ Logging is strictly additive and must not change behavior. Where a logged file
 owns feature behavior, its doc comment stays the source of truth; the new
 diagnostics files carry this feature's doc comments.
 
+## 7a. Time-limit edge cases the logs make observable
+
+Time-limit enforcement spans five processes and most events happen with the app
+closed, so the durable per-process files (not just `os.Logger`) are the field
+evidence. The instrumentation is sized so each suspected bug has a log signature:
+
+| Edge case | Log evidence |
+|---|---|
+| Stale cross-midnight checkpoint | `usage` `drop … (stale … minutes>sinceMidnight)` / `(no confirmed day-start)` |
+| Premature / 0-usage threshold fire (iOS 26) | monitor `eventDidReachThreshold` + `usage usageEvent … sinceMidnight=` accepted, cross-checked against `report authoritative … minutes≈0` for the same rule/day |
+| Missed midnight reset | **absence** of `monitor intervalDidStart` / `dayStart` near local 00:00, then a new-day `enforcer … clear` |
+| Authoritative lifts a real block | `usage timeLimit … source=authoritative` + `usage WARN … authoritative lifted a real block (EC4)`; root cause `report WARN … category/web tokens NOT summed` |
+| Freshness window (120 s) | `usage timeLimit … auth=…@<age>s … source=authoritative\|threshold` across consecutive refreshes |
+| Same-day re-fire zeroing usage | `dayStart confirm … (zeroed today's ledger)` vs `… skipped (same-day re-fire)` |
+| Monitoring restart resets counting | `scheduler dailyActivity restart … fp <old>-><new> (resets threshold accounting)` |
+| `startMonitoring` threw (no enforcement) | `scheduler [ERROR] start failed …` |
+| App-closed blind spot | extension entries persisted to the app-group files, exported later |
+| Foreground coverage gaps | `lifecycle refresh trigger: foreground 30s loop / rule-change / scenePhase active` |
+
+WARN-class anomalies are emitted at `error` level so they grep as `[ERROR]`.
+Selection contents are never logged — only token **counts** (apps/categories/web).
+
 ## 8. Testing
 
 TDD, with the **export path** as the priority. The bulk of coverage is unit

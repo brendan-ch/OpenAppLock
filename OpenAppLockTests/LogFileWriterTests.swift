@@ -62,3 +62,26 @@ struct LogFileWriterTests {
                 atPath: nested.appendingPathComponent("report-2026-06-22.log").path))
     }
 }
+
+@MainActor
+struct DiagFacadeTests {
+    @Test("Configured Diag writes a parseable line to the source file")
+    func diagWritesLine() throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DiagFacade-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        Diag.configure(directory: dir, source: .app)
+        Diag.log(.enforcer, .event, "refresh: applied rule-XYZ")
+
+        // The file name carries today's local day key.
+        let dayKey = UsageLedger.dayKey(for: .now)
+        let fileURL = dir.appendingPathComponent("app-\(dayKey).log")
+        let contents = try String(contentsOf: fileURL, encoding: .utf8)
+        #expect(contents.contains("[EVENT] [app/enforcer] refresh: applied rule-XYZ"))
+        // The line starts with a 24-char UTC timestamp and ends with a code site.
+        let firstLine = contents.split(separator: "\n").first.map(String.init) ?? ""
+        #expect(LogTimestamp.prefix(ofLine: firstLine).hasSuffix("Z"))
+        #expect(firstLine.contains("[LogFileWriterTests.swift:"))
+    }
+}

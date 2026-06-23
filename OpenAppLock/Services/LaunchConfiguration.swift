@@ -28,6 +28,10 @@ struct LaunchConfiguration: Equatable {
     var gitHubURLOverride: String?
     /// Overrides the Settings website link for UI tests. Nil uses `AppLinks`.
     var websiteURLOverride: String?
+    /// Seeds the mock notification authorization as already-granted, so a UI test
+    /// can exercise the authorized state directly. Absent → `.notDetermined`, so
+    /// the grant transition is the default path under test.
+    var notificationsAuthorized = false
 
     static let uiTestingFlag = "-ui-testing"
     static let onboardingCompletedFlag = "-onboarding-completed"
@@ -35,6 +39,7 @@ struct LaunchConfiguration: Equatable {
     static let seedScenarioPrefix = "-seed-scenario="
     static let gitHubURLPrefix = "-github-url="
     static let websiteURLPrefix = "-website-url="
+    static let notificationsAuthorizedFlag = "-notifications-authorized"
 
     static func parse(arguments: [String]) -> LaunchConfiguration {
         var config = LaunchConfiguration()
@@ -51,6 +56,7 @@ struct LaunchConfiguration: Equatable {
         }
         config.gitHubURLOverride = value(in: arguments, prefix: gitHubURLPrefix)
         config.websiteURLOverride = value(in: arguments, prefix: websiteURLPrefix)
+        config.notificationsAuthorized = arguments.contains(notificationsAuthorizedFlag)
         return config
     }
 

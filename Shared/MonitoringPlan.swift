@@ -14,6 +14,12 @@ enum MonitoringPlan {
     private static let minutePrefix = "minutes-"
     private static let scheduleWindowPrefix = "sched-"
     private static let scheduleWindowLatePrefix = "sched2-"
+    private static let warnActivityPrefix = "tlwarn-"
+    private static let warnEventPrefix = "warn-"
+
+    /// How early the "time limit almost up" notification fires, in minutes of
+    /// remaining allowance.
+    static let limitWarningLeadMinutes = 5
 
     /// Wall-clock length of one granted open. 15 minutes is DeviceActivity's
     /// minimum schedule interval, so an "open" lasts at most this long before
@@ -78,5 +84,29 @@ enum MonitoringPlan {
     static func blockEvent(forLimit limitMinutes: Int) -> [String: Int] {
         let minutes = max(1, limitMinutes)
         return [minuteEventName(for: minutes): minutes]
+    }
+
+    /// The dedicated, opt-in "time limit almost up" activity for a rule, kept
+    /// separate from the rule's enforcement (`dailyActivityName`) activity so
+    /// toggling the notification never restarts — and so never resets the usage
+    /// threshold accounting of — the activity that actually blocks. A distinct
+    /// prefix means `ruleID(fromDailyActivityName:)` never mistakes it for the
+    /// enforcement activity.
+    static func warnActivityName(for ruleID: UUID) -> String {
+        warnActivityPrefix + ruleID.uuidString
+    }
+
+    static func ruleID(fromWarnActivityName name: String) -> UUID? {
+        guard name.hasPrefix(warnActivityPrefix) else { return nil }
+        return UUID(uuidString: String(name.dropFirst(warnActivityPrefix.count)))
+    }
+
+    /// The single threshold event for the warn activity: one checkpoint
+    /// `limitWarningLeadMinutes` before the budget. Returns nil when the budget
+    /// is at or below the lead time (no meaningful "5 minutes left" moment).
+    static func warnEvent(forLimit limitMinutes: Int) -> [String: Int]? {
+        let threshold = limitMinutes - limitWarningLeadMinutes
+        guard threshold >= 1 else { return nil }
+        return [warnEventPrefix + String(threshold): threshold]
     }
 }

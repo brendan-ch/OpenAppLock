@@ -66,6 +66,13 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         _ event: DeviceActivityEvent.Name, activity: DeviceActivityName
     ) {
         super.eventDidReachThreshold(event, activity: activity)
+        // The opt-in warn activity fires ~5 min before the budget on its own
+        // activity, so check it first — its events don't use the `minutes-`
+        // naming the block path parses, and it records no usage.
+        if let ruleID = MonitoringPlan.ruleID(fromWarnActivityName: activity.rawValue) {
+            LimitWarningNotifier().notifyIfEligible(ruleID: ruleID)
+            return
+        }
         guard let ruleID = MonitoringPlan.ruleID(fromDailyActivityName: activity.rawValue),
               let minutes = MonitoringPlan.minutes(fromEventName: event.rawValue)
         else { return }

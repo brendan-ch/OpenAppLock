@@ -51,6 +51,7 @@ final class RuleScheduler {
 
     func sync(rules: [BlockingRule], at now: Date = .now) {
         snapshots.save(rules.map(RuleSnapshot.init))
+        Diag.log(.scheduler, "sync: \(rules.count) rules; mirrored snapshots")
 
         var fingerprints = storedFingerprints
         var desiredNames: Set<String> = []
@@ -126,6 +127,7 @@ final class RuleScheduler {
                 && !desiredNames.contains($0)
         }
         if !stale.isEmpty {
+            Diag.log(.scheduler, "stop \(stale.count) stale activities: \(stale.joined(separator: ","))")
             monitor.stopMonitoring(names: stale)
             for name in stale {
                 fingerprints[name] = nil
@@ -159,8 +161,12 @@ final class RuleScheduler {
         do {
             try body()
             onStarted()
+            Diag.log(.scheduler, .event, "started monitoring \(name)")
         } catch {
             // Best-effort; the foreground reconciliation loop is the safety net.
+            // On device a failure here means background enforcement did not engage
+            // (the simulator always throws — DeviceActivity is unavailable there).
+            Diag.error(.scheduler, "start failed \(name): \(error.localizedDescription)")
         }
     }
 

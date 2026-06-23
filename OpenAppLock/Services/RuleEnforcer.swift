@@ -81,11 +81,15 @@ final class RuleEnforcer {
     /// open, or a limit budget is spent) *or* when it is an open-limit rule
     /// that must gate its apps so opens can be counted.
     func refresh(rules: [BlockingRule], at now: Date = .now, calendar: Calendar = .current) {
+        let priorBlocking = blockingRuleIDs
+        Diag.log(.enforcer, "refresh: \(rules.count) rules at \(LogTimestamp.string(from: now))")
         var blocking: Set<UUID> = []
         var shielded: Set<UUID> = []
         for rule in rules {
+            let rid = rule.id.uuidString.prefix(8)
             if let pausedUntil = rule.pausedUntil, pausedUntil <= now {
                 rule.pausedUntil = nil
+                Diag.log(.enforcer, "rule-\(rid): pause expired, re-armed")
             }
             // 4c safety net: a skipped monitor `intervalDidStart` would block
             // usage recording all day; establish today's confirmed start from the
@@ -93,14 +97,23 @@ final class RuleEnforcer {
             if rule.kind == .timeLimit, rule.isEnabled,
                dayStarts.confirmedStart(for: rule.id) != calendar.startOfDay(for: now) {
                 dayStarts.setConfirmedStart(calendar.startOfDay(for: now), for: rule.id)
+                Diag.log(.dayStart, "rule-\(rid): foreground confirmed today's start (safety net)")
             }
             let usage = usage(for: rule, at: now, calendar: calendar)
-            let isBlocking = rule.status(at: now, calendar: calendar, usage: usage).isActive
+            let status = rule.status(at: now, calendar: calendar, usage: usage)
+            let isBlocking = status.isActive
             if isBlocking { blocking.insert(rule.id) }
-            guard isBlocking || shouldGateOpenLimit(rule, at: now, calendar: calendar) else {
+            let gating = !isBlocking && shouldGateOpenLimit(rule, at: now, calendar: calendar)
+            guard isBlocking || gating else {
+                Diag.log(
+                    .enforcer,
+                    "rule-\(rid) \(rule.kindRaw): not shielded (status=\(status) enabled=\(rule.isEnabled))")
                 continue
             }
             shielded.insert(rule.id)
+            Diag.log(
+                .enforcer, .event,
+                "rule-\(rid) \(rule.kindRaw): shield (\(isBlocking ? "active status=\(status)" : "open-limit gate")\(usage.map { ", used=\($0.minutesUsed)/opens=\($0.opensUsed)" } ?? ""))")
             shields.applyShield(
                 ruleID: rule.id,
                 selectionData: rule.appList?.selectionData,
@@ -115,6 +128,11 @@ final class RuleEnforcer {
         // "Blocked Apps" lists only rules whose budget/window is spent — not the
         // proactive open-limit gate, which surfaces under "Usage" instead.
         blockingRuleIDs = blocking
+        if priorBlocking != blocking {
+            Diag.log(
+                .enforcer, .event,
+                "blocking set changed \(priorBlocking.count)->\(blocking.count); shielded=\(shielded.count)")
+        }
         // Uninstall Protection: deny device app removal while the user has opted
         // in and any Hard Mode rule is actively blocking.
         shields.setAppRemovalDenied(

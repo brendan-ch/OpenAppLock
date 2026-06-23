@@ -17,6 +17,7 @@ struct RuleUsageReportWriter {
         let snapshots = RuleSnapshotStore().load()
             .filter { $0.kind == .timeLimit && $0.isEnabled }
         guard !snapshots.isEmpty else { return }
+        Diag.log(.report, "report run: \(snapshots.count) time-limit rules")
         let selections = snapshots.map { ($0, AppSelectionCodec.decode($0.selectionData)) }
 
         var secondsByRule: [UUID: Double] = [:]
@@ -38,6 +39,9 @@ struct RuleUsageReportWriter {
             let minutes = Int((secondsByRule[snapshot.id] ?? 0) / 60)
             ledger.recordAuthoritativeMinutes(
                 minutes, for: snapshot.id, onDayContaining: now, asOf: now)
+            Diag.log(
+                .report, .event,
+                "authoritative rule-\(snapshot.id.uuidString.prefix(8)) minutes=\(minutes) (Screen Time foreground total)")
         }
     }
 }

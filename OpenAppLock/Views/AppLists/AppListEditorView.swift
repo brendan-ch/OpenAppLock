@@ -147,10 +147,12 @@ struct AppListEditorView: View {
             list.name = resolvedName
             list.selectionData = data
             list.selectionCount = count
+            Diag.log(.appList, .event, "saved list \"\(resolvedName)\" (edit) selCount=\(count)")
             onComplete(list)
         } else {
             let created = AppList(name: resolvedName, selectionData: data, selectionCount: count)
             modelContext.insert(created)
+            Diag.log(.appList, .event, "saved list \"\(resolvedName)\" (new) selCount=\(count)")
             onComplete(created)
         }
         dismiss()

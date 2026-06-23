@@ -78,3 +78,56 @@ struct DiagnosticLogTests {
         #expect(LogTimestamp.prefix(ofLine: entry.formatted) == "2026-06-22T14:03:11.482Z")
     }
 }
+
+@MainActor
+struct LogMergeRetentionTests {
+    @Test("Merge interleaves files chronologically by the UTC prefix")
+    func mergeChronological() {
+        let app = [
+            "2026-06-22T10:00:00.000Z [INFO] [app/enforcer] a1",
+            "2026-06-22T10:00:05.000Z [INFO] [app/enforcer] a2",
+        ]
+        let monitor = [
+            "2026-06-22T10:00:02.000Z [EVENT] [monitor/monitor] m1"
+        ]
+        let merged = LogMerge.merge(perFile: [app, monitor])
+        #expect(
+            merged == [
+                "2026-06-22T10:00:00.000Z [INFO] [app/enforcer] a1",
+                "2026-06-22T10:00:02.000Z [EVENT] [monitor/monitor] m1",
+                "2026-06-22T10:00:05.000Z [INFO] [app/enforcer] a2",
+            ])
+    }
+
+    @Test("Equal timestamps keep file order, then within-file order (stable)")
+    func mergeStableTies() {
+        let fileA = [
+            "2026-06-22T10:00:00.000Z [INFO] [app/usage] A-first",
+            "2026-06-22T10:00:00.000Z [INFO] [app/usage] A-second",
+        ]
+        let fileB = ["2026-06-22T10:00:00.000Z [INFO] [monitor/usage] B-first"]
+        let merged = LogMerge.merge(perFile: [fileA, fileB])
+        #expect(
+            merged == [
+                "2026-06-22T10:00:00.000Z [INFO] [app/usage] A-first",
+                "2026-06-22T10:00:00.000Z [INFO] [app/usage] A-second",
+                "2026-06-22T10:00:00.000Z [INFO] [monitor/usage] B-first",
+            ])
+    }
+
+    @Test("Prune selects files strictly older than the retention window")
+    func prune() {
+        let today = date(2026, 6, 22)  // from TestSupport (UTC calendar)
+        let names = [
+            "app-2026-06-22.log",  // today — keep
+            "app-2026-06-08.log",  // 14 days ago — keep (boundary)
+            "monitor-2026-06-07.log",  // 15 days ago — prune
+            "app-2026-05-01.log",  // old — prune
+            "notes.txt",  // not a log — ignored
+        ]
+        let pruned = Set(
+            LogRetention.filesToPrune(
+                filenames: names, today: today, retentionDays: 14, calendar: utc))
+        #expect(pruned == ["monitor-2026-06-07.log", "app-2026-05-01.log"])
+    }
+}

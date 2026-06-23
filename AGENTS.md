@@ -23,18 +23,29 @@ OpenAppLock/                    App target (iOS 26, SwiftUI + SwiftData)
                             SampleRules (UI-test harness)
   Views/                    Native SwiftUI screens (spec in each view's doc
                             comment; see "Rules feature map" below)
-Shared/                     Compiled into the app AND all four extensions:
-                            RuleKind, Weekday, RuleSchedule, AppGroup,
-                            UsageLedger (per-day minutes/opens + the report's
-                            authoritative daily total),
-                            RuleSnapshot(+Store) (rule mirror in the app
-                            group), MonitoringPlan (activity/event naming),
+Shared/                     Compiled into the app AND all four extensions,
+                            grouped by architectural layer:
+  Models/                   Pure rule-domain value types: RuleKind,
+                            RuleConfiguration, RuleSchedule, Weekday
+  Enforcement/              Stateless decisions + shield controllers that turn
+                            rules/events into blocks: ScheduleEnforcement,
                             LimitEnforcement (shared event reactions),
-                            DayStartStore (confirmed daily-activity starts),
-                            ShieldController, ShieldLookup,
-                            DiagnosticLog (`Diag` dual-sink logging facade) +
-                            LogEntry/LogMerge/LogRetention/LogFileWriter
-                            (per-process daily log files in the app group)
+                            LimitWarningDecision, UninstallProtectionPolicy,
+                            UninstallProtectionEnforcer, ShieldController,
+                            ShieldLookup, ShieldPresentation
+  Stores/                   App-group persistence/accessors: UsageLedger
+                            (per-day minutes/opens + the report's authoritative
+                            daily total), OpenSessionStore, DayStartStore
+                            (confirmed daily-activity starts),
+                            RuleSnapshot(+Store) (rule mirror in the app group),
+                            NotificationPreferences
+  Diagnostics/              Logging subsystem: DiagnosticLog (`Diag` dual-sink
+                            logging facade) + LogEntry/LogMerge/LogRetention/
+                            LogFileWriter (per-process daily log files in the
+                            app group)
+  Platform/                 OS-integration glue / shared identifiers:
+                            AppGroup, MonitoringPlan (activity/event naming),
+                            DeviceActivityReportContext
 OpenAppLockMonitor/         DeviceActivityMonitor extension: midnight resets,
                             usage-minute checkpoints → shield at the limit,
                             open-session expiry
@@ -122,24 +133,24 @@ Where each topic is documented:
 
 | Topic | Source (doc comment) |
 |---|---|
-| Rule kinds, sum-type options, Schedule-only rationale | `Shared/RuleConfiguration.swift`, `Shared/RuleKind.swift` |
-| Persisted rule + common attributes; editor draft; cross-process mirror | `OpenAppLock/Models/BlockingRule.swift`, `OpenAppLock/Models/RuleDraft.swift`, `Shared/RuleSnapshot.swift` |
+| Rule kinds, sum-type options, Schedule-only rationale | `Shared/Models/RuleConfiguration.swift`, `Shared/Models/RuleKind.swift` |
+| Persisted rule + common attributes; editor draft; cross-process mirror | `OpenAppLock/Models/BlockingRule.swift`, `OpenAppLock/Models/RuleDraft.swift`, `Shared/Stores/RuleSnapshot.swift` |
 | Derived status & countdown labels | `OpenAppLock/Logic/RuleStatus.swift` |
-| Day-of-week picker & summary | `OpenAppLock/Views/Components/DayOfWeekPicker.swift`, `Shared/Weekday.swift` |
+| Day-of-week picker & summary | `OpenAppLock/Views/Components/DayOfWeekPicker.swift`, `Shared/Models/Weekday.swift` |
 | Presets; editors (all kinds); detail | `OpenAppLock/Models/RulePreset.swift`, `OpenAppLock/Views/Rules/RuleEditorView.swift`, `OpenAppLock/Views/Rules/RuleDetailSheet.swift` |
 | App lists (model, picker, library, edit) + legacy migration | `OpenAppLock/Models/AppList.swift`, `OpenAppLock/Views/AppLists/*`, `OpenAppLock/Services/AppListMigration.swift` |
 | Home: Currently Blocking + Usage, row strings | `OpenAppLock/Views/Home/HomeView.swift`, `OpenAppLock/Logic/UsageDisplay.swift` |
-| Schedule activation / time-window math (incl. midnight crossing) | `Shared/RuleSchedule.swift`, `Shared/ScheduleEnforcement.swift` |
+| Schedule activation / time-window math (incl. midnight crossing) | `Shared/Models/RuleSchedule.swift`, `Shared/Enforcement/ScheduleEnforcement.swift` |
 | Unblock / disable / delete / Hard Mode gating | `OpenAppLock/Logic/RulePolicy.swift` |
-| Foreground reconciliation; **overlapping rules → strictest wins** | `OpenAppLock/Services/RuleEnforcer.swift`, `Shared/ShieldController.swift` |
-| Time/open-limit behavior, granted opens, proactive gate | `Shared/LimitEnforcement.swift`, `Shared/UsageLedger.swift`, `Shared/OpenSessionStore.swift` |
-| Shield text + "Open" button / press handling | `Shared/ShieldPresentation.swift`, `OpenAppLockShieldConfig/ShieldConfigurationExtension.swift`, `OpenAppLockShieldAction/ShieldActionExtension.swift` |
-| DeviceActivity scheduling, naming; background monitor | `OpenAppLock/Services/RuleScheduler.swift`, `Shared/MonitoringPlan.swift`, `OpenAppLockMonitor/DeviceActivityMonitorExtension.swift` |
-| Authoritative time-limit usage report; confirmed day-start gate | `OpenAppLockReport/RuleUsageReport.swift`, `Shared/DayStartStore.swift`, `OpenAppLock/Views/MainView.swift` |
-| Uninstall Protection | `OpenAppLock/Views/Settings/SettingsView.swift`, `Shared/UninstallProtectionPolicy.swift`, `Shared/UninstallProtectionEnforcer.swift`, `OpenAppLock/Services/AppSettings.swift` |
-| Notifications (permission + schedule-start & time-limit nudges) | `OpenAppLock/Views/Settings/NotificationSettingsView.swift`, `OpenAppLock/Services/NotificationAuthorization.swift`, `OpenAppLock/Services/NotificationScheduler.swift` (+ `ScheduleStartNotificationPlan.swift`), `Shared/NotificationPreferences.swift`, `Shared/LimitWarningDecision.swift`, `OpenAppLockMonitor/LimitWarningNotifier.swift`, `Shared/MonitoringPlan.swift` (`tlwarn-`/`warn-`); design spec `Docs/Agents/Specs/NOTIFICATIONS.md` |
+| Foreground reconciliation; **overlapping rules → strictest wins** | `OpenAppLock/Services/RuleEnforcer.swift`, `Shared/Enforcement/ShieldController.swift` |
+| Time/open-limit behavior, granted opens, proactive gate | `Shared/Enforcement/LimitEnforcement.swift`, `Shared/Stores/UsageLedger.swift`, `Shared/Stores/OpenSessionStore.swift` |
+| Shield text + "Open" button / press handling | `Shared/Enforcement/ShieldPresentation.swift`, `OpenAppLockShieldConfig/ShieldConfigurationExtension.swift`, `OpenAppLockShieldAction/ShieldActionExtension.swift` |
+| DeviceActivity scheduling, naming; background monitor | `OpenAppLock/Services/RuleScheduler.swift`, `Shared/Platform/MonitoringPlan.swift`, `OpenAppLockMonitor/DeviceActivityMonitorExtension.swift` |
+| Authoritative time-limit usage report; confirmed day-start gate | `OpenAppLockReport/RuleUsageReport.swift`, `Shared/Stores/DayStartStore.swift`, `OpenAppLock/Views/MainView.swift` |
+| Uninstall Protection | `OpenAppLock/Views/Settings/SettingsView.swift`, `Shared/Enforcement/UninstallProtectionPolicy.swift`, `Shared/Enforcement/UninstallProtectionEnforcer.swift`, `OpenAppLock/Services/AppSettings.swift` |
+| Notifications (permission + schedule-start & time-limit nudges) | `OpenAppLock/Views/Settings/NotificationSettingsView.swift`, `OpenAppLock/Services/NotificationAuthorization.swift`, `OpenAppLock/Services/NotificationScheduler.swift` (+ `ScheduleStartNotificationPlan.swift`), `Shared/Stores/NotificationPreferences.swift`, `Shared/Enforcement/LimitWarningDecision.swift`, `OpenAppLockMonitor/LimitWarningNotifier.swift`, `Shared/Platform/MonitoringPlan.swift` (`tlwarn-`/`warn-`); design spec `Docs/Agents/Specs/NOTIFICATIONS.md` |
 | About links (GitHub / Website) | `OpenAppLock/Services/AppLinks.swift`, `OpenAppLock/Services/LaunchConfiguration.swift` |
-| Diagnostic logging + daily export | `Shared/DiagnosticLog.swift`, `Shared/LogEntry.swift`, `Shared/LogFileWriter.swift` (+ `LogMerge`/`LogRetention`), `OpenAppLock/Services/LogStore.swift`, `OpenAppLock/Views/Settings/DiagnosticLogsView.swift`; instrumentation lives at each enforcement site; design spec `Docs/Agents/Specs/DIAGNOSTIC_LOGGING.md` |
+| Diagnostic logging + daily export | `Shared/Diagnostics/DiagnosticLog.swift`, `Shared/Diagnostics/LogEntry.swift`, `Shared/Diagnostics/LogFileWriter.swift` (+ `LogMerge`/`LogRetention`), `OpenAppLock/Services/LogStore.swift`, `OpenAppLock/Views/Settings/DiagnosticLogsView.swift`; instrumentation lives at each enforcement site; design spec `Docs/Agents/Specs/DIAGNOSTIC_LOGGING.md` |
 
 Not part of the feature: paywall, the Home gem/score UI, a Timer tab (one-off
 sessions). Onboarding exists (`OpenAppLock/Views/Onboarding/`)

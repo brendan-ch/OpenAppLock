@@ -58,6 +58,16 @@ struct LaunchConfigurationTests {
         #expect(config.gitHubURLOverride == nil)
         #expect(config.websiteURLOverride == nil)
     }
+
+    @Test("Parses the -seed-logs flag")
+    func parsesSeedLogs() {
+        let on = LaunchConfiguration.parse(arguments: [
+            "OpenAppLockApp", "-ui-testing", "-seed-logs",
+        ])
+        #expect(on.seedLogs == true)
+        let off = LaunchConfiguration.parse(arguments: ["OpenAppLockApp", "-ui-testing"])
+        #expect(off.seedLogs == false)
+    }
 }
 
 @MainActor

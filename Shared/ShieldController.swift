@@ -61,15 +61,25 @@ final class ManagedSettingsShieldController: ShieldApplying {
         // Screen Time's "Limit Adult Websites" filter for the rule's lifetime.
         store.webContent.blockedByFilter = blockAdultContent ? .auto() : nil
         track(ruleID: ruleID)
+        Diag.log(
+            .shield, .event,
+            "apply rule-\(ruleID.uuidString.prefix(8)) mode=\(mode) adult=\(blockAdultContent) apps=\(selection.applicationTokens.count) cats=\(selection.categoryTokens.count) web=\(selection.webDomainTokens.count)")
     }
 
     func clearShield(ruleID: UUID) {
+        Diag.log(.shield, .event, "clear rule-\(ruleID.uuidString.prefix(8))")
         store(for: ruleID).clearAllSettings()
         untrack(ruleID: ruleID)
     }
 
     func clearShields(except activeRuleIDs: Set<UUID>) {
-        for ruleID in trackedIDs.subtracting(activeRuleIDs) {
+        let toClear = trackedIDs.subtracting(activeRuleIDs)
+        if !toClear.isEmpty {
+            Diag.log(
+                .shield,
+                "clearShields: \(activeRuleIDs.count) active, clearing \(toClear.count) stray")
+        }
+        for ruleID in toClear {
             clearShield(ruleID: ruleID)
         }
     }
@@ -80,6 +90,7 @@ final class ManagedSettingsShieldController: ShieldApplying {
         // (not false) relinquishes the constraint entirely when off.
         let store = ManagedSettingsStore(named: Self.uninstallProtectionStoreName)
         store.application.denyAppRemoval = denied ? true : nil
+        if denied { Diag.log(.shield, "appRemovalDenied engaged (Uninstall Protection)") }
     }
 
     private static let uninstallProtectionStoreName =

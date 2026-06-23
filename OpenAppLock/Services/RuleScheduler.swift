@@ -51,6 +51,7 @@ final class RuleScheduler {
 
     func sync(rules: [BlockingRule], at now: Date = .now) {
         snapshots.save(rules.map(RuleSnapshot.init))
+        Diag.log(.scheduler, "sync: \(rules.count) rules; mirrored snapshots")
 
         var fingerprints = storedFingerprints
         var desiredNames: Set<String> = []
@@ -72,6 +73,12 @@ final class RuleScheduler {
                 let fingerprint = "\(rule.kindRaw)|\(rule.dailyLimitMinutes)|"
                     + Self.selectionFingerprint(selectionData)
                 if needsRestart(name, fingerprint, in: fingerprints) {
+                    // EC7: a restart resets threshold accounting to "from now".
+                    // Log the fingerprint change so a mid-day count reset can be
+                    // correlated to its cause (config change vs not-monitored).
+                    Diag.log(
+                        .scheduler, .event,
+                        "dailyActivity restart \(name): events=\(events) fp \(Self.shortFingerprint(fingerprints[name]))->\(Self.shortFingerprint(fingerprint)) (resets threshold accounting)")
                     start(name: name) {
                         try monitor.startDailyMonitoring(
                             name: name, selectionData: selectionData, eventMinutes: events)
@@ -126,6 +133,7 @@ final class RuleScheduler {
                 && !desiredNames.contains($0)
         }
         if !stale.isEmpty {
+            Diag.log(.scheduler, "stop \(stale.count) stale activities: \(stale.joined(separator: ","))")
             monitor.stopMonitoring(names: stale)
             for name in stale {
                 fingerprints[name] = nil
@@ -152,6 +160,14 @@ final class RuleScheduler {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
+    /// Compact, log-only form of a fingerprint (its trailing 12 chars), or
+    /// "none" when there was no prior fingerprint. Used to make a monitoring
+    /// restart's cause visible without dumping the full SHA-256.
+    static func shortFingerprint(_ fingerprint: String?) -> String {
+        guard let fingerprint else { return "none" }
+        return String(fingerprint.suffix(12))
+    }
+
     /// Runs a best-effort `startMonitoring` call. Monitoring throws on the
     /// simulator, when authorization is missing, and when the activity cap or
     /// minimum interval is exceeded; the next sync retries.
@@ -159,8 +175,12 @@ final class RuleScheduler {
         do {
             try body()
             onStarted()
+            Diag.log(.scheduler, .event, "started monitoring \(name)")
         } catch {
             // Best-effort; the foreground reconciliation loop is the safety net.
+            // On device a failure here means background enforcement did not engage
+            // (the simulator always throws — DeviceActivity is unavailable there).
+            Diag.error(.scheduler, "start failed \(name): \(error.localizedDescription)")
         }
     }
 

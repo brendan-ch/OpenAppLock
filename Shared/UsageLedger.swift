@@ -83,8 +83,12 @@ final class UsageLedger: UsageReading {
         calendar: Calendar = .current
     ) {
         var usage = self.usage(for: ruleID, onDayContaining: date, calendar: calendar)
+        let prior = usage.minutesUsed
         usage.minutesUsed = max(usage.minutesUsed, minutes)
         setUsage(usage, for: ruleID, onDayContaining: date, calendar: calendar)
+        Diag.log(
+            .usage,
+            "ledger.minutes rule-\(ruleID.uuidString.prefix(8)) \(prior)->\(usage.minutesUsed) (event=\(minutes))")
     }
 
     /// Records the report's authoritative daily total without disturbing the
@@ -106,6 +110,8 @@ final class UsageLedger: UsageReading {
         var usage = self.usage(for: ruleID, onDayContaining: date, calendar: calendar)
         usage.opensUsed += 1
         setUsage(usage, for: ruleID, onDayContaining: date, calendar: calendar)
+        Diag.log(
+            .session, "ledger.open rule-\(ruleID.uuidString.prefix(8)) opens=\(usage.opensUsed)")
         return usage
     }
 

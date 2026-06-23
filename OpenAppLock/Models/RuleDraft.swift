@@ -62,6 +62,9 @@ struct RuleDraft: Hashable {
         if rule.appList !== appList {
             rule.appList = appList
         }
+        Diag.log(
+            .rule, .event,
+            "commit rule-\(rule.id.uuidString.prefix(8)) \"\(name)\" \(rule.kindRaw) hard=\(hardMode) enabled=\(rule.isEnabled) list=\(appList?.name ?? "none")")
     }
 
     /// Creates and inserts a new rule from this draft. The rule is inserted

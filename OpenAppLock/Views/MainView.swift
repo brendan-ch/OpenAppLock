@@ -32,10 +32,16 @@ struct MainView: View {
                 await enforcementLoop()
             }
             .onChange(of: ruleChangeToken) {
+                // Logs the rule/app-list-driven refresh trigger so the timeline
+                // shows whether (e.g.) an app-list edit re-enforced at all.
+                Diag.log(.lifecycle, "refresh trigger: rule-change observed")
                 refreshEnforcement()
             }
             .onChange(of: scenePhase) { _, phase in
-                if phase == .active { refreshEnforcement() }
+                if phase == .active {
+                    Diag.log(.lifecycle, "refresh trigger: scenePhase active")
+                    refreshEnforcement()
+                }
             }
     }
 
@@ -107,6 +113,9 @@ struct MainView: View {
     private func enforcementLoop() async {
         while !Task.isCancelled {
             let allRules = (try? modelContext.fetch(FetchDescriptor<BlockingRule>())) ?? []
+            // The 30 s foreground backstop. Logged each tick so coverage gaps
+            // (when the app isn't open to run this) are visible as timeline holes.
+            Diag.log(.lifecycle, "refresh trigger: foreground 30s loop")
             enforcer.refresh(rules: allRules)
             try? await Task.sleep(for: .seconds(30))
         }

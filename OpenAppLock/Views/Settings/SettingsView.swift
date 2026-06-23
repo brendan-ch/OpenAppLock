@@ -88,6 +88,20 @@ struct SettingsView: View {
                 } header: {
                     Text("Notifications").textCase(nil)
                 }
+                Section {
+                    NavigationLink {
+                        DiagnosticLogsView()
+                    } label: {
+                        Label("Logs", systemImage: "doc.text.magnifyingglass")
+                    }
+                    .accessibilityIdentifier("diagnosticsLogsRow")
+                } header: {
+                    Text("Diagnostics").textCase(nil)
+                } footer: {
+                    Text(
+                        "Records how and when blocks execute, for troubleshooting. Export a day "
+                            + "to share it.")
+                }
                 linkSection
                 if launch.isUITesting {
                     // Test-only probe: the destination of the last intercepted

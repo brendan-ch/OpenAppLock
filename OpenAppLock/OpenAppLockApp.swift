@@ -15,9 +15,35 @@ struct OpenAppLockApp: App {
     @State private var notificationAuthorization: NotificationAuthorization
     @State private var enforcer: RuleEnforcer
     @State private var settings: AppSettingsStore
+    @State private var logStore: LogStore
 
     init() {
         let config = LaunchConfiguration.current
+
+        // Diagnostic logging, configured before anything else can log: app-group
+        // `Logs/` in production; a wiped per-launch temp dir under UI testing so
+        // the export flow is hermetic and deterministic.
+        let logsDirectory: URL
+        if config.isUITesting {
+            let temp = FileManager.default.temporaryDirectory
+                .appendingPathComponent("DiagLogsUITest", isDirectory: true)
+            try? FileManager.default.removeItem(at: temp)
+            logsDirectory = temp
+        } else {
+            logsDirectory = DiagnosticLogLocation.defaultDirectory()
+        }
+        Diag.configure(directory: logsDirectory)
+        let logStore = LogStore(directory: logsDirectory)
+        if !config.isUITesting {
+            logStore.prune()
+        }
+        _logStore = State(initialValue: logStore)
+        Diag.log(.lifecycle, "app launch (uiTesting=\(config.isUITesting))")
+        if config.seedLogs {
+            Diag.log(.rule, "SEED-MARKER seeded rule snapshot")
+            Diag.log(.enforcer, .event, "SEED-MARKER refresh applied a shield")
+            Diag.error(.monitor, "SEED-MARKER simulated threshold drop")
+        }
 
         if let onboardingCompleted = config.onboardingCompleted {
             UserDefaults.standard.set(onboardingCompleted, forKey: "hasCompletedOnboarding")
@@ -94,6 +120,7 @@ struct OpenAppLockApp: App {
                 .environment(notificationAuthorization)
                 .environment(enforcer)
                 .environment(settings)
+                .environment(logStore)
         }
         .modelContainer(container)
     }

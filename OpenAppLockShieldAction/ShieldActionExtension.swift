@@ -63,6 +63,7 @@ final class ShieldActionExtension: ShieldActionDelegate {
     }
 
     private func grantOpen(ruleID: UUID) -> ShieldActionResponse {
+        Diag.log(.session, .event, "shieldAction Open pressed rule-\(ruleID.uuidString.prefix(8))")
         let enforcement = LimitEnforcement(
             snapshots: RuleSnapshotStore(),
             ledger: UsageLedger(),

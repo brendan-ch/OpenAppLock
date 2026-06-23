@@ -38,6 +38,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
+        Diag.log(.monitor, .event, "intervalDidStart \(activity.rawValue)")
         if let ruleID = MonitoringPlan.ruleID(fromDailyActivityName: activity.rawValue) {
             enforcement.handleDayStart(ruleID: ruleID)
         } else if let ruleID = MonitoringPlan.ruleID(fromScheduleWindowName: activity.rawValue) {
@@ -50,6 +51,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
+        Diag.log(.monitor, .event, "intervalDidEnd \(activity.rawValue)")
         if let ruleID = MonitoringPlan.ruleID(fromSessionActivityName: activity.rawValue) {
             enforcement.handleOpenSessionEnded(ruleID: ruleID)
             DeviceActivityCenter().stopMonitoring([activity])
@@ -66,6 +68,9 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         _ event: DeviceActivityEvent.Name, activity: DeviceActivityName
     ) {
         super.eventDidReachThreshold(event, activity: activity)
+        Diag.log(
+            .monitor, .event,
+            "eventDidReachThreshold event=\(event.rawValue) activity=\(activity.rawValue)")
         // The opt-in warn activity fires ~5 min before the budget on its own
         // activity, so check it first — its events don't use the `minutes-`
         // naming the block path parses, and it records no usage.

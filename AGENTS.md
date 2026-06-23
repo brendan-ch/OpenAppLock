@@ -31,7 +31,10 @@ Shared/                     Compiled into the app AND all four extensions:
                             group), MonitoringPlan (activity/event naming),
                             LimitEnforcement (shared event reactions),
                             DayStartStore (confirmed daily-activity starts),
-                            ShieldController, ShieldLookup
+                            ShieldController, ShieldLookup,
+                            DiagnosticLog (`Diag` dual-sink logging facade) +
+                            LogEntry/LogMerge/LogRetention/LogFileWriter
+                            (per-process daily log files in the app group)
 OpenAppLockMonitor/         DeviceActivityMonitor extension: midnight resets,
                             usage-minute checkpoints → shield at the limit,
                             open-session expiry
@@ -136,6 +139,7 @@ Where each topic is documented:
 | Uninstall Protection | `OpenAppLock/Views/Settings/SettingsView.swift`, `Shared/UninstallProtectionPolicy.swift`, `Shared/UninstallProtectionEnforcer.swift`, `OpenAppLock/Services/AppSettings.swift` |
 | Notifications (permission + schedule-start & time-limit nudges) | `OpenAppLock/Views/Settings/NotificationSettingsView.swift`, `OpenAppLock/Services/NotificationAuthorization.swift`, `OpenAppLock/Services/NotificationScheduler.swift` (+ `ScheduleStartNotificationPlan.swift`), `Shared/NotificationPreferences.swift`, `Shared/LimitWarningDecision.swift`, `OpenAppLockMonitor/LimitWarningNotifier.swift`, `Shared/MonitoringPlan.swift` (`tlwarn-`/`warn-`); design spec `Docs/Agents/Specs/NOTIFICATIONS.md` |
 | About links (GitHub / Website) | `OpenAppLock/Services/AppLinks.swift`, `OpenAppLock/Services/LaunchConfiguration.swift` |
+| Diagnostic logging + daily export | `Shared/DiagnosticLog.swift`, `Shared/LogEntry.swift`, `Shared/LogFileWriter.swift` (+ `LogMerge`/`LogRetention`), `OpenAppLock/Services/LogStore.swift`, `OpenAppLock/Views/Settings/DiagnosticLogsView.swift`; instrumentation lives at each enforcement site; design spec `Docs/Agents/Specs/DIAGNOSTIC_LOGGING.md` |
 
 Not part of the feature: paywall, the Home gem/score UI, a Timer tab (one-off
 sessions). Onboarding exists (`OpenAppLock/Views/Onboarding/`)
@@ -200,6 +204,7 @@ when reminded:
 | `-seed-scenario=standard` | Active soft rule "Work Time" + upcoming "Sleep" |
 | `-seed-scenario=hard-mode-active` | Active Hard Mode rule "Locked In" + upcoming "Sleep" |
 | `-github-url=<url>` / `-website-url=<url>` | Override the Settings About links with deterministic URLs |
+| `-seed-logs` | Route diagnostic logs to a wiped per-launch temp dir and seed deterministic `SEED-MARKER` entries (Settings → Diagnostics → Logs export flow) |
 
 Use `XCUIApplication.launchOpenAppLock(...)` (UITestSupport.swift), which also
 provides `app.element(_:)` for identifier lookup across element types and
@@ -248,6 +253,21 @@ Gotchas learned the hard way:
 
 ## Known gaps / next steps
 
+- **Diagnostic logs are now the primary on-device instrument.** Every process
+  logs how/when blocks execute to `os.Logger` (live in Xcode/Console) and to
+  per-process daily files in the app group, exportable from Settings →
+  Diagnostics → Logs as a per-day `.txt`. Each line carries its
+  `[File.swift:line function]` so behavior traces back to code. When debugging
+  the time-limit / blocking inconsistencies, pull a day's export and read the
+  enforcement timeline (the `event`-level lines and the "drop … (stale …)"
+  rejections in particular). Instrumentation breadth may widen after the first
+  device logs. **Likely bug surfaced while instrumenting:** editing an existing
+  app list saves the new selection but its editor completion handler is a no-op
+  (`AppListLibraryView` `editingList` → `{ _ in }`), so nothing re-enforces
+  until the next 30 s `RuleEnforcer` loop — a strong match for "app-list edits
+  don't register after I save." Not fixed in the logging change; confirm via the
+  logs (an `appList saved … (edit)` line with no following `enforcer refresh`)
+  then address separately.
 - **On-device verification of limit enforcement is pending.** The
   DeviceActivity monitor + shield extensions and the app group are in place,
   but real blocking/usage tracking is only observable on a device (the

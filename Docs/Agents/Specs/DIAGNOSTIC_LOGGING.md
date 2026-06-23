@@ -82,14 +82,34 @@ e.g. `app-2026-06-22.log`, `monitor-2026-06-22.log`, `report-2026-06-22.log`,
 ### Line format
 
 One entry = one line. A fixed-width UTC ISO8601(ms) prefix makes a plain lexical
-sort identical to chronological order, which is what the merge relies on:
+sort identical to chronological order, which is what the merge relies on. Every
+entry also carries the **source location** it was emitted from (captured
+automatically via `#fileID`/`#line`/`#function`), so a line read back from an
+exported log traces straight to the code that produced it:
 
 ```
-2026-06-22T14:03:11.482Z [EVENT] [app/enforcer] refresh: 2 active rules; applied shield rule-ABC (strictest), cleared rule-DEF
+2026-06-22T14:03:11.482Z [EVENT] [app/enforcer] applied shield rule-ABC (strictest) [RuleEnforcer.swift:104 refresh(rules:at:calendar:)]
 ```
 
-Fields: `<iso8601-utc-ms>` · `[<LEVEL>]` · `[<source>/<category>]` · `<message>`.
-Newlines and tabs are stripped from the message so each entry stays on one line.
+Fields: `<iso8601-utc-ms>` · `[<LEVEL>]` · `[<source>/<category>]` · `<message>` ·
+`[<File.swift>:<line> <function>]`. Newlines and tabs are stripped from the
+message (and function) so each entry stays on one line.
+
+### Verbosity & traceability
+
+The logs must be detailed enough that, reading a day back, one can tell *exactly*
+what happened, spot anomalies, and trace each to code. Concretely, the
+enforcement sites log the **inputs**, the **decision**, and the **outcome** —
+including the "why-not" branches that are the usual source of blocking bugs:
+
+- a rule that was *considered but not shielded*, and why (disabled, paused,
+  not scheduled today, budget not yet spent, inside a granted open session);
+- a threshold/usage event *rejected as stale* (with the value and the bound it
+  failed), not just the accepted ones;
+- before→after shield state on every `refresh` (which rule ids gained/lost a
+  shield), so an unexpected clear or a missed apply is visible;
+- an app-list or rule **save** and whether it triggered a re-enforce — the
+  direct probe for "edits don't register after I save them".
 
 - **Levels**: `debug · info · event · error`. `event` flags the load-bearing
   "a block actually executed / a threshold fired" lines for easy grepping; it

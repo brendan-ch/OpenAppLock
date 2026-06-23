@@ -14,7 +14,8 @@
 - **14-day** on-device retention, pruned at app launch.
 - App-group identifier is `group.dev.bchen.OpenAppLock` (`AppGroup.identifier`).
 - Bundle IDs → source: `dev.bchen.OpenAppLock`→`app`, `.Monitor`→`monitor`, `.ShieldConfig`→`shieldconfig`, `.ShieldAction`→`shieldaction`, `.Report`→`report`.
-- Line format (one entry per line): `<UTC-ISO8601-ms> [<LEVEL>] [<source>/<category>] <message>`, e.g. `2026-06-22T14:03:11.482Z [EVENT] [app/enforcer] refresh: ...`. The timestamp is **UTC** (sortable); the **file's day bucket uses the local calendar** (`UsageLedger.dayKey`).
+- Line format (one entry per line): `<UTC-ISO8601-ms> [<LEVEL>] [<source>/<category>] <message> [<File.swift>:<line> <function>]`, e.g. `2026-06-22T14:03:11.482Z [EVENT] [app/enforcer] applied shield rule-ABC [RuleEnforcer.swift:104 refresh(rules:at:calendar:)]`. The timestamp is **UTC** (sortable); the **file's day bucket uses the local calendar** (`UsageLedger.dayKey`). Every entry carries its **source location** (`#fileID`/`#line`/`#function`) so a log line traces back to the exact code.
+- **Verbosity:** the enforcement sites log inputs, the decision, and the outcome — including the "why-not" branches (rule considered but not shielded and why; usage/threshold event rejected as stale; before→after shield state per refresh; whether a save re-enforced). Reading a day back must show exactly what happened and let anomalies be traced to code.
 - Levels: `debug · info · event · error` (`event` → `os` `.default`/notice).
 - Logging is strictly **additive** — it must never change behavior. The full existing unit + UI suites must stay green.
 - Logging types are `Sendable` / `nonisolated` — callable from any process/thread (the app target defaults to `MainActor` isolation; extensions call from arbitrary queues). Do **not** hop to `MainActor`.
@@ -616,7 +617,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 **Interfaces:**
 - Consumes: everything from Tasks 1 & 3.
 - Produces:
-  - `enum Diag { static func configure(directory: URL); static func log(_ category: LogCategory, _ level: LogLevel = .info, _ message: String); static func error(_ category: LogCategory, _ message: String) }`
+  - `enum Diag { static func configure(directory: URL, source: LogSource); static func log(_ category: LogCategory, _ level: LogLevel = .info, _ message: String, file: String = #fileID, function: String = #function, line: Int = #line); static func error(_ category: LogCategory, _ message: String, file: String = #fileID, function: String = #function, line: Int = #line) }` — `log`/`error` capture the call site and pass it into `LogEntry`; the os.Logger message also gets a `[File.swift:line]` suffix.
   - `extension LogLevel { var osType: OSLogType }`
 
 - [ ] **Step 1: Write the failing test**
@@ -694,16 +695,25 @@ enum Diag {
         writer = LogFileWriter(directory: directory, source: source)
     }
 
-    static func log(_ category: LogCategory, _ level: LogLevel = .info, _ message: String) {
+    static func log(
+        _ category: LogCategory, _ level: LogLevel = .info, _ message: String,
+        file: String = #fileID, function: String = #function, line: Int = #line
+    ) {
         let date = Date()
+        let shortFile = LogEntry.shortFile(file)
         let entry = LogEntry(
-            date: date, level: level, source: source, category: category, message: message)
-        logger(for: category).log(level: level.osType, "\(message, privacy: .public)")
-        fileWriter().append(entry.line, day: date)
+            date: date, level: level, source: source, category: category, message: message,
+            file: shortFile, line: line, function: function)
+        logger(for: category).log(
+            level: level.osType, "\(message, privacy: .public) [\(shortFile):\(line)]")
+        fileWriter().append(entry.formatted, day: date)
     }
 
-    static func error(_ category: LogCategory, _ message: String) {
-        log(category, .error, message)
+    static func error(
+        _ category: LogCategory, _ message: String,
+        file: String = #fileID, function: String = #function, line: Int = #line
+    ) {
+        log(category, .error, message, file: file, function: function, line: line)
     }
 
     private static func fileWriter() -> LogFileWriter {
@@ -1262,6 +1272,14 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ## Task 8: Instrument the enforcement + state-change layer
 
 Add `Diag.log(...)` calls at the sites below. **Additive only** — change no control flow, no return values, no signatures. After wiring, the entire existing unit + UI suite must still pass unchanged.
+
+**Verbosity bar:** reading a day's log back must let you tell *exactly* what happened, spot anomalies, and trace each to code (the trailing `[File.swift:line function]` gives the anchor). At each site log the **inputs**, the **decision**, and the **outcome** — and crucially the **"why-not" branches**, which is where blocking bugs hide:
+- In `RuleEnforcer.refresh`: log each rule's id/kind/status and *why* it was or wasn't shielded (disabled / paused-until / not-scheduled-today / budget spent vs. remaining / inside a granted open session / open-limit gate), and the **before→after** shielded set (which ids gained or lost a shield this pass) plus `appRemovalDenied` transitions.
+- In the monitor: log accepted *and* **rejected** events — a stale threshold drop logs the event value and the bound it failed (`minutesSinceMidnight`, confirmed day-start), not silence.
+- In `UsageLedger`/report: log the prior value, the incoming value, and the stored result (so a counter that "stalls at 14/15" is visible as the exact sequence of writes).
+- At save sites: log what changed and whether a re-enforce ran.
+
+Keep each message one line and information-dense; prefer `rule-<first8>` id prefixes and concrete numbers over prose.
 
 **Files (modify):**
 - `OpenAppLock/Services/RuleEnforcer.swift`

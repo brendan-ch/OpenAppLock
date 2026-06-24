@@ -104,7 +104,20 @@ final class NotificationAuthorization {
         persist(newStatus)
     }
 
+    /// Mirrors "can deliver right now" into the shared app group — but only from a
+    /// *determined* status. `.notDetermined` is the launch placeholder ("not
+    /// checked yet"), set before any real read; treating it as "can't deliver"
+    /// and writing `false` would wipe a genuine grant on every relaunch and tear
+    /// down the time-limit warn activity, so it leaves the stored value intact.
+    /// Only an explicit `.denied` clears the mirror.
     private func persist(_ status: NotificationAuthorizationStatus) {
-        defaults.set(status == .authorized, forKey: AppGroup.notificationsAuthorizedKey)
+        switch status {
+        case .authorized:
+            defaults.set(true, forKey: AppGroup.notificationsAuthorizedKey)
+        case .denied:
+            defaults.set(false, forKey: AppGroup.notificationsAuthorizedKey)
+        case .notDetermined:
+            break
+        }
     }
 }

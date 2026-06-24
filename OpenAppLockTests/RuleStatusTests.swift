@@ -20,19 +20,19 @@ struct RuleStatusTests {
     func disabled() {
         let rule = workTime()
         rule.isEnabled = false
-        #expect(rule.status(at: date(2025, 1, 6, 10, 0), calendar: utc) == .disabled)
+        #expect(rule.dto.status(at: date(2025, 1, 6, 10, 0), calendar: utc) == .disabled)
     }
 
     @Test("Enabled rule inside its window is active until the window ends")
     func active() {
-        let status = workTime().status(at: date(2025, 1, 6, 10, 0), calendar: utc)
+        let status = workTime().dto.status(at: date(2025, 1, 6, 10, 0), calendar: utc)
         #expect(status == .active(until: date(2025, 1, 6, 17, 0)))
         #expect(status.isActive)
     }
 
     @Test("Enabled rule outside its window is upcoming")
     func upcoming() {
-        let status = workTime().status(at: date(2025, 1, 6, 18, 0), calendar: utc)
+        let status = workTime().dto.status(at: date(2025, 1, 6, 18, 0), calendar: utc)
         #expect(status == .upcoming(startsAt: date(2025, 1, 7, 9, 0)))
         #expect(!status.isActive)
     }
@@ -41,14 +41,14 @@ struct RuleStatusTests {
     func dormant() {
         let rule = workTime()
         rule.days = []
-        #expect(rule.status(at: date(2025, 1, 6, 10, 0), calendar: utc) == .dormant)
+        #expect(rule.dto.status(at: date(2025, 1, 6, 10, 0), calendar: utc) == .dormant)
     }
 
     @Test("A paused rule reports paused until the window ends")
     func paused() {
         let rule = workTime()
         rule.pausedUntil = date(2025, 1, 6, 17, 0)
-        let status = rule.status(at: date(2025, 1, 6, 10, 0), calendar: utc)
+        let status = rule.dto.status(at: date(2025, 1, 6, 10, 0), calendar: utc)
         #expect(status == .paused(until: date(2025, 1, 6, 17, 0)))
         #expect(!status.isActive)
     }
@@ -57,14 +57,14 @@ struct RuleStatusTests {
     func expiredPause() {
         let rule = workTime()
         rule.pausedUntil = date(2025, 1, 6, 9, 30)
-        let status = rule.status(at: date(2025, 1, 6, 10, 0), calendar: utc)
+        let status = rule.dto.status(at: date(2025, 1, 6, 10, 0), calendar: utc)
         #expect(status == .active(until: date(2025, 1, 6, 17, 0)))
     }
 
     @Test("Time-limit rules are never schedule-active")
     func timeLimitNeverActive() {
         let rule = BlockingRule(name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig()))
-        let status = rule.status(at: date(2025, 1, 6, 10, 0), calendar: utc)
+        let status = rule.dto.status(at: date(2025, 1, 6, 10, 0), calendar: utc)
         #expect(!status.isActive)
         if case .upcoming = status {} else {
             Issue.record("Expected upcoming, got \(status)")
@@ -74,7 +74,7 @@ struct RuleStatusTests {
     @Test("Active label rounds hours up")
     func activeLabel() {
         // 11:28 → 17:00 is 5h32m; rounds up to "6h left".
-        let status = workTime().status(at: date(2025, 1, 6, 11, 28), calendar: utc)
+        let status = workTime().dto.status(at: date(2025, 1, 6, 11, 28), calendar: utc)
         #expect(status.label(relativeTo: date(2025, 1, 6, 11, 28)) == "6h left")
     }
 
@@ -83,7 +83,7 @@ struct RuleStatusTests {
         // Friday 11:28 → Saturday 09:00 is 21h32m; rounds up to "Starts in 22h".
         let weekend = BlockingRule(name: "Weekend Zen", days: Weekday.weekends)
         let friday = date(2025, 1, 10, 11, 28)
-        #expect(weekend.status(at: friday, calendar: utc).label(relativeTo: friday) == "Starts in 22h")
+        #expect(weekend.dto.status(at: friday, calendar: utc).label(relativeTo: friday) == "Starts in 22h")
     }
 
     @Test("Countdown formatting tiers", arguments: [
@@ -119,8 +119,8 @@ struct RuleStatusTests {
         let rule = BlockingRule(
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
         let now = date(2025, 1, 6, 11, 38) // past the vestigial 09:00 window start
-        let status = rule.status(at: now, calendar: utc)
-        #expect(rule.rowContext(for: status, usage: RuleUsage(), relativeTo: now) == "15m / day")
+        let status = rule.dto.status(at: now, calendar: utc)
+        #expect(rule.dto.rowContext(for: status, usage: RuleUsage(), relativeTo: now) == "15m / day")
     }
 
     @Test("Untouched open-limit rule shows its daily opens budget")
@@ -128,16 +128,16 @@ struct RuleStatusTests {
         let rule = BlockingRule(
             name: "Gate Keeper", configuration: .openLimit(OpenLimitConfig(maxOpens: 5)))
         let now = date(2025, 1, 6, 11, 38)
-        let status = rule.status(at: now, calendar: utc)
-        #expect(rule.rowContext(for: status, usage: RuleUsage(), relativeTo: now) == "5 opens / day")
+        let status = rule.dto.status(at: now, calendar: utc)
+        #expect(rule.dto.rowContext(for: status, usage: RuleUsage(), relativeTo: now) == "5 opens / day")
     }
 
     @Test("Schedule rule still shows the clock countdown")
     func scheduleDisplayLabelUnchanged() {
         let weekend = BlockingRule(name: "Weekend Zen", days: Weekday.weekends)
         let friday = date(2025, 1, 10, 11, 28)
-        let status = weekend.status(at: friday, calendar: utc)
-        #expect(weekend.rowContext(for: status, usage: RuleUsage(), relativeTo: friday) == "Starts in 22h")
+        let status = weekend.dto.status(at: friday, calendar: utc)
+        #expect(weekend.dto.rowContext(for: status, usage: RuleUsage(), relativeTo: friday) == "Starts in 22h")
     }
 
     /// Limit rules block by budget, not by the clock, so a spent one reads its
@@ -148,8 +148,8 @@ struct RuleStatusTests {
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
         let now = date(2025, 1, 6, 11, 38)
         let usage = RuleUsage(minutesUsed: 15)
-        let status = rule.status(at: now, calendar: utc, usage: usage)
+        let status = rule.dto.status(at: now, calendar: utc, usage: usage)
         #expect(status.isActive)
-        #expect(rule.rowContext(for: status, usage: usage, relativeTo: now) == "15m of 15m used")
+        #expect(rule.dto.rowContext(for: status, usage: usage, relativeTo: now) == "15m of 15m used")
     }
 }

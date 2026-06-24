@@ -57,10 +57,10 @@ final class RuleEnforcer {
 
     /// The day's usage for a rule (nil for schedule rules, which don't track).
     func usage(
-        for rule: BlockingRule, at now: Date = .now, calendar: Calendar = .current
+        for snapshot: RuleSnapshotDTO, at now: Date = .now, calendar: Calendar = .current
     ) -> RuleUsage? {
-        guard rule.kind != .schedule else { return nil }
-        return usageReader.usage(for: rule.id, onDayContaining: now, calendar: calendar)
+        guard snapshot.kind != .schedule else { return nil }
+        return usageReader.usage(for: snapshot.id, onDayContaining: now, calendar: calendar)
     }
 
     /// Recomputes shields from scratch. Call on launch, on any rule change,
@@ -86,90 +86,142 @@ final class RuleEnforcer {
         var blocking: Set<UUID> = []
         var shielded: Set<UUID> = []
         for rule in rules {
-            let rid = rule.id.uuidString.prefix(8)
-            if let pausedUntil = rule.pausedUntil, pausedUntil <= now {
-                rule.pausedUntil = nil
-                Diag.log(.enforcer, "rule-\(rid): pause expired, re-armed")
-            }
-            // 4c safety net: a skipped monitor `intervalDidStart` would block
-            // usage recording all day; establish today's confirmed start from the
-            // foreground (no zeroing — preserve any legitimate accrual).
-            if rule.kind == .timeLimit, rule.isEnabled,
-               dayStarts.confirmedStart(for: rule.id) != calendar.startOfDay(for: now) {
-                dayStarts.setConfirmedStart(calendar.startOfDay(for: now), for: rule.id)
-                Diag.log(.dayStart, "rule-\(rid): foreground confirmed today's start (safety net)")
-            }
-            let usage = usage(for: rule, at: now, calendar: calendar)
-            let status = rule.status(at: now, calendar: calendar, usage: usage)
-            let isBlocking = status.isActive
-            if isBlocking { blocking.insert(rule.id) }
-            // EC4/EC9: surface the authoritative-vs-threshold decision for time
-            // limits — which source the block decision used, its freshness, and a
-            // WARN when the report's (app-token-only) authoritative figure has
-            // lifted a block the threshold count says is real.
-            if rule.kind == .timeLimit, let usage {
-                let limit = rule.dailyLimitMinutes
-                let effective = usage.effectiveMinutesUsed(asOf: now)
-                let asOfAge = usage.authoritativeAsOf.map { Int(now.timeIntervalSince($0)) }
-                let usingAuthoritative =
-                    usage.authoritativeMinutesUsed != nil
-                    && (asOfAge.map { abs($0) <= Int(RuleUsage.authoritativeFreshness) } ?? false)
-                Diag.log(
-                    .usage,
-                    "timeLimit rule-\(rid) threshold=\(usage.minutesUsed) auth=\(usage.authoritativeMinutesUsed.map(String.init) ?? "-")@\(asOfAge.map { "\($0)s" } ?? "-") effective=\(effective)/\(limit) source=\(usingAuthoritative ? "authoritative" : "threshold")")
-                if !isBlocking, usage.minutesUsed >= limit, effective < limit {
-                    Diag.log(
-                        .usage, .error,
-                        "WARN rule-\(rid): authoritative lifted a real block (threshold=\(usage.minutesUsed)>=\(limit) but effective=\(effective)) — possible category/web undercount (EC4)")
-                }
-            }
-            let gating = !isBlocking && shouldGateOpenLimit(rule, at: now, calendar: calendar)
-            guard isBlocking || gating else {
-                Diag.log(
-                    .enforcer,
-                    "rule-\(rid) \(rule.kindRaw): not shielded (status=\(status) enabled=\(rule.isEnabled))")
-                continue
-            }
-            shielded.insert(rule.id)
-            Diag.log(
-                .enforcer, .event,
-                "rule-\(rid) \(rule.kindRaw): shield (\(isBlocking ? "active status=\(status)" : "open-limit gate")\(usage.map { ", used=\($0.minutesUsed)/opens=\($0.opensUsed)" } ?? ""))")
-            shields.applyShield(
-                ruleID: rule.id,
-                selectionData: rule.appList?.selectionData,
-                // Allow Only and Block Adult Content are Schedule-only options;
-                // the model already forces .block / false on limit rules, so we
-                // can forward the rule's values directly.
-                mode: rule.selectionMode,
-                blockAdultContent: rule.blockAdultContent
-            )
+            let outcome = evaluate(rule, at: now, calendar: calendar)
+            if outcome.isBlocking { blocking.insert(rule.id) }
+            if outcome.isShielded { shielded.insert(rule.id) }
         }
         shields.clearShields(except: shielded)
-        // "Blocked Apps" lists only rules whose budget/window is spent — not the
-        // proactive open-limit gate, which surfaces under "Usage" instead.
-        blockingRuleIDs = blocking
-        if priorBlocking != blocking {
+        commitBlockingSet(blocking, prior: priorBlocking, shieldedCount: shielded.count)
+        applyUninstallProtection(rules: rules, at: now, calendar: calendar)
+        scheduler?.sync(rules: rules, at: now)
+        syncStartingSoonNotifications(rules: rules)
+    }
+
+    /// Runs one rule through the refresh pipeline — expire a stale pause, confirm
+    /// today's day-start, then decide whether it is actively blocking and whether
+    /// it should carry a shield (an active block, or an open-limit's proactive
+    /// gate), applying the shield as a side effect. Returns both facts so
+    /// `refresh` can accumulate the blocking and shielded sets.
+    private func evaluate(
+        _ rule: BlockingRule, at now: Date, calendar: Calendar
+    ) -> (isBlocking: Bool, isShielded: Bool) {
+        expireStalePauseIfNeeded(rule, at: now)
+        confirmForegroundDayStartIfNeeded(rule, at: now, calendar: calendar)
+        let snapshot = rule.dto
+        let usage = usage(for: snapshot, at: now, calendar: calendar)
+        let status = snapshot.status(at: now, calendar: calendar, usage: usage)
+        let isBlocking = status.isActive
+        logTimeLimitDecision(rule, usage: usage, isBlocking: isBlocking, at: now)
+        guard isBlocking || shouldGateOpenLimit(snapshot, at: now, calendar: calendar) else {
+            let rid = rule.id.uuidString.prefix(8)
             Diag.log(
-                .enforcer, .event,
-                "blocking set changed \(priorBlocking.count)->\(blocking.count); shielded=\(shielded.count)")
+                .enforcer,
+                "rule-\(rid) \(rule.kindRaw): not shielded (status=\(status) enabled=\(rule.isEnabled))")
+            return (isBlocking, false)
         }
-        // Uninstall Protection: deny device app removal while the user has opted
-        // in and any Hard Mode rule is actively blocking.
+        applyShield(for: snapshot, status: status, usage: usage, isBlocking: isBlocking)
+        return (isBlocking, true)
+    }
+
+    /// Clears a pause that has elapsed so the rule re-arms at its next window.
+    private func expireStalePauseIfNeeded(_ rule: BlockingRule, at now: Date) {
+        guard let pausedUntil = rule.pausedUntil, pausedUntil <= now else { return }
+        rule.pausedUntil = nil
+        let rid = rule.id.uuidString.prefix(8)
+        Diag.log(.enforcer, "rule-\(rid): pause expired, re-armed")
+    }
+
+    /// 4c safety net: a skipped monitor `intervalDidStart` would block usage
+    /// recording all day; establish today's confirmed start from the foreground
+    /// (no zeroing — preserve any legitimate accrual).
+    private func confirmForegroundDayStartIfNeeded(
+        _ rule: BlockingRule, at now: Date, calendar: Calendar
+    ) {
+        guard rule.kind == .timeLimit, rule.isEnabled,
+            dayStarts.confirmedStart(for: rule.id) != calendar.startOfDay(for: now)
+        else { return }
+        dayStarts.setConfirmedStart(calendar.startOfDay(for: now), for: rule.id)
+        let rid = rule.id.uuidString.prefix(8)
+        Diag.log(.dayStart, "rule-\(rid): foreground confirmed today's start (safety net)")
+    }
+
+    /// EC4/EC9 diagnostics for a time-limit rule: surface the
+    /// authoritative-vs-threshold decision — which source the block decision used,
+    /// its freshness, and a WARN when the report's (app-token-only) authoritative
+    /// figure has lifted a block the threshold count says is real.
+    private func logTimeLimitDecision(
+        _ rule: BlockingRule, usage: RuleUsage?, isBlocking: Bool, at now: Date
+    ) {
+        guard rule.kind == .timeLimit, let usage else { return }
+        let rid = rule.id.uuidString.prefix(8)
+        let limit = rule.dailyLimitMinutes
+        let effective = usage.effectiveMinutesUsed(asOf: now)
+        let asOfAge = usage.authoritativeAsOf.map { Int(now.timeIntervalSince($0)) }
+        let usingAuthoritative =
+            usage.authoritativeMinutesUsed != nil
+            && (asOfAge.map { abs($0) <= Int(RuleUsage.authoritativeFreshness) } ?? false)
+        Diag.log(
+            .usage,
+            "timeLimit rule-\(rid) threshold=\(usage.minutesUsed) auth=\(usage.authoritativeMinutesUsed.map(String.init) ?? "-")@\(asOfAge.map { "\($0)s" } ?? "-") effective=\(effective)/\(limit) source=\(usingAuthoritative ? "authoritative" : "threshold")")
+        if !isBlocking, usage.minutesUsed >= limit, effective < limit {
+            Diag.log(
+                .usage, .error,
+                "WARN rule-\(rid): authoritative lifted a real block (threshold=\(usage.minutesUsed)>=\(limit) but effective=\(effective)) — possible category/web undercount (EC4)")
+        }
+    }
+
+    /// Records the rule's shield and writes it. Allow Only and Block Adult Content
+    /// are Schedule-only options; the model already forces `.block`/`false` on
+    /// limit rules, so we forward the rule's values directly.
+    private func applyShield(
+        for snapshot: RuleSnapshotDTO, status: RuleStatus, usage: RuleUsage?, isBlocking: Bool
+    ) {
+        let rid = snapshot.id.uuidString.prefix(8)
+        Diag.log(
+            .enforcer, .event,
+            "rule-\(rid) \(snapshot.kindRaw): shield (\(isBlocking ? "active status=\(status)" : "open-limit gate")\(usage.map { ", used=\($0.minutesUsed)/opens=\($0.opensUsed)" } ?? ""))")
+        shields.applyShield(
+            ruleID: snapshot.id,
+            selectionData: snapshot.selectionData,
+            mode: snapshot.selectionMode,
+            blockAdultContent: snapshot.blockAdultContent
+        )
+    }
+
+    /// Publishes the new actively-blocking set and logs when it changes. "Blocked
+    /// Apps" lists only rules whose budget/window is spent — not the proactive
+    /// open-limit gate, which surfaces under "Usage" instead.
+    private func commitBlockingSet(
+        _ blocking: Set<UUID>, prior: Set<UUID>, shieldedCount: Int
+    ) {
+        blockingRuleIDs = blocking
+        guard prior != blocking else { return }
+        Diag.log(
+            .enforcer, .event,
+            "blocking set changed \(prior.count)->\(blocking.count); shielded=\(shieldedCount)")
+    }
+
+    /// Uninstall Protection: deny device app removal while the user has opted in
+    /// and any Hard Mode rule is actively blocking.
+    private func applyUninstallProtection(
+        rules: [BlockingRule], at now: Date, calendar: Calendar
+    ) {
         shields.setAppRemovalDenied(
             RulePolicy.shouldDenyAppRemoval(
-                rules: rules,
+                snapshots: rules.map(\.dto),
                 enabled: settings.uninstallProtectionEnabled,
                 usageFor: { usage(for: $0, at: now, calendar: calendar) },
                 at: now, calendar: calendar))
-        scheduler?.sync(rules: rules, at: now)
-        // Re-sync the "starting soon" notifications off the same funnel. The
-        // scheduler is an actor (overlapping fire-and-forget calls from the 30 s
-        // loop serialize) and fingerprint-gated, so this is cheap when unchanged.
-        if let notificationScheduler {
-            let snapshots = rules.map(RuleSnapshot.init)
-            let enabled = NotificationPreferences().scheduleStartEnabled
-            Task { await notificationScheduler.sync(snapshots: snapshots, enabled: enabled) }
-        }
+    }
+
+    /// Re-syncs the "starting soon" notifications off the same refresh funnel. The
+    /// scheduler is an actor (overlapping fire-and-forget calls from the 30 s loop
+    /// serialize) and fingerprint-gated, so this is cheap when unchanged.
+    private func syncStartingSoonNotifications(rules: [BlockingRule]) {
+        guard let notificationScheduler else { return }
+        let snapshots = rules.map(\.dto)
+        let enabled = NotificationPreferences().scheduleStartEnabled
+        Task { await notificationScheduler.sync(snapshots: snapshots, enabled: enabled) }
     }
 
     /// Whether an open-limit rule should carry its proactive gate right now:
@@ -177,12 +229,12 @@ final class RuleEnforcer {
     /// session (which would otherwise be cut short). Mirrors
     /// `LimitEnforcement.handleDayStart` so the foreground and background agree.
     private func shouldGateOpenLimit(
-        _ rule: BlockingRule, at now: Date, calendar: Calendar
+        _ snapshot: RuleSnapshotDTO, at now: Date, calendar: Calendar
     ) -> Bool {
-        rule.kind == .openLimit
-            && rule.isEnabled
-            && rule.pausedUntil == nil
-            && rule.isScheduledToday(at: now, calendar: calendar)
-            && !openSessions.hasActiveSession(for: rule.id, at: now)
+        snapshot.kind == .openLimit
+            && snapshot.isEnabled
+            && snapshot.pausedUntil == nil
+            && snapshot.isScheduledToday(at: now, calendar: calendar)
+            && !openSessions.hasActiveSession(for: snapshot.id, at: now)
     }
 }

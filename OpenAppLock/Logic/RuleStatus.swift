@@ -44,42 +44,23 @@ enum RuleStatus: Equatable, Sendable {
     }
 }
 
-extension BlockingRule {
-    /// Live status of this rule. Schedule rules derive it from their time
-    /// window. Time/open-limit rules derive it from the day's usage: once the
-    /// budget is spent on an enabled day they are active (blocking) until the
-    /// next midnight; without usage data they report upcoming.
+extension RuleSnapshotDTO {
+    /// Live status of this rule, for the UI. Derived from the shared
+    /// `activation` primitive, with the disabled / dormant distinctions the UI
+    /// needs layered on top: schedule rules block by the clock; limit rules
+    /// block once the day's budget is spent on an enabled day; without usage
+    /// data a limit rule reports upcoming.
     func status(
         at now: Date = .now, calendar: Calendar = .current, usage: RuleUsage? = nil
     ) -> RuleStatus {
         guard isEnabled else { return .disabled }
         guard !days.isEmpty else { return .dormant }
-
-        guard kind == .schedule else {
-            if let usage, isScheduledToday(at: now, calendar: calendar),
-               limitReached(given: usage, at: now),
-               let midnight = calendar.nextMidnight(after: now) {
-                if let pausedUntil, pausedUntil > now {
-                    return .paused(until: min(pausedUntil, midnight))
-                }
-                return .active(until: midnight)
-            }
-            guard let next = schedule.nextStart(after: now, calendar: calendar) else {
-                return .dormant
-            }
-            return .upcoming(startsAt: next)
+        switch activation(usage: usage, at: now, calendar: calendar) {
+        case .active(let until): return .active(until: until)
+        case .paused(let until): return .paused(until: until)
+        case .inactive(let nextStart):
+            return nextStart.map(RuleStatus.upcoming(startsAt:)) ?? .dormant
         }
-
-        if let window = schedule.activeWindow(containing: now, calendar: calendar) {
-            if let pausedUntil, pausedUntil > now {
-                return .paused(until: min(pausedUntil, window.end))
-            }
-            return .active(until: window.end)
-        }
-        if let next = schedule.nextStart(after: now, calendar: calendar) {
-            return .upcoming(startsAt: next)
-        }
-        return .dormant
     }
 
     /// The live "context" line shown under a rule's name on the Home and Rules
@@ -94,7 +75,7 @@ extension BlockingRule {
     ///   still untouched ("45m / day"). A spent limit therefore reads
     ///   "45m of 45m used", never a clock countdown.
     func rowContext(for status: RuleStatus, usage: RuleUsage, relativeTo now: Date) -> String {
-        switch configuration {
+        switch kind {
         case .schedule:
             return status.label(relativeTo: now)
         case .timeLimit, .openLimit:
@@ -108,31 +89,5 @@ extension BlockingRule {
                     : UsageDisplay.budgetPhrase(for: self)
             }
         }
-    }
-
-    /// Whether the rule's enabled days include the day containing `now`.
-    func isScheduledToday(at now: Date, calendar: Calendar = .current) -> Bool {
-        guard let weekday = Weekday(rawValue: calendar.component(.weekday, from: now)) else {
-            return false
-        }
-        return days.contains(weekday)
-    }
-
-    /// Whether the given usage exhausts this rule's daily budget.
-    /// Always false for schedule rules — they block by the clock.
-    func limitReached(given usage: RuleUsage, at now: Date = .now) -> Bool {
-        switch configuration {
-        case .schedule: false
-        case .timeLimit(let config): usage.effectiveMinutesUsed(asOf: now) >= config.dailyLimitMinutes
-        case .openLimit(let config): usage.opensUsed >= config.maxOpens
-        }
-    }
-}
-
-extension Calendar {
-    /// The first instant of the day after the one containing `date` — the
-    /// "Tomorrow" reset point for spent limit budgets.
-    func nextMidnight(after date: Date) -> Date? {
-        self.date(byAdding: .day, value: 1, to: startOfDay(for: date))
     }
 }

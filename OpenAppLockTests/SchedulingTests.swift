@@ -22,7 +22,7 @@ struct RuleSnapshotTests {
     @Test("Snapshots round-trip through the shared store")
     func storeRoundTrip() throws {
         let store = RuleSnapshotStore(defaults: freshDefaults())
-        let snapshot = RuleSnapshot(
+        let snapshot = RuleSnapshotDTO(
             id: UUID(), name: "Time Keeper", kindRaw: "timeLimit", isEnabled: true,
             hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
             selectionData: Data([1]), dayNumbers: [2, 3], startMinutes: 540, endMinutes: 1020,
@@ -48,7 +48,7 @@ struct RuleSnapshotTests {
         context.insert(rule)
         rule.appList = list
 
-        let snapshot = RuleSnapshot(rule: rule)
+        let snapshot = RuleSnapshotDTO(rule: rule)
         #expect(snapshot.id == rule.id)
         #expect(snapshot.kind == .openLimit)
         #expect(snapshot.selectionData == Data([9]))
@@ -400,8 +400,8 @@ struct LimitEnforcementTests {
     private func snapshot(
         kind: RuleKind, limit: Int = 45, maxOpens: Int = 5,
         days: Set<Weekday> = Weekday.everyDay, pausedUntil: Date? = nil
-    ) -> RuleSnapshot {
-        RuleSnapshot(
+    ) -> RuleSnapshotDTO {
+        RuleSnapshotDTO(
             id: UUID(), name: "Rule", kindRaw: kind.rawValue, isEnabled: true,
             hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
             selectionData: Data([1]), dayNumbers: days.map(\.rawValue),
@@ -620,8 +620,8 @@ struct ScheduleEnforcementTests {
     private func snapshot(
         start: Int = 9 * 60, end: Int = 17 * 60, days: Set<Weekday> = Weekday.everyDay,
         isEnabled: Bool = true, mode: SelectionMode = .block, pausedUntil: Date? = nil
-    ) -> RuleSnapshot {
-        RuleSnapshot(
+    ) -> RuleSnapshotDTO {
+        RuleSnapshotDTO(
             id: UUID(), name: "Work Time", kindRaw: RuleKind.schedule.rawValue,
             isEnabled: isEnabled, hardMode: false, blockAdultContent: false,
             selectionModeRaw: mode.rawValue, selectionData: Data([1]),

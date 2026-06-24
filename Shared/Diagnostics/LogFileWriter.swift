@@ -9,7 +9,7 @@ import Foundation
 /// every process writes to the same place and the app can read them all back.
 /// Falls back to the temp directory if the group container is unavailable (e.g.
 /// the entitlement is not provisioned yet).
-enum DiagnosticLogLocation {
+nonisolated enum DiagnosticLogLocation {
     static func defaultDirectory() -> URL {
         let base =
             FileManager.default
@@ -23,7 +23,7 @@ enum DiagnosticLogLocation {
 /// (`<source>-<YYYY-MM-DD>.log`). Per-process files mean no cross-process write
 /// contention; a private serial queue plus an open→seek-end→write→close per line
 /// keeps writes ordered and durable even if an extension is killed right after.
-final class LogFileWriter: @unchecked Sendable {
+nonisolated final class LogFileWriter: @unchecked Sendable {
     private let directory: URL
     private let source: LogSource
     private let calendar: Calendar

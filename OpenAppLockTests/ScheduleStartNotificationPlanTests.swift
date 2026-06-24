@@ -15,8 +15,8 @@ struct ScheduleStartNotificationPlanTests {
         id: UUID = UUID(), name: String = "Work Time",
         kind: RuleKind = .schedule, start: Int, end: Int = 0,
         days: Set<Weekday>, enabled: Bool = true, hasApps: Bool = true
-    ) -> RuleSnapshot {
-        RuleSnapshot(
+    ) -> RuleSnapshotDTO {
+        RuleSnapshotDTO(
             id: id, name: name, kindRaw: kind.rawValue, isEnabled: enabled,
             hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
             selectionData: hasApps ? Data([1]) : nil,

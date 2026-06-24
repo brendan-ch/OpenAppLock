@@ -8,7 +8,7 @@ import Foundation
 /// Severity of a diagnostic entry. `event` flags the load-bearing
 /// "a block/threshold actually fired" lines for easy grepping; it maps to the
 /// unified log's `.default` (notice) level.
-enum LogLevel: String, Sendable, CaseIterable {
+nonisolated enum LogLevel: String, Sendable, CaseIterable {
     case debug, info, event, error
     /// Upper-cased token used in the line, e.g. `EVENT`.
     var tag: String { rawValue.uppercased() }
@@ -16,14 +16,14 @@ enum LogLevel: String, Sendable, CaseIterable {
 
 /// The area a log entry belongs to — both the `os.Logger` category (for Console
 /// filtering) and the in-line `[source/category]` tag.
-enum LogCategory: String, Sendable {
+nonisolated enum LogCategory: String, Sendable {
     case enforcer, scheduler, shield, monitor, report
     case usage, dayStart, session, appList, rule, auth, lifecycle
 }
 
 /// Which process wrote an entry, inferred from the running bundle so no
 /// extension has to wire itself up.
-enum LogSource: String, Sendable {
+nonisolated enum LogSource: String, Sendable {
     case app
     case monitor
     case shieldConfig = "shieldconfig"
@@ -45,7 +45,7 @@ enum LogSource: String, Sendable {
 /// plain lexical sort of whole lines is chronological. The file's *day bucket*
 /// uses the local calendar (`UsageLedger.dayKey`); the per-line stamp is UTC and
 /// unambiguous, which is what the merge relies on.
-enum LogTimestamp {
+nonisolated enum LogTimestamp {
     static let prefixLength = 24
 
     private static let formatter: ISO8601DateFormatter = {
@@ -98,7 +98,7 @@ enum LogFilename {
 /// written to the per-process file and shown on export. Every entry carries the
 /// source location (`file:line function`) it was emitted from, so a line read
 /// back from an exported log can be traced straight to the code that produced it.
-struct LogEntry: Sendable {
+nonisolated struct LogEntry: Sendable {
     let date: Date
     let level: LogLevel
     let source: LogSource

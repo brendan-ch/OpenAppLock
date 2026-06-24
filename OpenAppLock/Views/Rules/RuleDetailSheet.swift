@@ -51,14 +51,15 @@ struct RuleDetailSheet: View {
     }
 
     private func detailList(now: Date) -> some View {
-        let usage = enforcer.usage(for: rule, at: now)
-        let status = rule.status(at: now, usage: usage)
+        let dto = rule.dto
+        let usage = enforcer.usage(for: dto, at: now)
+        let status = dto.status(at: now, usage: usage)
         return List {
             Section {
                 detailRows
             }
             Section {
-                if RulePolicy.canEdit(rule, usage: usage, at: now) {
+                if RulePolicy.canEdit(dto, usage: usage, at: now) {
                     Button {
                         isEditing = true
                     } label: {
@@ -89,7 +90,7 @@ struct RuleDetailSheet: View {
                     Text(rule.name)
                         .font(.headline)
                         .accessibilityIdentifier("detailRuleName")
-                    Text("\(rule.kind.displayName), \(rule.rowContext(for: status, usage: usage ?? RuleUsage(), relativeTo: now))")
+                    Text("\(dto.kind.displayName), \(dto.rowContext(for: status, usage: usage ?? RuleUsage(), relativeTo: now))")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("detailStatusLabel")

@@ -11,8 +11,8 @@ import ManagedSettings
 /// UI can offer "Open" with the right counts for open-limit rules.
 enum ShieldLookup {
     static func openLimitSnapshot(
-        containingApplication token: ApplicationToken, in snapshots: [RuleSnapshot]
-    ) -> RuleSnapshot? {
+        containingApplication token: ApplicationToken, in snapshots: [RuleSnapshotDTO]
+    ) -> RuleSnapshotDTO? {
         snapshots.first { snapshot in
             guard snapshot.kind == .openLimit, snapshot.isEnabled else { return false }
             return AppSelectionCodec.decode(snapshot.selectionData)
@@ -21,8 +21,8 @@ enum ShieldLookup {
     }
 
     static func openLimitSnapshot(
-        containingCategory token: ActivityCategoryToken, in snapshots: [RuleSnapshot]
-    ) -> RuleSnapshot? {
+        containingCategory token: ActivityCategoryToken, in snapshots: [RuleSnapshotDTO]
+    ) -> RuleSnapshotDTO? {
         snapshots.first { snapshot in
             guard snapshot.kind == .openLimit, snapshot.isEnabled else { return false }
             return AppSelectionCodec.decode(snapshot.selectionData)

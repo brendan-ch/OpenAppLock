@@ -45,7 +45,7 @@ struct AppListLibraryView: View {
 
     /// While any hard-mode rule is actively blocking, lists are read-only.
     private var listsLocked: Bool {
-        !RulePolicy.canEditAppLists(rules: rules, usageFor: { enforcer.usage(for: $0) })
+        !RulePolicy.canEditAppLists(snapshots: rules.map(\.dto), usageFor: { enforcer.usage(for: $0) })
     }
 
     var body: some View {

@@ -7,7 +7,7 @@ import Foundation
 
 /// Stable identifiers for the locally-scheduled notifications the app owns.
 /// Centralised so building and recognising them can't drift apart.
-enum NotificationIDs {
+nonisolated enum NotificationIDs {
     static let scheduleStartPrefix = "schedule-start-"
 
     /// A per-weekday "schedule starting soon" request.
@@ -28,7 +28,7 @@ enum NotificationIDs {
 
 /// One planned local notification: a stable identifier, the calendar trigger
 /// components (weekly when a `weekday` is present, daily when not), and content.
-struct PlannedNotification: Equatable, Sendable {
+nonisolated struct PlannedNotification: Equatable, Sendable {
     let identifier: String
     let dateComponents: DateComponents
     let title: String
@@ -46,18 +46,18 @@ struct PlannedNotification: Equatable, Sendable {
 /// would want warning of: it is an enabled `.schedule` rule, has enabled days,
 /// blocks at least one app, and is not a 24-hour (`start == end`) window — a
 /// perpetual window never meaningfully "starts".
-enum ScheduleStartNotificationPlan {
+nonisolated enum ScheduleStartNotificationPlan {
     static let leadMinutes = 5
     private static let minutesPerDay = 24 * 60
 
     static func requests(
-        for snapshots: [RuleSnapshot], leadMinutes: Int = leadMinutes
+        for snapshots: [RuleSnapshotDTO], leadMinutes: Int = leadMinutes
     ) -> [PlannedNotification] {
         snapshots.flatMap { requests(for: $0, leadMinutes: leadMinutes) }
     }
 
     private static func requests(
-        for snapshot: RuleSnapshot, leadMinutes: Int
+        for snapshot: RuleSnapshotDTO, leadMinutes: Int
     ) -> [PlannedNotification] {
         guard snapshot.kind == .schedule, snapshot.isEnabled,
               !snapshot.days.isEmpty, snapshot.selectionData != nil,

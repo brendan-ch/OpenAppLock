@@ -80,8 +80,9 @@ struct RulesListView: View {
     }
 
     private func ruleRow(for rule: BlockingRule, now: Date) -> some View {
-        let usage = enforcer.usage(for: rule, at: now) ?? RuleUsage()
-        let status = rule.status(at: now, usage: usage)
+        let dto = rule.dto
+        let usage = enforcer.usage(for: dto, at: now) ?? RuleUsage()
+        let status = dto.status(at: now, usage: usage)
         return Button {
             detailRule = rule
         } label: {
@@ -95,7 +96,7 @@ struct RulesListView: View {
                         .foregroundStyle(Color.primary)
                     // The kind is conveyed by the section header, so the
                     // subtitle is just the live context (no type prefix).
-                    Text(rule.rowContext(for: status, usage: usage, relativeTo: now))
+                    Text(dto.rowContext(for: status, usage: usage, relativeTo: now))
                         .font(.caption)
                         .foregroundStyle(Color.secondary)
                         .accessibilityIdentifier("ruleStatus-\(rule.name)")

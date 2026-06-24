@@ -13,35 +13,35 @@ enum UsageDisplay {
     /// "Schedule · 6h left"). The Rules list omits the type prefix because its
     /// section header already conveys it.
     static func homeSubtitle(
-        for rule: BlockingRule, status: RuleStatus, usage: RuleUsage, relativeTo now: Date
+        for snapshot: RuleSnapshotDTO, status: RuleStatus, usage: RuleUsage, relativeTo now: Date
     ) -> String {
-        "\(rule.kind.displayName) · \(rule.rowContext(for: status, usage: usage, relativeTo: now))"
+        "\(snapshot.kind.displayName) · \(snapshot.rowContext(for: status, usage: usage, relativeTo: now))"
     }
 
     /// "18m of 45m used" / "2 of 5 opens". Empty for schedule rules, which have
     /// no usage budget. ("today" is implied — usage always covers the current day.)
-    static func usagePhrase(for rule: BlockingRule, usage: RuleUsage, asOf now: Date) -> String {
-        switch rule.configuration {
+    static func usagePhrase(for snapshot: RuleSnapshotDTO, usage: RuleUsage, asOf now: Date) -> String {
+        switch snapshot.kind {
         case .schedule:
             ""
-        case .timeLimit(let config):
-            "\(min(usage.effectiveMinutesUsed(asOf: now), config.dailyLimitMinutes))m of "
-                + "\(config.dailyLimitMinutes)m used"
-        case .openLimit(let config):
-            "\(min(usage.opensUsed, config.maxOpens)) of \(config.maxOpens) opens"
+        case .timeLimit:
+            "\(min(usage.effectiveMinutesUsed(asOf: now), snapshot.dailyLimitMinutes))m of "
+                + "\(snapshot.dailyLimitMinutes)m used"
+        case .openLimit:
+            "\(min(usage.opensUsed, snapshot.maxOpens)) of \(snapshot.maxOpens) opens"
         }
     }
 
     /// "45m / day" / "5 opens / day" — the plain daily allowance, shown while a
     /// limit rule has no usage recorded today. Empty for schedule rules.
-    static func budgetPhrase(for rule: BlockingRule) -> String {
-        switch rule.configuration {
+    static func budgetPhrase(for snapshot: RuleSnapshotDTO) -> String {
+        switch snapshot.kind {
         case .schedule:
             ""
-        case .timeLimit(let config):
-            "\(config.dailyLimitMinutes)m / day"
-        case .openLimit(let config):
-            "\(config.maxOpens) opens / day"
+        case .timeLimit:
+            "\(snapshot.dailyLimitMinutes)m / day"
+        case .openLimit:
+            "\(snapshot.maxOpens) opens / day"
         }
     }
 }

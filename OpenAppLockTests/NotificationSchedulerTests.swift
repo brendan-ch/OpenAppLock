@@ -18,8 +18,8 @@ private func freshDefaults() -> UserDefaults {
 private func scheduleSnapshot(
     id: UUID = UUID(), name: String = "Work Time", start: Int, end: Int = 17 * 60,
     days: Set<Weekday>, enabled: Bool = true, hasApps: Bool = true
-) -> RuleSnapshot {
-    RuleSnapshot(
+) -> RuleSnapshotDTO {
+    RuleSnapshotDTO(
         id: id, name: name, kindRaw: RuleKind.schedule.rawValue, isEnabled: enabled,
         hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
         selectionData: hasApps ? Data([1]) : nil,

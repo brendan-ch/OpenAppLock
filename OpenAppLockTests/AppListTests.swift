@@ -206,7 +206,7 @@ struct AppListEditingPolicyTests {
         let hard = BlockingRule(name: "Locked In", hardMode: true)
         let soft = BlockingRule(name: "Work Time")
         #expect(
-            !RulePolicy.canEditAppLists(rules: [hard, soft], at: mondayDuringWork, calendar: utc))
+            !RulePolicy.canEditAppLists(snapshots: [hard, soft].map(\.dto), at: mondayDuringWork, calendar: utc))
     }
 
     @Test("App lists stay editable when no hard-mode rule is blocking")
@@ -215,14 +215,14 @@ struct AppListEditingPolicyTests {
         let hardInactive = BlockingRule(name: "Locked In", hardMode: true)
         #expect(
             RulePolicy.canEditAppLists(
-                rules: [softActive, hardInactive], at: mondayEvening, calendar: utc))
-        #expect(RulePolicy.canEditAppLists(rules: [], at: mondayDuringWork, calendar: utc))
+                snapshots: [softActive, hardInactive].map(\.dto), at: mondayEvening, calendar: utc))
+        #expect(RulePolicy.canEditAppLists(snapshots: [], at: mondayDuringWork, calendar: utc))
     }
 
     @Test("A disabled hard-mode rule does not lock app lists")
     func disabledHardRuleDoesNotLock() {
         let rule = BlockingRule(name: "Locked In", isEnabled: false, hardMode: true)
-        #expect(RulePolicy.canEditAppLists(rules: [rule], at: mondayDuringWork, calendar: utc))
+        #expect(RulePolicy.canEditAppLists(snapshots: [rule].map(\.dto), at: mondayDuringWork, calendar: utc))
     }
 }
 

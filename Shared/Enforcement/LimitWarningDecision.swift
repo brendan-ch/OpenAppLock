@@ -18,7 +18,7 @@ enum LimitWarningDecision {
     /// not already spent (a late/stale warn after the block already fired must
     /// not nag).
     static func content(
-        for snapshot: RuleSnapshot?,
+        for snapshot: RuleSnapshotDTO?,
         usage: RuleUsage,
         preferences: NotificationPreferences,
         now: Date = .now,

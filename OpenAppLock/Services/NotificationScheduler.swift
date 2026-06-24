@@ -73,7 +73,7 @@ actor NotificationScheduler {
         self.defaults = defaults
     }
 
-    func sync(snapshots: [RuleSnapshot], enabled: Bool) async {
+    func sync(snapshots: [RuleSnapshotDTO], enabled: Bool) async {
         let fingerprint = Self.fingerprint(enabled: enabled, snapshots: snapshots)
         guard fingerprint != defaults.string(forKey: Self.fingerprintKey) else { return }
 
@@ -111,7 +111,7 @@ actor NotificationScheduler {
     /// Pause is deliberately excluded — a soft unblock only affects an already
     /// active window whose start has passed, so it never collides with a
     /// "starting soon" notification.
-    private static func fingerprint(enabled: Bool, snapshots: [RuleSnapshot]) -> String {
+    private static func fingerprint(enabled: Bool, snapshots: [RuleSnapshotDTO]) -> String {
         let rules =
             snapshots
             .filter { $0.kind == .schedule }

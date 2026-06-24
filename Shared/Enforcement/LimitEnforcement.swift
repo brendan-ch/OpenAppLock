@@ -190,7 +190,7 @@ struct LimitEnforcement {
         return true
     }
 
-    private func shield(_ snapshot: RuleSnapshot) {
+    private func shield(_ snapshot: RuleSnapshotDTO) {
         shields.applyShield(
             ruleID: snapshot.id,
             selectionData: snapshot.selectionData,

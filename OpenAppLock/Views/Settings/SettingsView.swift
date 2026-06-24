@@ -145,7 +145,7 @@ struct SettingsView: View {
     /// toggle (it must not be turned off while a hard block is in force).
     private var isUninstallProtectionLocked: Bool {
         !RulePolicy.canToggleUninstallProtection(
-            rules: rules, usageFor: { enforcer.usage(for: $0) })
+            snapshots: rules.map(\.dto), usageFor: { enforcer.usage(for: $0) })
     }
 
     /// Drives the toggle's visual state from `@State` while persisting and

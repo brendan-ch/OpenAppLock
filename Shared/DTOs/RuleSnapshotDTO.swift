@@ -1,5 +1,5 @@
 //
-//  RuleSnapshot.swift
+//  RuleSnapshotDTO.swift
 //  OpenAppLock
 //
 
@@ -7,8 +7,10 @@ import Foundation
 
 /// Codable mirror of a rule, written to the app group by the app whenever
 /// rules change so the Screen Time extensions (which cannot open the
-/// SwiftData store) know what to enforce.
-struct RuleSnapshot: Codable, Equatable {
+/// SwiftData store) know what to enforce. Built from a `BlockingRule` via
+/// `BlockingRule.dto`; outside the SwiftData store, the rule editors, and the
+/// mutation path, this is the type every consumer speaks.
+struct RuleSnapshotDTO: Codable, Equatable {
     var id: UUID
     var name: String
     var kindRaw: String
@@ -58,7 +60,7 @@ struct RuleSnapshot: Codable, Equatable {
     }
 }
 
-extension RuleSnapshot {
+extension RuleSnapshotDTO {
     private enum CodingKeys: String, CodingKey {
         case id, name, kindRaw, isEnabled, hardMode, blockAdultContent
         case selectionModeRaw, selectionData, dayNumbers, startMinutes, endMinutes
@@ -84,31 +86,5 @@ extension RuleSnapshot {
         dailyLimitMinutes = try container.decode(Int.self, forKey: .dailyLimitMinutes)
         maxOpens = try container.decode(Int.self, forKey: .maxOpens)
         pausedUntil = try container.decodeIfPresent(Date.self, forKey: .pausedUntil)
-    }
-}
-
-/// Persistence for the rule mirror in the shared app-group defaults.
-final class RuleSnapshotStore {
-    private static let key = "ruleSnapshots"
-    private let defaults: UserDefaults
-
-    init(defaults: UserDefaults = AppGroup.defaults) {
-        self.defaults = defaults
-    }
-
-    func save(_ snapshots: [RuleSnapshot]) {
-        guard let data = try? JSONEncoder().encode(snapshots) else { return }
-        defaults.set(data, forKey: Self.key)
-    }
-
-    func load() -> [RuleSnapshot] {
-        guard let data = defaults.data(forKey: Self.key),
-              let snapshots = try? JSONDecoder().decode([RuleSnapshot].self, from: data)
-        else { return [] }
-        return snapshots
-    }
-
-    func snapshot(for ruleID: UUID) -> RuleSnapshot? {
-        load().first { $0.id == ruleID }
     }
 }

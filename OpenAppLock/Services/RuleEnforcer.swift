@@ -57,10 +57,10 @@ final class RuleEnforcer {
 
     /// The day's usage for a rule (nil for schedule rules, which don't track).
     func usage(
-        for rule: BlockingRule, at now: Date = .now, calendar: Calendar = .current
+        for snapshot: RuleSnapshotDTO, at now: Date = .now, calendar: Calendar = .current
     ) -> RuleUsage? {
-        guard rule.kind != .schedule else { return nil }
-        return usageReader.usage(for: rule.id, onDayContaining: now, calendar: calendar)
+        guard snapshot.kind != .schedule else { return nil }
+        return usageReader.usage(for: snapshot.id, onDayContaining: now, calendar: calendar)
     }
 
     /// Recomputes shields from scratch. Call on launch, on any rule change,
@@ -107,18 +107,19 @@ final class RuleEnforcer {
     ) -> (isBlocking: Bool, isShielded: Bool) {
         expireStalePauseIfNeeded(rule, at: now)
         confirmForegroundDayStartIfNeeded(rule, at: now, calendar: calendar)
-        let usage = usage(for: rule, at: now, calendar: calendar)
-        let status = rule.status(at: now, calendar: calendar, usage: usage)
+        let snapshot = rule.dto
+        let usage = usage(for: snapshot, at: now, calendar: calendar)
+        let status = snapshot.status(at: now, calendar: calendar, usage: usage)
         let isBlocking = status.isActive
         logTimeLimitDecision(rule, usage: usage, isBlocking: isBlocking, at: now)
-        guard isBlocking || shouldGateOpenLimit(rule, at: now, calendar: calendar) else {
+        guard isBlocking || shouldGateOpenLimit(snapshot, at: now, calendar: calendar) else {
             let rid = rule.id.uuidString.prefix(8)
             Diag.log(
                 .enforcer,
                 "rule-\(rid) \(rule.kindRaw): not shielded (status=\(status) enabled=\(rule.isEnabled))")
             return (isBlocking, false)
         }
-        applyShield(for: rule, status: status, usage: usage, isBlocking: isBlocking)
+        applyShield(for: snapshot, status: status, usage: usage, isBlocking: isBlocking)
         return (isBlocking, true)
     }
 
@@ -173,17 +174,17 @@ final class RuleEnforcer {
     /// are Schedule-only options; the model already forces `.block`/`false` on
     /// limit rules, so we forward the rule's values directly.
     private func applyShield(
-        for rule: BlockingRule, status: RuleStatus, usage: RuleUsage?, isBlocking: Bool
+        for snapshot: RuleSnapshotDTO, status: RuleStatus, usage: RuleUsage?, isBlocking: Bool
     ) {
-        let rid = rule.id.uuidString.prefix(8)
+        let rid = snapshot.id.uuidString.prefix(8)
         Diag.log(
             .enforcer, .event,
-            "rule-\(rid) \(rule.kindRaw): shield (\(isBlocking ? "active status=\(status)" : "open-limit gate")\(usage.map { ", used=\($0.minutesUsed)/opens=\($0.opensUsed)" } ?? ""))")
+            "rule-\(rid) \(snapshot.kindRaw): shield (\(isBlocking ? "active status=\(status)" : "open-limit gate")\(usage.map { ", used=\($0.minutesUsed)/opens=\($0.opensUsed)" } ?? ""))")
         shields.applyShield(
-            ruleID: rule.id,
-            selectionData: rule.appList?.selectionData,
-            mode: rule.selectionMode,
-            blockAdultContent: rule.blockAdultContent
+            ruleID: snapshot.id,
+            selectionData: snapshot.selectionData,
+            mode: snapshot.selectionMode,
+            blockAdultContent: snapshot.blockAdultContent
         )
     }
 
@@ -207,7 +208,7 @@ final class RuleEnforcer {
     ) {
         shields.setAppRemovalDenied(
             RulePolicy.shouldDenyAppRemoval(
-                rules: rules,
+                snapshots: rules.map(\.dto),
                 enabled: settings.uninstallProtectionEnabled,
                 usageFor: { usage(for: $0, at: now, calendar: calendar) },
                 at: now, calendar: calendar))
@@ -218,7 +219,7 @@ final class RuleEnforcer {
     /// serialize) and fingerprint-gated, so this is cheap when unchanged.
     private func syncStartingSoonNotifications(rules: [BlockingRule]) {
         guard let notificationScheduler else { return }
-        let snapshots = rules.map(RuleSnapshot.init)
+        let snapshots = rules.map(\.dto)
         let enabled = NotificationPreferences().scheduleStartEnabled
         Task { await notificationScheduler.sync(snapshots: snapshots, enabled: enabled) }
     }
@@ -228,12 +229,12 @@ final class RuleEnforcer {
     /// session (which would otherwise be cut short). Mirrors
     /// `LimitEnforcement.handleDayStart` so the foreground and background agree.
     private func shouldGateOpenLimit(
-        _ rule: BlockingRule, at now: Date, calendar: Calendar
+        _ snapshot: RuleSnapshotDTO, at now: Date, calendar: Calendar
     ) -> Bool {
-        rule.kind == .openLimit
-            && rule.isEnabled
-            && rule.pausedUntil == nil
-            && rule.isScheduledToday(at: now, calendar: calendar)
-            && !openSessions.hasActiveSession(for: rule.id, at: now)
+        snapshot.kind == .openLimit
+            && snapshot.isEnabled
+            && snapshot.pausedUntil == nil
+            && snapshot.isScheduledToday(at: now, calendar: calendar)
+            && !openSessions.hasActiveSession(for: snapshot.id, at: now)
     }
 }

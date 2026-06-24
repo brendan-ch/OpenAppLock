@@ -50,7 +50,7 @@ final class RuleScheduler {
     }
 
     func sync(rules: [BlockingRule], at now: Date = .now) {
-        snapshots.save(rules.map(RuleSnapshot.init))
+        snapshots.save(rules.map(\.dto))
         Diag.log(.scheduler, "sync: \(rules.count) rules; mirrored snapshots")
 
         var fingerprints = storedFingerprints
@@ -211,27 +211,6 @@ final class RuleScheduler {
     private var storedFingerprints: [String: String] {
         get { defaults.dictionary(forKey: Self.fingerprintsKey) as? [String: String] ?? [:] }
         set { defaults.set(newValue, forKey: Self.fingerprintsKey) }
-    }
-}
-
-extension RuleSnapshot {
-    init(rule: BlockingRule) {
-        self.init(
-            id: rule.id,
-            name: rule.name,
-            kindRaw: rule.kindRaw,
-            isEnabled: rule.isEnabled,
-            hardMode: rule.hardMode,
-            blockAdultContent: rule.blockAdultContent,
-            selectionModeRaw: rule.selectionModeRaw,
-            selectionData: rule.appList?.selectionData,
-            dayNumbers: rule.dayNumbers,
-            startMinutes: rule.startMinutes,
-            endMinutes: rule.endMinutes,
-            dailyLimitMinutes: rule.dailyLimitMinutes,
-            maxOpens: rule.maxOpens,
-            pausedUntil: rule.pausedUntil
-        )
     }
 }
 

@@ -51,13 +51,13 @@ enum ScheduleStartNotificationPlan {
     private static let minutesPerDay = 24 * 60
 
     static func requests(
-        for snapshots: [RuleSnapshot], leadMinutes: Int = leadMinutes
+        for snapshots: [RuleSnapshotDTO], leadMinutes: Int = leadMinutes
     ) -> [PlannedNotification] {
         snapshots.flatMap { requests(for: $0, leadMinutes: leadMinutes) }
     }
 
     private static func requests(
-        for snapshot: RuleSnapshot, leadMinutes: Int
+        for snapshot: RuleSnapshotDTO, leadMinutes: Int
     ) -> [PlannedNotification] {
         guard snapshot.kind == .schedule, snapshot.isEnabled,
               !snapshot.days.isEmpty, snapshot.selectionData != nil,

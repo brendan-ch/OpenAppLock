@@ -80,7 +80,7 @@ struct SampleRulesTests {
     func activeRuleIsActive(hour: Int, minute: Int) {
         let now = date(2025, 1, 6, hour, minute)
         let rule = SampleRules.activeRule(named: "Work Time", hardMode: false, now: now, calendar: utc)
-        #expect(rule.status(at: now, calendar: utc).isActive)
+        #expect(rule.dto.status(at: now, calendar: utc).isActive)
     }
 
     @Test(
@@ -90,7 +90,7 @@ struct SampleRulesTests {
     func upcomingRuleIsUpcoming(hour: Int, minute: Int) {
         let now = date(2025, 1, 6, hour, minute)
         let rule = SampleRules.upcomingRule(named: "Sleep", now: now, calendar: utc)
-        let status = rule.status(at: now, calendar: utc)
+        let status = rule.dto.status(at: now, calendar: utc)
         #expect(!status.isActive)
         if case .upcoming = status {} else {
             Issue.record("Expected upcoming, got \(status)")
@@ -101,7 +101,7 @@ struct SampleRulesTests {
     func hardModeScenario() {
         let now = date(2025, 1, 6, 12, 0)
         let rule = SampleRules.activeRule(named: "Locked In", hardMode: true, now: now, calendar: utc)
-        #expect(RulePolicy.isHardLocked(rule, at: now, calendar: utc))
+        #expect(RulePolicy.isHardLocked(rule.dto, at: now, calendar: utc))
     }
 
     @Test("Mock authorization approves on request")

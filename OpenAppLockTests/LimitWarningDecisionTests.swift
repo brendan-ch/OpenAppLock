@@ -37,8 +37,8 @@ struct LimitWarningDecisionTests {
     private func timeLimitSnapshot(
         kind: RuleKind = .timeLimit, limit: Int = 60, days: Set<Weekday> = [.monday],
         enabled: Bool = true, paused: Date? = nil
-    ) -> RuleSnapshot {
-        RuleSnapshot(
+    ) -> RuleSnapshotDTO {
+        RuleSnapshotDTO(
             id: UUID(), name: "Social", kindRaw: kind.rawValue, isEnabled: enabled,
             hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
             selectionData: Data([1]), dayNumbers: days.map(\.rawValue),

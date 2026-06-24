@@ -32,7 +32,7 @@ struct HomeView: View {
         ) {
             Button("Unblock", role: .destructive) {
                 if let rule = unblockCandidate {
-                    RulePolicy.unblock(rule, usage: enforcer.usage(for: rule))
+                    RulePolicy.unblock(rule, usage: enforcer.usage(for: rule.dto))
                     enforcer.refresh(rules: rules)
                 }
                 unblockCandidate = nil
@@ -57,7 +57,8 @@ struct HomeView: View {
     /// Status with the day's usage folded in, so limit rules whose budget is
     /// spent count as actively blocking.
     private func liveStatus(for rule: BlockingRule, now: Date) -> RuleStatus {
-        rule.status(at: now, usage: enforcer.usage(for: rule, at: now))
+        let dto = rule.dto
+        return dto.status(at: now, usage: enforcer.usage(for: dto, at: now))
     }
 
     // MARK: - Currently Blocking
@@ -85,10 +86,11 @@ struct HomeView: View {
     /// affordance: a lock when Hard Mode (the block can't be lifted), otherwise
     /// an Unblock button.
     private func blockingRow(for rule: BlockingRule, now: Date) -> some View {
-        let usage = enforcer.usage(for: rule, at: now) ?? RuleUsage()
+        let dto = rule.dto
+        let usage = enforcer.usage(for: dto, at: now) ?? RuleUsage()
         let status = liveStatus(for: rule, now: now)
         return Button {
-            if RulePolicy.canUnblock(rule, usage: enforcer.usage(for: rule, at: now), at: now) {
+            if RulePolicy.canUnblock(dto, usage: enforcer.usage(for: dto, at: now), at: now) {
                 unblockCandidate = rule
             } else {
                 hardModeBlockedAttempt = true
@@ -99,7 +101,7 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(rule.name)
                         .foregroundStyle(Color.primary)
-                    Text(UsageDisplay.homeSubtitle(for: rule, status: status, usage: usage, relativeTo: now))
+                    Text(UsageDisplay.homeSubtitle(for: dto, status: status, usage: usage, relativeTo: now))
                         .font(.caption)
                         .foregroundStyle(Color.secondary)
                 }
@@ -134,7 +136,7 @@ struct HomeView: View {
     @ViewBuilder
     private func usageSection(now: Date) -> some View {
         let tracked = rules.filter {
-            $0.kind != .schedule && $0.isEnabled && $0.isScheduledToday(at: now)
+            $0.kind != .schedule && $0.isEnabled && $0.dto.isScheduledToday(at: now)
                 && !liveStatus(for: $0, now: now).isActive
         }
         if !tracked.isEmpty {
@@ -149,14 +151,15 @@ struct HomeView: View {
     }
 
     private func usageRow(for rule: BlockingRule, now: Date) -> some View {
-        let usage = enforcer.usage(for: rule, at: now) ?? RuleUsage()
+        let dto = rule.dto
+        let usage = enforcer.usage(for: dto, at: now) ?? RuleUsage()
         let status = liveStatus(for: rule, now: now)
         return HStack {
             kindIcon(for: rule)
             VStack(alignment: .leading, spacing: 2) {
                 Text(rule.name)
                     .foregroundStyle(Color.primary)
-                Text(UsageDisplay.homeSubtitle(for: rule, status: status, usage: usage, relativeTo: now))
+                Text(UsageDisplay.homeSubtitle(for: dto, status: status, usage: usage, relativeTo: now))
                     .font(.caption)
                     .foregroundStyle(Color.secondary)
             }

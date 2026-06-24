@@ -27,7 +27,7 @@ struct UninstallProtectionEnforcerTests {
     /// Wires an enforcer whose stores all read from one isolated defaults suite,
     /// pre-seeded with the given snapshots and opt-in flag.
     private func makeEnforcer(
-        snapshots: [RuleSnapshot], enabled: Bool, shields: MockShieldController
+        snapshots: [RuleSnapshotDTO], enabled: Bool, shields: MockShieldController
     ) -> UninstallProtectionEnforcer {
         let defaults = freshDefaults()
         defaults.set(enabled, forKey: AppGroup.uninstallProtectionKey)
@@ -38,8 +38,8 @@ struct UninstallProtectionEnforcerTests {
             ledger: UsageLedger(defaults: defaults), defaults: defaults)
     }
 
-    private func hardSchedule() -> RuleSnapshot {
-        RuleSnapshot(rule: BlockingRule(name: "Locked In", hardMode: true))
+    private func hardSchedule() -> RuleSnapshotDTO {
+        RuleSnapshotDTO(rule: BlockingRule(name: "Locked In", hardMode: true))
     }
 
     @Test("Denies removal when opted in and a hard rule is actively blocking")
@@ -65,7 +65,7 @@ struct UninstallProtectionEnforcerTests {
     @Test("A soft rule never denies, even opted in")
     func doesNotDenyForSoftRule() {
         let shields = MockShieldController()
-        let soft = RuleSnapshot(rule: BlockingRule(name: "Work Time"))
+        let soft = RuleSnapshotDTO(rule: BlockingRule(name: "Work Time"))
         let enforcer = makeEnforcer(snapshots: [soft], enabled: true, shields: shields)
 
         enforcer.reconcile(at: mondayDuringWork, calendar: utc)

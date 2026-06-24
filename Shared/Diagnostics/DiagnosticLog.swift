@@ -17,7 +17,7 @@ import os
 /// (extension callbacks run on arbitrary threads; the app target defaults to
 /// `MainActor`). Every entry records its source location so a logged line traces
 /// back to the exact code. See `Docs/Agents/Specs/DIAGNOSTIC_LOGGING.md`.
-enum Diag {
+nonisolated enum Diag {
     private static let lock = NSLock()
     nonisolated(unsafe) private static var writer: LogFileWriter?
     nonisolated(unsafe) private static var loggers: [LogCategory: Logger] = [:]
@@ -86,7 +86,7 @@ enum Diag {
     }
 }
 
-extension LogLevel {
+nonisolated extension LogLevel {
     /// Mapping to unified-log severities. `event` → `.default` (notice).
     var osType: OSLogType {
         switch self {

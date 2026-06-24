@@ -13,7 +13,7 @@ import Foundation
 ///
 /// Pure and dependency-free (no `UserNotifications` import) so it is safe to
 /// compile into every target via `Shared/`.
-struct NotificationPreferences {
+nonisolated struct NotificationPreferences {
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = AppGroup.defaults) {

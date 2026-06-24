@@ -6,7 +6,11 @@
 import Foundation
 
 /// A day of the week, using `Calendar` weekday numbering (1 = Sunday … 7 = Saturday).
-enum Weekday: Int, CaseIterable, Codable, Hashable, Sendable {
+///
+/// `nonisolated` because it is a pure value type used from every isolation
+/// domain — the background Screen Time extensions and default-argument
+/// expressions — under the project's `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`.
+nonisolated enum Weekday: Int, CaseIterable, Codable, Hashable, Sendable {
     case sunday = 1
     case monday = 2
     case tuesday = 3

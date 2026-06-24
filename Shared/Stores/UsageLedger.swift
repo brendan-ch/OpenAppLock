@@ -8,7 +8,7 @@ import Foundation
 /// What a limit rule has consumed on a given day. Written by the
 /// DeviceActivity monitor (minutes) and shield-action extension (opens);
 /// read by the app for display and enforcement.
-struct RuleUsage: Codable, Equatable {
+nonisolated struct RuleUsage: Codable, Equatable {
     var minutesUsed = 0
     var opensUsed = 0
     /// The true daily total written by the DeviceActivityReport extension while

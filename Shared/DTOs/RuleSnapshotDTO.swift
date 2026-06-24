@@ -10,7 +10,7 @@ import Foundation
 /// SwiftData store) know what to enforce. Built from a `BlockingRule` via
 /// `BlockingRule.dto`; outside the SwiftData store, the rule editors, and the
 /// mutation path, this is the type every consumer speaks.
-struct RuleSnapshotDTO: Codable, Equatable {
+nonisolated struct RuleSnapshotDTO: Codable, Equatable {
     var id: UUID
     var name: String
     var kindRaw: String
@@ -60,7 +60,7 @@ struct RuleSnapshotDTO: Codable, Equatable {
     }
 }
 
-extension RuleSnapshotDTO {
+nonisolated extension RuleSnapshotDTO {
     private enum CodingKeys: String, CodingKey {
         case id, name, kindRaw, isEnabled, hardMode, blockAdultContent
         case selectionModeRaw, selectionData, dayNumbers, startMinutes, endMinutes

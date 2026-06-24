@@ -19,7 +19,7 @@ protocol LocalNotificationScheduling: Sendable {
 
 /// Real scheduling via UserNotifications: weekly (or daily, when collapsed)
 /// repeating calendar triggers.
-struct UserNotificationScheduler: LocalNotificationScheduling {
+nonisolated struct UserNotificationScheduler: LocalNotificationScheduling {
     func pendingScheduleStartIdentifiers() async -> [String] {
         await UNUserNotificationCenter.current().pendingNotificationRequests()
             .map(\.identifier)
@@ -127,7 +127,7 @@ actor NotificationScheduler {
 
 /// Records scheduling calls for tests, emulating "add replaces a same-identifier
 /// request".
-final class MockNotificationScheduler: LocalNotificationScheduling, @unchecked Sendable {
+nonisolated final class MockNotificationScheduler: LocalNotificationScheduling, @unchecked Sendable {
     private(set) var pending: [PlannedNotification] = []
     private(set) var removeCallCount = 0
     private(set) var addCallCount = 0

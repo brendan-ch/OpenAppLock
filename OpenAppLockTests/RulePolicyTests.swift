@@ -128,11 +128,11 @@ struct UninstallProtectionPolicyTests {
         let rule = hardLimitRule()
         #expect(
             RulePolicy.shouldDenyAppRemoval(
-                snapshots: [rule].map(\.dto), enabled: true, usageFor: { _ in RuleUsage(minutesUsed: 45) },
+                snapshots: [rule].map(\.dto), enabled: true, usageFor: { _ in RuleUsageDTO(minutesUsed: 45) },
                 at: mondayDuringWork, calendar: utc))
         #expect(
             !RulePolicy.shouldDenyAppRemoval(
-                snapshots: [rule].map(\.dto), enabled: true, usageFor: { _ in RuleUsage(minutesUsed: 10) },
+                snapshots: [rule].map(\.dto), enabled: true, usageFor: { _ in RuleUsageDTO(minutesUsed: 10) },
                 at: mondayDuringWork, calendar: utc))
     }
 
@@ -162,11 +162,11 @@ struct UninstallProtectionPolicyTests {
         let rule = hardLimitRule()
         #expect(
             !RulePolicy.canToggleUninstallProtection(
-                snapshots: [rule].map(\.dto), usageFor: { _ in RuleUsage(minutesUsed: 45) },
+                snapshots: [rule].map(\.dto), usageFor: { _ in RuleUsageDTO(minutesUsed: 45) },
                 at: mondayDuringWork, calendar: utc))
         #expect(
             RulePolicy.canToggleUninstallProtection(
-                snapshots: [rule].map(\.dto), usageFor: { _ in RuleUsage(minutesUsed: 10) },
+                snapshots: [rule].map(\.dto), usageFor: { _ in RuleUsageDTO(minutesUsed: 10) },
                 at: mondayDuringWork, calendar: utc))
     }
 }
@@ -232,11 +232,11 @@ struct UninstallProtectionSnapshotPolicyTests {
         let snap = RuleSnapshotDTO(rule: hardLimitRule())
         #expect(
             UninstallProtectionPolicy.shouldDenyAppRemoval(
-                snapshots: [snap], enabled: true, usageFor: { _ in RuleUsage(minutesUsed: 45) },
+                snapshots: [snap], enabled: true, usageFor: { _ in RuleUsageDTO(minutesUsed: 45) },
                 at: mondayDuringWork, calendar: utc))
         #expect(
             !UninstallProtectionPolicy.shouldDenyAppRemoval(
-                snapshots: [snap], enabled: true, usageFor: { _ in RuleUsage(minutesUsed: 10) },
+                snapshots: [snap], enabled: true, usageFor: { _ in RuleUsageDTO(minutesUsed: 10) },
                 at: mondayDuringWork, calendar: utc))
     }
 
@@ -247,7 +247,7 @@ struct UninstallProtectionSnapshotPolicyTests {
         let snap = RuleSnapshotDTO(rule: tuesdayHardLimitRule())
         #expect(
             !UninstallProtectionPolicy.shouldDenyAppRemoval(
-                snapshots: [snap], enabled: true, usageFor: { _ in RuleUsage(minutesUsed: 99) },
+                snapshots: [snap], enabled: true, usageFor: { _ in RuleUsageDTO(minutesUsed: 99) },
                 at: mondayDuringWork, calendar: utc))
     }
 }

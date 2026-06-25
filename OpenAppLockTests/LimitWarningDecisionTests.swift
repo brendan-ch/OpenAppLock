@@ -52,7 +52,7 @@ struct LimitWarningDecisionTests {
     @Test("Eligible rule produces warning content")
     func eligible() {
         let content = LimitWarningDecision.content(
-            for: timeLimitSnapshot(), usage: RuleUsage(minutesUsed: 55),
+            for: timeLimitSnapshot(), usage: RuleUsageDTO(minutesUsed: 55),
             preferences: enabledPreferences(), now: mondayNoon, calendar: utc)
         #expect(content != nil)
         #expect(content?.body.contains("5 minutes") == true)
@@ -64,12 +64,12 @@ struct LimitWarningDecisionTests {
         let snap = timeLimitSnapshot()
         #expect(
             LimitWarningDecision.content(
-                for: snap, usage: RuleUsage(minutesUsed: 55),
+                for: snap, usage: RuleUsageDTO(minutesUsed: 55),
                 preferences: preferences(authorized: true, toggle: false),
                 now: mondayNoon, calendar: utc) == nil)
         #expect(
             LimitWarningDecision.content(
-                for: snap, usage: RuleUsage(minutesUsed: 55),
+                for: snap, usage: RuleUsageDTO(minutesUsed: 55),
                 preferences: preferences(authorized: false, toggle: true),
                 now: mondayNoon, calendar: utc) == nil)
     }
@@ -77,7 +77,7 @@ struct LimitWarningDecisionTests {
     @Test("No content for ineligible rule states")
     func ineligibleStates() {
         let prefs = enabledPreferences()
-        let usage = RuleUsage(minutesUsed: 55)
+        let usage = RuleUsageDTO(minutesUsed: 55)
         // Nil snapshot.
         #expect(
             LimitWarningDecision.content(
@@ -100,7 +100,7 @@ struct LimitWarningDecisionTests {
         // Already at/over the limit (block already fired).
         #expect(
             LimitWarningDecision.content(
-                for: timeLimitSnapshot(), usage: RuleUsage(minutesUsed: 60), preferences: prefs,
+                for: timeLimitSnapshot(), usage: RuleUsageDTO(minutesUsed: 60), preferences: prefs,
                 now: mondayNoon, calendar: utc) == nil)
         // Wrong kinds.
         #expect(

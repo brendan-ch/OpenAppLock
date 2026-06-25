@@ -519,7 +519,7 @@ struct LimitEnforcementTests {
         store.save([snap])
         // A stale value sitting in today's key (e.g. a pre-boundary write).
         ledger.setUsage(
-            RuleUsage(minutesUsed: 45), for: snap.id, onDayContaining: monday, calendar: utc)
+            RuleUsageDTO(minutesUsed: 45), for: snap.id, onDayContaining: monday, calendar: utc)
 
         // First day-start of the day: transition → zeroed.
         enforcement.handleDayStart(ruleID: snap.id, now: monday, calendar: utc)

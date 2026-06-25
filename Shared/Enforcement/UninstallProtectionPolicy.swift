@@ -17,7 +17,7 @@ enum UninstallProtectionPolicy {
     /// (`enabled`) *and* some snapshot is actively blocking with Hard Mode on.
     static func shouldDenyAppRemoval(
         snapshots: [RuleSnapshotDTO], enabled: Bool,
-        usageFor: (RuleSnapshotDTO) -> RuleUsage? = { _ in nil },
+        usageFor: (RuleSnapshotDTO) -> RuleUsageDTO? = { _ in nil },
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         enabled && isAnyHardLocked(snapshots: snapshots, usageFor: usageFor, at: now, calendar: calendar)
@@ -26,7 +26,7 @@ enum UninstallProtectionPolicy {
     /// Whether any snapshot is currently a hard block.
     static func isAnyHardLocked(
         snapshots: [RuleSnapshotDTO],
-        usageFor: (RuleSnapshotDTO) -> RuleUsage? = { _ in nil },
+        usageFor: (RuleSnapshotDTO) -> RuleUsageDTO? = { _ in nil },
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         snapshots.contains {
@@ -36,7 +36,7 @@ enum UninstallProtectionPolicy {
 
     /// True while the snapshot is actively blocking with Hard Mode on.
     static func isHardLocked(
-        _ snapshot: RuleSnapshotDTO, usage: RuleUsage? = nil,
+        _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         snapshot.hardMode && isActive(snapshot, usage: usage, at: now, calendar: calendar)
@@ -46,7 +46,7 @@ enum UninstallProtectionPolicy {
     /// `RuleActivation` primitive that `BlockingRule.status(...).isActive` also
     /// derives from, so the foreground and background paths cannot disagree.
     static func isActive(
-        _ snapshot: RuleSnapshotDTO, usage: RuleUsage? = nil,
+        _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         snapshot.activation(usage: usage, at: now, calendar: calendar).isBlocking

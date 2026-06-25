@@ -51,7 +51,7 @@ extension RuleSnapshotDTO {
     /// block once the day's budget is spent on an enabled day; without usage
     /// data a limit rule reports upcoming.
     func status(
-        at now: Date = .now, calendar: Calendar = .current, usage: RuleUsage? = nil
+        at now: Date = .now, calendar: Calendar = .current, usage: RuleUsageDTO? = nil
     ) -> RuleStatus {
         guard isEnabled else { return .disabled }
         guard !days.isEmpty else { return .dormant }
@@ -74,7 +74,7 @@ extension RuleSnapshotDTO {
     ///   used today ("18m of 45m used"), and the plain daily allowance while
     ///   still untouched ("45m / day"). A spent limit therefore reads
     ///   "45m of 45m used", never a clock countdown.
-    func rowContext(for status: RuleStatus, usage: RuleUsage, relativeTo now: Date) -> String {
+    func rowContext(for status: RuleStatus, usage: RuleUsageDTO, relativeTo now: Date) -> String {
         switch kind {
         case .schedule:
             return status.label(relativeTo: now)

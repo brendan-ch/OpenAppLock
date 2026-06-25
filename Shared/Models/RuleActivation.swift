@@ -37,7 +37,7 @@ extension RuleSnapshotDTO {
     /// on an enabled day (requires usage). A pause only surfaces when the rule
     /// would otherwise be blocking.
     func activation(
-        usage: RuleUsage?, at now: Date = .now, calendar: Calendar = .current
+        usage: RuleUsageDTO?, at now: Date = .now, calendar: Calendar = .current
     ) -> RuleActivation {
         guard isEnabled else { return .inactive(nextStart: nil) }
 

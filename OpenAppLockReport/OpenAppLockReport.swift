@@ -5,6 +5,7 @@
 
 import DeviceActivity
 import SwiftUI
+import ExtensionKit
 
 @main
 struct OpenAppLockReport: DeviceActivityReportExtension {

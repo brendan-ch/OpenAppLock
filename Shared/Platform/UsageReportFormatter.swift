@@ -11,7 +11,7 @@ import Foundation
 nonisolated enum UsageReportFormatter {
     static func todayTotal(seconds: Double) -> String {
         let minutes = Int(seconds / 60)
-        guard minutes > 0 else { return "" }
+        guard minutes > 0 else { return "No usage today" }
         let hours = minutes / 60
         let remainder = minutes % 60
         if hours > 0 && remainder > 0 { return "\(hours)h \(remainder)m today" }

@@ -275,8 +275,8 @@ struct UsageDisplayTests {
 struct UsageReportFormatterTests {
     @Test("Formats today's total; blank under a minute")
     func formatsTotal() {
-        #expect(UsageReportFormatter.todayTotal(seconds: 0) == "")
-        #expect(UsageReportFormatter.todayTotal(seconds: 59) == "")
+        #expect(UsageReportFormatter.todayTotal(seconds: 0) == "No usage today")
+        #expect(UsageReportFormatter.todayTotal(seconds: 59) == "No usage today")
         #expect(UsageReportFormatter.todayTotal(seconds: 60) == "1m today")
         #expect(UsageReportFormatter.todayTotal(seconds: 22 * 60) == "22m today")
         #expect(UsageReportFormatter.todayTotal(seconds: 72 * 60) == "1h 12m today")

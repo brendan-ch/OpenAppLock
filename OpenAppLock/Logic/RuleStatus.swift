@@ -82,11 +82,12 @@ extension RuleSnapshotDTO {
             switch status {
             case .disabled, .dormant, .paused:
                 return status.label(relativeTo: now)
-            case .active, .upcoming:
-                let usedToday = usage.effectiveMinutesUsed(asOf: now) > 0 || usage.opensUsed > 0
-                return usedToday
-                    ? UsageDisplay.usagePhrase(for: self, usage: usage, asOf: now)
-                    : UsageDisplay.budgetPhrase(for: self)
+            case .active:
+                // A spent budget blocks for the rest of the day; the detail row
+                // ("Then block until: Tomorrow") names the same moment.
+                return "Blocked until tomorrow"
+            case .upcoming:
+                return UsageDisplay.budgetPhrase(for: self)
             }
         }
     }

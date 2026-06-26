@@ -140,9 +140,9 @@ struct RuleStatusTests {
         #expect(weekend.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: friday) == "Starts in 22h")
     }
 
-    /// Limit rules block by budget, not by the clock, so a spent one reads its
-    /// usage ("15m of 15m used"), never a countdown (that is schedule-only).
-    @Test("A spent time-limit budget shows its usage, not a countdown")
+    /// Limit rules block by budget, not by the clock, so a spent one reads
+    /// "Blocked until tomorrow", never a countdown (that is schedule-only).
+    @Test("A spent time-limit budget reads 'Blocked until tomorrow'")
     func timeLimitBlockingDisplayLabel() {
         let rule = BlockingRule(
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
@@ -150,6 +150,6 @@ struct RuleStatusTests {
         let usage = RuleUsageDTO(minutesUsed: 15)
         let status = rule.dto.status(at: now, calendar: utc, usage: usage)
         #expect(status.isActive)
-        #expect(rule.dto.rowContext(for: status, usage: usage, relativeTo: now) == "15m of 15m used")
+        #expect(rule.dto.rowContext(for: status, usage: usage, relativeTo: now) == "Blocked until tomorrow")
     }
 }

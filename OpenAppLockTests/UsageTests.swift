@@ -317,68 +317,38 @@ struct UsageDisplayTests {
 
     let now = date(2025, 1, 6, 10, 0) // a Monday, so the every-day rules fire
 
-    @Test("Time-limit rows show minutes used of the budget")
-    func timeLimitStrings() {
-        let usage = RuleUsageDTO(minutesUsed: 18)
-        #expect(UsageDisplay.usagePhrase(for: timeRule.dto, usage: usage, asOf: now) == "18m of 45m used")
-    }
-
-    @Test("Usage phrase reflects a fresh authoritative reading")
-    func usagePhrasePrefersFreshAuthoritative() {
-        var usage = RuleUsageDTO(minutesUsed: 5)
-        usage.authoritativeMinutesUsed = 18
-        usage.authoritativeAsOf = now.addingTimeInterval(-10)
-        #expect(UsageDisplay.usagePhrase(for: timeRule.dto, usage: usage, asOf: now) == "18m of 45m used")
-    }
-
-    @Test("Open-limit rows show opens used of the budget")
-    func openLimitStrings() {
-        let usage = RuleUsageDTO(opensUsed: 2)
-        #expect(UsageDisplay.usagePhrase(for: openRule.dto, usage: usage, asOf: now) == "2 of 5 opens")
-    }
-
-    /// Limit context adapts: the daily budget while untouched, live usage once
-    /// the rule has been used today.
-    @Test("Limit context shows budget while idle and usage once used")
-    func adaptiveLimitContext() {
+    @Test("Limit rows show the daily budget, never a live count")
+    func limitContextShowsBudget() {
         let idle = timeRule.dto.status(at: now, calendar: utc, usage: RuleUsageDTO())
         #expect(timeRule.dto.rowContext(for: idle, usage: RuleUsageDTO(), relativeTo: now) == "45m / day")
 
-        let used = RuleUsageDTO(minutesUsed: 18)
+        let used = RuleUsageDTO(minutesUsed: 18) // under budget → upcoming → budget
         let active = timeRule.dto.status(at: now, calendar: utc, usage: used)
-        #expect(timeRule.dto.rowContext(for: active, usage: used, relativeTo: now) == "18m of 45m used")
+        #expect(timeRule.dto.rowContext(for: active, usage: used, relativeTo: now) == "45m / day")
     }
 
-    @Test("A spent limit reads its usage; unblocking it reads Paused")
-    func exhaustedContext() {
+    @Test("A spent limit reads 'Blocked until tomorrow'; unblocking it reads Paused")
+    func spentLimitContext() {
         let spent = RuleUsageDTO(minutesUsed: 45)
         let blocking = timeRule.dto.status(at: now, calendar: utc, usage: spent)
         #expect(blocking.isActive)
-        #expect(timeRule.dto.rowContext(for: blocking, usage: spent, relativeTo: now) == "45m of 45m used")
+        #expect(timeRule.dto.rowContext(for: blocking, usage: spent, relativeTo: now) == "Blocked until tomorrow")
 
         timeRule.pausedUntil = utc.date(byAdding: .hour, value: 5, to: now)
         let paused = timeRule.dto.status(at: now, calendar: utc, usage: spent)
         #expect(timeRule.dto.rowContext(for: paused, usage: spent, relativeTo: now) == "Paused")
     }
 
-    @Test("Overshoot clamps to the budget")
-    func overshootClamps() {
-        let over = RuleUsageDTO(minutesUsed: 60)
-        #expect(UsageDisplay.usagePhrase(for: timeRule.dto, usage: over, asOf: now) == "45m of 45m used")
-    }
-
-    @Test("Home subtitles prefix the rule kind so the type reads without the icon")
+    @Test("Home subtitles prefix the rule kind")
     func homeSubtitles() {
-        let timeUsage = RuleUsageDTO(minutesUsed: 18)
-        let timeStatus = timeRule.dto.status(at: now, calendar: utc, usage: timeUsage)
+        let timeStatus = timeRule.dto.status(at: now, calendar: utc, usage: RuleUsageDTO())
         #expect(
-            UsageDisplay.homeSubtitle(for: timeRule.dto, status: timeStatus, usage: timeUsage, relativeTo: now)
-                == "Time Limit · 18m of 45m used")
+            UsageDisplay.homeSubtitle(for: timeRule.dto, status: timeStatus, usage: RuleUsageDTO(), relativeTo: now)
+                == "Time Limit · 45m / day")
 
-        let openUsage = RuleUsageDTO(opensUsed: 2)
-        let openStatus = openRule.dto.status(at: now, calendar: utc, usage: openUsage)
+        let openStatus = openRule.dto.status(at: now, calendar: utc, usage: RuleUsageDTO())
         #expect(
-            UsageDisplay.homeSubtitle(for: openRule.dto, status: openStatus, usage: openUsage, relativeTo: now)
-                == "Open Limit · 2 of 5 opens")
+            UsageDisplay.homeSubtitle(for: openRule.dto, status: openStatus, usage: RuleUsageDTO(), relativeTo: now)
+                == "Open Limit · 5 opens / day")
     }
 }

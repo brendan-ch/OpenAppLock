@@ -18,20 +18,6 @@ enum UsageDisplay {
         "\(snapshot.kind.displayName) · \(snapshot.rowContext(for: status, usage: usage, relativeTo: now))"
     }
 
-    /// "18m of 45m used" / "2 of 5 opens". Empty for schedule rules, which have
-    /// no usage budget. ("today" is implied — usage always covers the current day.)
-    static func usagePhrase(for snapshot: RuleSnapshotDTO, usage: RuleUsageDTO, asOf now: Date) -> String {
-        switch snapshot.kind {
-        case .schedule:
-            ""
-        case .timeLimit:
-            "\(min(usage.effectiveMinutesUsed(asOf: now), snapshot.dailyLimitMinutes))m of "
-                + "\(snapshot.dailyLimitMinutes)m used"
-        case .openLimit:
-            "\(min(usage.opensUsed, snapshot.maxOpens)) of \(snapshot.maxOpens) opens"
-        }
-    }
-
     /// "45m / day" / "5 opens / day" — the plain daily allowance, shown while a
     /// limit rule has no usage recorded today. Empty for schedule rules.
     static func budgetPhrase(for snapshot: RuleSnapshotDTO) -> String {

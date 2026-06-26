@@ -76,7 +76,7 @@ struct LimitEnforcement {
             "confirm rule-\(ruleID.uuidString.prefix(8)) start=\(LogTimestamp.string(from: today))"
                 + (kind == .timeLimit ? " (zeroed today's ledger)" : ""))
         if kind == .timeLimit {
-            ledger.setUsage(RuleUsage(), for: ruleID, onDayContaining: now, calendar: calendar)
+            ledger.setUsage(RuleUsageDTO(), for: ruleID, onDayContaining: now, calendar: calendar)
         }
     }
 

@@ -81,7 +81,7 @@ struct RulesListView: View {
 
     private func ruleRow(for rule: BlockingRule, now: Date) -> some View {
         let dto = rule.dto
-        let usage = enforcer.usage(for: dto, at: now) ?? RuleUsage()
+        let usage = enforcer.usage(for: dto, at: now) ?? RuleUsageDTO()
         let status = dto.status(at: now, usage: usage)
         return Button {
             detailRule = rule

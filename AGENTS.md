@@ -27,6 +27,10 @@ Shared/                     Compiled into the app AND all four extensions,
                             grouped by architectural layer:
   Models/                   Pure rule-domain value types: RuleKind,
                             RuleConfiguration, RuleSchedule, Weekday
+  DTOs/                     Codable plain-data mirrors persisted to the app
+                            group (the payloads the extensions read):
+                            RuleSnapshotDTO (rule mirror), RuleUsageDTO
+                            (per-day minutes/opens + authoritative daily total)
   Enforcement/              Stateless decisions + shield controllers that turn
                             rules/events into blocks: ScheduleEnforcement,
                             LimitEnforcement (shared event reactions),
@@ -34,10 +38,9 @@ Shared/                     Compiled into the app AND all four extensions,
                             UninstallProtectionEnforcer, ShieldController,
                             ShieldLookup, ShieldPresentation
   Stores/                   App-group persistence/accessors: UsageLedger
-                            (per-day minutes/opens + the report's authoritative
-                            daily total), OpenSessionStore, DayStartStore
-                            (confirmed daily-activity starts),
-                            RuleSnapshot(+Store) (rule mirror in the app group),
+                            (reads/writes RuleUsageDTO per day), OpenSessionStore,
+                            DayStartStore (confirmed daily-activity starts),
+                            RuleSnapshotStore (writes the rule mirror),
                             NotificationPreferences
   Diagnostics/              Logging subsystem: DiagnosticLog (`Diag` dual-sink
                             logging facade) + LogEntry/LogMerge/LogRetention/
@@ -134,7 +137,7 @@ Where each topic is documented:
 | Topic | Source (doc comment) |
 |---|---|
 | Rule kinds, sum-type options, Schedule-only rationale | `Shared/Models/RuleConfiguration.swift`, `Shared/Models/RuleKind.swift` |
-| Persisted rule + common attributes; editor draft; cross-process mirror | `OpenAppLock/Models/BlockingRule.swift`, `OpenAppLock/Models/RuleDraft.swift`, `Shared/Stores/RuleSnapshot.swift` |
+| Persisted rule + common attributes; editor draft; cross-process mirror | `OpenAppLock/Models/BlockingRule.swift`, `OpenAppLock/Models/RuleDraft.swift`, `Shared/DTOs/RuleSnapshotDTO.swift` |
 | Derived status & countdown labels | `OpenAppLock/Logic/RuleStatus.swift` |
 | Day-of-week picker & summary | `OpenAppLock/Views/Components/DayOfWeekPicker.swift`, `Shared/Models/Weekday.swift` |
 | Presets; editors (all kinds); detail | `OpenAppLock/Models/RulePreset.swift`, `OpenAppLock/Views/Rules/RuleEditorView.swift`, `OpenAppLock/Views/Rules/RuleDetailSheet.swift` |
@@ -143,7 +146,7 @@ Where each topic is documented:
 | Schedule activation / time-window math (incl. midnight crossing) | `Shared/Models/RuleSchedule.swift`, `Shared/Enforcement/ScheduleEnforcement.swift` |
 | Unblock / disable / delete / Hard Mode gating | `OpenAppLock/Logic/RulePolicy.swift` |
 | Foreground reconciliation; **overlapping rules → strictest wins** | `OpenAppLock/Services/RuleEnforcer.swift`, `Shared/Enforcement/ShieldController.swift` |
-| Time/open-limit behavior, granted opens, proactive gate | `Shared/Enforcement/LimitEnforcement.swift`, `Shared/Stores/UsageLedger.swift`, `Shared/Stores/OpenSessionStore.swift` |
+| Time/open-limit behavior, granted opens, proactive gate | `Shared/Enforcement/LimitEnforcement.swift`, `Shared/Stores/UsageLedger.swift` (+ `Shared/DTOs/RuleUsageDTO.swift`), `Shared/Stores/OpenSessionStore.swift` |
 | Shield text + "Open" button / press handling | `Shared/Enforcement/ShieldPresentation.swift`, `OpenAppLockShieldConfig/ShieldConfigurationExtension.swift`, `OpenAppLockShieldAction/ShieldActionExtension.swift` |
 | DeviceActivity scheduling, naming; background monitor | `OpenAppLock/Services/RuleScheduler.swift`, `Shared/Platform/MonitoringPlan.swift`, `OpenAppLockMonitor/DeviceActivityMonitorExtension.swift` |
 | Authoritative time-limit usage report; confirmed day-start gate | `OpenAppLockReport/RuleUsageReport.swift`, `Shared/Stores/DayStartStore.swift`, `OpenAppLock/Views/MainView.swift` |
@@ -300,7 +303,7 @@ Gotchas learned the hard way:
   does not re-block unused apps the next morning (or clears within one
   foreground refresh); report attribution covers category/web-domain
   selections (currently only application tokens are summed); and tune
-  `RuleUsage.authoritativeFreshness` (120s) so the foreground stays fresh.
+  `RuleUsageDTO.authoritativeFreshness` (120s) so the foreground stays fresh.
 - **Schedule-rule background transitions** are now backed by DeviceActivity:
   `RuleScheduler` registers a repeating window activity per schedule rule
   (`sched-<uuid>`, plus `sched2-<uuid>` for midnight-crossing windows) and the

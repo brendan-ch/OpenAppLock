@@ -16,32 +16,32 @@ import Foundation
 /// pauses.
 ///
 /// Limit rules block on spent usage rather than the clock, so their gates
-/// take the day's `RuleUsage`; passing nil treats them as not blocking.
+/// take the day's `RuleUsageDTO`; passing nil treats them as not blocking.
 enum RulePolicy {
     /// True while the rule is actively blocking with Hard Mode on.
     static func isHardLocked(
-        _ snapshot: RuleSnapshotDTO, usage: RuleUsage? = nil,
+        _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         snapshot.hardMode && snapshot.activation(usage: usage, at: now, calendar: calendar).isBlocking
     }
 
     static func canEdit(
-        _ snapshot: RuleSnapshotDTO, usage: RuleUsage? = nil,
+        _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         !isHardLocked(snapshot, usage: usage, at: now, calendar: calendar)
     }
 
     static func canDisable(
-        _ snapshot: RuleSnapshotDTO, usage: RuleUsage? = nil,
+        _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         !isHardLocked(snapshot, usage: usage, at: now, calendar: calendar)
     }
 
     static func canDelete(
-        _ snapshot: RuleSnapshotDTO, usage: RuleUsage? = nil,
+        _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         !isHardLocked(snapshot, usage: usage, at: now, calendar: calendar)
@@ -50,7 +50,7 @@ enum RulePolicy {
     /// Whether the user may lift the current block early ("Unblock").
     /// Requires an active block and Hard Mode off.
     static func canUnblock(
-        _ snapshot: RuleSnapshotDTO, usage: RuleUsage? = nil,
+        _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         snapshot.activation(usage: usage, at: now, calendar: calendar).isBlocking && !snapshot.hardMode
@@ -59,7 +59,7 @@ enum RulePolicy {
     /// Hard Mode can always be turned on, but never off while the rule is
     /// actively blocking — that is the whole point of a hard block.
     static func canTurnOffHardMode(
-        _ snapshot: RuleSnapshotDTO, usage: RuleUsage? = nil,
+        _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         !isHardLocked(snapshot, usage: usage, at: now, calendar: calendar)
@@ -68,7 +68,7 @@ enum RulePolicy {
     /// Whether *any* rule is currently a hard block — the condition that locks
     /// app-list editing and (when the user opts in) device app removal.
     static func isAnyHardLocked(
-        snapshots: [RuleSnapshotDTO], usageFor: (RuleSnapshotDTO) -> RuleUsage? = { _ in nil },
+        snapshots: [RuleSnapshotDTO], usageFor: (RuleSnapshotDTO) -> RuleUsageDTO? = { _ in nil },
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         snapshots.contains {
@@ -81,7 +81,7 @@ enum RulePolicy {
     /// back door out of the hard block. Creating new lists and picking lists
     /// for other rules stay allowed; they cannot weaken an active block.
     static func canEditAppLists(
-        snapshots: [RuleSnapshotDTO], usageFor: (RuleSnapshotDTO) -> RuleUsage? = { _ in nil },
+        snapshots: [RuleSnapshotDTO], usageFor: (RuleSnapshotDTO) -> RuleUsageDTO? = { _ in nil },
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         !isAnyHardLocked(snapshots: snapshots, usageFor: usageFor, at: now, calendar: calendar)
@@ -91,7 +91,7 @@ enum RulePolicy {
     /// locked while any hard-mode rule is actively blocking — turning it off
     /// mid-block would be an escape hatch, the very thing it exists to prevent.
     static func canToggleUninstallProtection(
-        snapshots: [RuleSnapshotDTO], usageFor: (RuleSnapshotDTO) -> RuleUsage? = { _ in nil },
+        snapshots: [RuleSnapshotDTO], usageFor: (RuleSnapshotDTO) -> RuleUsageDTO? = { _ in nil },
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         !isAnyHardLocked(snapshots: snapshots, usageFor: usageFor, at: now, calendar: calendar)
@@ -103,7 +103,7 @@ enum RulePolicy {
     /// (the user can't delete the locked apps — or OpenAppLock itself).
     static func shouldDenyAppRemoval(
         snapshots: [RuleSnapshotDTO], enabled: Bool,
-        usageFor: (RuleSnapshotDTO) -> RuleUsage? = { _ in nil },
+        usageFor: (RuleSnapshotDTO) -> RuleUsageDTO? = { _ in nil },
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         enabled && isAnyHardLocked(snapshots: snapshots, usageFor: usageFor, at: now, calendar: calendar)
@@ -114,7 +114,7 @@ enum RulePolicy {
     /// window; limit rules re-arm at midnight with the next day's budget.
     @discardableResult
     static func unblock(
-        _ rule: BlockingRule, usage: RuleUsage? = nil,
+        _ rule: BlockingRule, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
         guard canUnblock(rule.dto, usage: usage, at: now, calendar: calendar) else { return false }

@@ -138,7 +138,7 @@ struct RuleEnforcerTests {
             days: Weekday.everyDay)
         // 2 of 5 opens spent: budget not reached, so the rule is not "active",
         // but its apps must still be gated so the next open can be counted.
-        ledger.usageByRule[rule.id] = RuleUsage(opensUsed: 2)
+        ledger.usageByRule[rule.id] = RuleUsageDTO(opensUsed: 2)
 
         enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
@@ -158,7 +158,7 @@ struct RuleEnforcerTests {
             name: "Gate Keeper",
             configuration: .openLimit(OpenLimitConfig(maxOpens: 5)),
             days: Weekday.everyDay)
-        ledger.usageByRule[rule.id] = RuleUsage(opensUsed: 2)
+        ledger.usageByRule[rule.id] = RuleUsageDTO(opensUsed: 2)
         // The user spent an open and is mid-session; re-shielding would cut the
         // sanctioned ~15-minute session short.
         sessions.activeRuleIDs = [rule.id]
@@ -213,7 +213,7 @@ struct OverlappingRuleEnforcementTests {
         let enforcer = RuleEnforcer(shields: shields, usage: ledger)
         let schedule = BlockingRule(name: "Work Time")  // 09:00–17:00, active now
         let timeLimit = timeLimitRule()
-        ledger.usageByRule[timeLimit.id] = RuleUsage(minutesUsed: 45)  // spent → blocking
+        ledger.usageByRule[timeLimit.id] = RuleUsageDTO(minutesUsed: 45)  // spent → blocking
 
         enforcer.refresh(rules: [schedule, timeLimit], at: mondayDuringWork, calendar: utc)
 
@@ -228,8 +228,8 @@ struct OverlappingRuleEnforcementTests {
         let enforcer = RuleEnforcer(shields: shields, usage: ledger)
         let openLimit = openLimitRule(maxOpens: 5)
         let timeLimit = timeLimitRule(limit: 45)
-        ledger.usageByRule[openLimit.id] = RuleUsage(opensUsed: 1)    // opens remain
-        ledger.usageByRule[timeLimit.id] = RuleUsage(minutesUsed: 45)  // budget spent
+        ledger.usageByRule[openLimit.id] = RuleUsageDTO(opensUsed: 1)    // opens remain
+        ledger.usageByRule[timeLimit.id] = RuleUsageDTO(minutesUsed: 45)  // budget spent
 
         enforcer.refresh(rules: [openLimit, timeLimit], at: mondayDuringWork, calendar: utc)
 
@@ -248,9 +248,9 @@ struct OverlappingRuleEnforcementTests {
         let openLimit = openLimitRule(maxOpens: 5)
         let timeLimit = timeLimitRule(limit: 45)
         sessions.activeRuleIDs = [openLimit.id]  // user is mid-open on the shared app
-        ledger.usageByRule[openLimit.id] = RuleUsage(opensUsed: 1)
+        ledger.usageByRule[openLimit.id] = RuleUsageDTO(opensUsed: 1)
         // The metered minutes during the open push the time limit over budget.
-        ledger.usageByRule[timeLimit.id] = RuleUsage(minutesUsed: 45)
+        ledger.usageByRule[timeLimit.id] = RuleUsageDTO(minutesUsed: 45)
 
         enforcer.refresh(rules: [openLimit, timeLimit], at: mondayDuringWork, calendar: utc)
 

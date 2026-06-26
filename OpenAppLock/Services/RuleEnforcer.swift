@@ -58,7 +58,7 @@ final class RuleEnforcer {
     /// The day's usage for a rule (nil for schedule rules, which don't track).
     func usage(
         for snapshot: RuleSnapshotDTO, at now: Date = .now, calendar: Calendar = .current
-    ) -> RuleUsage? {
+    ) -> RuleUsageDTO? {
         guard snapshot.kind != .schedule else { return nil }
         return usageReader.usage(for: snapshot.id, onDayContaining: now, calendar: calendar)
     }
@@ -150,7 +150,7 @@ final class RuleEnforcer {
     /// its freshness, and a WARN when the report's (app-token-only) authoritative
     /// figure has lifted a block the threshold count says is real.
     private func logTimeLimitDecision(
-        _ rule: BlockingRule, usage: RuleUsage?, isBlocking: Bool, at now: Date
+        _ rule: BlockingRule, usage: RuleUsageDTO?, isBlocking: Bool, at now: Date
     ) {
         guard rule.kind == .timeLimit, let usage else { return }
         let rid = rule.id.uuidString.prefix(8)
@@ -159,7 +159,7 @@ final class RuleEnforcer {
         let asOfAge = usage.authoritativeAsOf.map { Int(now.timeIntervalSince($0)) }
         let usingAuthoritative =
             usage.authoritativeMinutesUsed != nil
-            && (asOfAge.map { abs($0) <= Int(RuleUsage.authoritativeFreshness) } ?? false)
+            && (asOfAge.map { abs($0) <= Int(RuleUsageDTO.authoritativeFreshness) } ?? false)
         Diag.log(
             .usage,
             "timeLimit rule-\(rid) threshold=\(usage.minutesUsed) auth=\(usage.authoritativeMinutesUsed.map(String.init) ?? "-")@\(asOfAge.map { "\($0)s" } ?? "-") effective=\(effective)/\(limit) source=\(usingAuthoritative ? "authoritative" : "threshold")")
@@ -174,7 +174,7 @@ final class RuleEnforcer {
     /// are Schedule-only options; the model already forces `.block`/`false` on
     /// limit rules, so we forward the rule's values directly.
     private func applyShield(
-        for snapshot: RuleSnapshotDTO, status: RuleStatus, usage: RuleUsage?, isBlocking: Bool
+        for snapshot: RuleSnapshotDTO, status: RuleStatus, usage: RuleUsageDTO?, isBlocking: Bool
     ) {
         let rid = snapshot.id.uuidString.prefix(8)
         Diag.log(

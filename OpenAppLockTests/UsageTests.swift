@@ -191,35 +191,6 @@ struct UsageStatusTests {
             !RulePolicy.canEditAppLists(
                 snapshots: [rule].map(\.dto), usageFor: { _ in usage }, at: mondayMorning, calendar: utc))
     }
-
-    @Test("A fresh authoritative reading below budget keeps a rule inactive")
-    func freshAuthoritativeBelowBudgetInactive() {
-        let rule = timeLimitRule(limit: 45)
-        var usage = RuleUsageDTO(minutesUsed: 45)        // threshold says spent (phantom)
-        usage.authoritativeMinutesUsed = 5            // report says 5
-        usage.authoritativeAsOf = mondayMorning.addingTimeInterval(-10)
-        #expect(!rule.dto.status(at: mondayMorning, calendar: utc, usage: usage).isActive)
-    }
-
-    @Test("A fresh authoritative reading at budget blocks even if threshold lags")
-    func freshAuthoritativeAtBudgetBlocks() {
-        let rule = timeLimitRule(limit: 45)
-        var usage = RuleUsageDTO(minutesUsed: 10)
-        usage.authoritativeMinutesUsed = 45
-        usage.authoritativeAsOf = mondayMorning.addingTimeInterval(-10)
-        #expect(
-            rule.dto.status(at: mondayMorning, calendar: utc, usage: usage)
-                == .active(until: date(2025, 1, 7, 0, 0)))
-    }
-
-    @Test("A stale authoritative reading falls back to the threshold count")
-    func staleAuthoritativeUsesThreshold() {
-        let rule = timeLimitRule(limit: 45)
-        var usage = RuleUsageDTO(minutesUsed: 45)
-        usage.authoritativeMinutesUsed = 5
-        usage.authoritativeAsOf = mondayMorning.addingTimeInterval(-600) // stale
-        #expect(rule.dto.status(at: mondayMorning, calendar: utc, usage: usage).isActive)
-    }
 }
 
 @MainActor
@@ -281,25 +252,6 @@ struct UsageEnforcementTests {
         enforcer.refresh(rules: [rule], at: mondayMorning, calendar: utc)
 
         #expect(shields.shieldedRuleIDs.isEmpty)
-    }
-
-    @Test("A fresh authoritative reading below budget clears a phantom block")
-    func freshAuthoritativeClearsPhantomBlock() {
-        let shields = MockShieldController()
-        let ledger = MockUsageLedger()
-        let enforcer = RuleEnforcer(shields: shields, usage: ledger)
-        let rule = BlockingRule(
-            name: "Time Keeper",
-            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 45)),
-            days: Weekday.everyDay)
-        var usage = RuleUsageDTO(minutesUsed: 45)       // threshold phantom
-        usage.authoritativeMinutesUsed = 5
-        usage.authoritativeAsOf = mondayMorning.addingTimeInterval(-10)
-        ledger.usageByRule[rule.id] = usage
-
-        enforcer.refresh(rules: [rule], at: mondayMorning, calendar: utc)
-
-        #expect(shields.shieldedRuleIDs.isEmpty)     // authoritative wins → not blocked
     }
 }
 

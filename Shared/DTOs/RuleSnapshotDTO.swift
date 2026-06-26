@@ -48,7 +48,7 @@ nonisolated struct RuleSnapshotDTO: Codable, Equatable {
     func limitReached(given usage: RuleUsageDTO, at now: Date = .now) -> Bool {
         switch kind {
         case .schedule: false
-        case .timeLimit: usage.effectiveMinutesUsed(asOf: now) >= dailyLimitMinutes
+        case .timeLimit: usage.minutesUsed >= dailyLimitMinutes
         case .openLimit: usage.opensUsed >= maxOpens
         }
     }

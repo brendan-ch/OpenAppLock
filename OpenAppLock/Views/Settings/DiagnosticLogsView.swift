@@ -52,22 +52,23 @@ struct DiagnosticLogsView: View {
                         Text("Clear All Logs")
                     }
                     .accessibilityIdentifier("clearLogsButton")
+                    .confirmationDialog(
+                        "Clear all logs?", isPresented: $showClearConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Clear All Logs", role: .destructive) {
+                            logStore.clearAll()
+                            days = logStore.availableDays()
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("This permanently deletes all recorded diagnostic logs on this device.")
+                    }
                 }
             }
         }
         .navigationTitle("Logs")
         .onAppear { days = logStore.availableDays() }
-        .confirmationDialog(
-            "Clear all logs?", isPresented: $showClearConfirmation, titleVisibility: .visible
-        ) {
-            Button("Clear All Logs", role: .destructive) {
-                logStore.clearAll()
-                days = logStore.availableDays()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This permanently deletes all recorded diagnostic logs on this device.")
-        }
     }
 }
 

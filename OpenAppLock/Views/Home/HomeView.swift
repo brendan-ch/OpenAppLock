@@ -22,24 +22,6 @@ struct HomeView: View {
             }
             .navigationTitle("Home")
         }
-        .confirmationDialog(
-            "Unblock \(unblockCandidate?.name ?? "")?",
-            isPresented: Binding(
-                get: { unblockCandidate != nil },
-                set: { if !$0 { unblockCandidate = nil } }
-            ),
-            titleVisibility: .visible
-        ) {
-            Button("Unblock", role: .destructive) {
-                if let rule = unblockCandidate {
-                    RulePolicy.unblock(rule, usage: enforcer.usage(for: rule.dto))
-                    enforcer.refresh(rules: rules)
-                }
-                unblockCandidate = nil
-            }
-        } message: {
-            Text("Blocking resumes with the rule's next window.")
-        }
         .alert("Hard Mode is on", isPresented: $hardModeBlockedAttempt) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -116,6 +98,22 @@ struct HomeView: View {
             }
         }
         .accessibilityIdentifier("blockedTile-\(rule.name)")
+        .confirmationDialog(
+            "Unblock \(rule.name)?",
+            isPresented: Binding(
+                get: { unblockCandidate?.id == rule.id },
+                set: { if !$0 { unblockCandidate = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Unblock", role: .destructive) {
+                RulePolicy.unblock(rule, usage: enforcer.usage(for: rule.dto))
+                enforcer.refresh(rules: rules)
+                unblockCandidate = nil
+            }
+        } message: {
+            Text("Blocking resumes with the rule's next window.")
+        }
     }
 
     /// The rule's kind icon, tinted, sized to align row text. Decorative — the

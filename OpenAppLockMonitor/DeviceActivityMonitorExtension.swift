@@ -13,7 +13,7 @@ import Foundation
 final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     private var enforcement: LimitEnforcement {
         LimitEnforcement(
-            snapshots: RuleSnapshotStore(),
+            snapshots: RuleSnapshotUserDefaultsStore(),
             ledger: UsageLedger(),
             shields: ManagedSettingsShieldController()
         )
@@ -21,7 +21,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
     private var scheduleEnforcement: ScheduleEnforcement {
         ScheduleEnforcement(
-            snapshots: RuleSnapshotStore(),
+            snapshots: RuleSnapshotUserDefaultsStore(),
             shields: ManagedSettingsShieldController()
         )
     }
@@ -31,7 +31,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     /// app is closed.
     private var uninstallProtection: UninstallProtectionEnforcer {
         UninstallProtectionEnforcer(
-            snapshots: RuleSnapshotStore(),
+            snapshots: RuleSnapshotUserDefaultsStore(),
             shields: ManagedSettingsShieldController()
         )
     }

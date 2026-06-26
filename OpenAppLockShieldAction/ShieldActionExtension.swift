@@ -44,7 +44,7 @@ final class ShieldActionExtension: ShieldActionDelegate {
         switch action {
         case .secondaryButtonPressed:
             if let snapshot = ShieldLookup.openLimitSnapshot(
-                containingCategory: category, in: RuleSnapshotStore().load()) {
+                containingCategory: category, in: RuleSnapshotUserDefaultsStore().load()) {
                 completionHandler(grantOpen(ruleID: snapshot.id))
             } else {
                 completionHandler(.close)
@@ -57,7 +57,7 @@ final class ShieldActionExtension: ShieldActionDelegate {
     private func handleOpenPress(applicationToken: ApplicationToken) -> ShieldActionResponse {
         guard
             let snapshot = ShieldLookup.openLimitSnapshot(
-                containingApplication: applicationToken, in: RuleSnapshotStore().load())
+                containingApplication: applicationToken, in: RuleSnapshotUserDefaultsStore().load())
         else { return .close }
         return grantOpen(ruleID: snapshot.id)
     }
@@ -65,7 +65,7 @@ final class ShieldActionExtension: ShieldActionDelegate {
     private func grantOpen(ruleID: UUID) -> ShieldActionResponse {
         Diag.log(.session, .event, "shieldAction Open pressed rule-\(ruleID.uuidString.prefix(8))")
         let enforcement = LimitEnforcement(
-            snapshots: RuleSnapshotStore(),
+            snapshots: RuleSnapshotUserDefaultsStore(),
             ledger: UsageLedger(),
             shields: ManagedSettingsShieldController()
         )
@@ -78,7 +78,7 @@ final class ShieldActionExtension: ShieldActionDelegate {
         // Keep Uninstall Protection in step with the (possibly changed) blocking
         // state now that an open was spent.
         UninstallProtectionEnforcer(
-            snapshots: RuleSnapshotStore(),
+            snapshots: RuleSnapshotUserDefaultsStore(),
             shields: ManagedSettingsShieldController()
         ).reconcile()
         return .none

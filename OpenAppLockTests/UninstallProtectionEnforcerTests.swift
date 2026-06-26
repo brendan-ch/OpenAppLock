@@ -31,7 +31,7 @@ struct UninstallProtectionEnforcerTests {
     ) -> UninstallProtectionEnforcer {
         let defaults = freshDefaults()
         defaults.set(enabled, forKey: AppGroup.uninstallProtectionKey)
-        let store = RuleSnapshotStore(defaults: defaults)
+        let store = RuleSnapshotUserDefaultsStore(defaults: defaults)
         store.save(snapshots)
         return UninstallProtectionEnforcer(
             snapshots: store, shields: shields,

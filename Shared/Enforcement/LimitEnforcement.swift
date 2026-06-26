@@ -10,7 +10,7 @@ import Foundation
 /// extensions call these; keeping the logic here makes it unit-testable from
 /// the app target.
 struct LimitEnforcement {
-    let snapshots: RuleSnapshotStore
+    let snapshots: RuleSnapshotUserDefaultsStore
     let ledger: UsageLedger
     let shields: ShieldApplying
     /// Granted-open session bookkeeping shared with the foreground enforcer.

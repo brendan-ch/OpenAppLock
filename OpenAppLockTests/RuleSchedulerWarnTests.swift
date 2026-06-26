@@ -26,7 +26,7 @@ struct RuleSchedulerWarnTests {
     private func makeScheduler(defaults: UserDefaults) -> (RuleScheduler, MockActivityMonitor) {
         let monitor = MockActivityMonitor()
         let scheduler = RuleScheduler(
-            monitor: monitor, snapshots: RuleSnapshotStore(defaults: defaults), defaults: defaults)
+            monitor: monitor, snapshots: RuleSnapshotUserDefaultsStore(defaults: defaults), defaults: defaults)
         return (scheduler, monitor)
     }
 

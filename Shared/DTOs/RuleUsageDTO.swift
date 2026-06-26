@@ -10,7 +10,7 @@ import Foundation
 /// (minutes) and shield-action extension (opens); read by the app for display
 /// and enforcement. The plain-data payload every consumer speaks, paired with
 /// `UsageLedger` which performs the app-group I/O — the same payload/store
-/// split as `RuleSnapshotDTO` / `RuleSnapshotStore`.
+/// split as `RuleSnapshotDTO` / `RuleSnapshotUserDefaultsStore`.
 nonisolated struct RuleUsageDTO: Codable, Equatable {
     var minutesUsed = 0
     var opensUsed = 0

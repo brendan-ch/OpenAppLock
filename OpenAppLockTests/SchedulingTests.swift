@@ -21,7 +21,7 @@ private func freshDefaults() -> UserDefaults {
 struct RuleSnapshotTests {
     @Test("Snapshots round-trip through the shared store")
     func storeRoundTrip() throws {
-        let store = RuleSnapshotStore(defaults: freshDefaults())
+        let store = RuleSnapshotUserDefaultsStore(defaults: freshDefaults())
         let snapshot = RuleSnapshotDTO(
             id: UUID(), name: "Time Keeper", kindRaw: "timeLimit", isEnabled: true,
             hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
@@ -69,7 +69,7 @@ struct RuleSnapshotTests {
             """
         let defaults = freshDefaults()
         defaults.set(Data(legacy.utf8), forKey: "ruleSnapshots")
-        let store = RuleSnapshotStore(defaults: defaults)
+        let store = RuleSnapshotUserDefaultsStore(defaults: defaults)
 
         let loaded = store.load()
         #expect(loaded.count == 1)
@@ -128,9 +128,9 @@ struct MonitoringPlanTests {
 @MainActor
 @Suite("Rule scheduler → DeviceActivity")
 struct RuleSchedulerTests {
-    private func makeScheduler() -> (RuleScheduler, MockActivityMonitor, RuleSnapshotStore) {
+    private func makeScheduler() -> (RuleScheduler, MockActivityMonitor, RuleSnapshotUserDefaultsStore) {
         let monitor = MockActivityMonitor()
-        let store = RuleSnapshotStore(defaults: freshDefaults())
+        let store = RuleSnapshotUserDefaultsStore(defaults: freshDefaults())
         return (RuleScheduler(monitor: monitor, snapshots: store), monitor, store)
     }
 
@@ -384,10 +384,10 @@ struct RuleSchedulerTests {
 struct LimitEnforcementTests {
     let monday = date(2025, 1, 6, 10, 0)
 
-    private func makeEnforcement() -> (LimitEnforcement, MockShieldController, UsageLedger, RuleSnapshotStore) {
+    private func makeEnforcement() -> (LimitEnforcement, MockShieldController, UsageLedger, RuleSnapshotUserDefaultsStore) {
         let shields = MockShieldController()
         let ledger = UsageLedger(defaults: freshDefaults())
-        let store = RuleSnapshotStore(defaults: freshDefaults())
+        let store = RuleSnapshotUserDefaultsStore(defaults: freshDefaults())
         // Isolated session store so granted-open writes don't touch the app group.
         return (
             LimitEnforcement(
@@ -562,7 +562,7 @@ struct LimitEnforcementTests {
     func openSessionMarkerLifecycle() {
         let shields = MockShieldController()
         let ledger = UsageLedger(defaults: freshDefaults())
-        let store = RuleSnapshotStore(defaults: freshDefaults())
+        let store = RuleSnapshotUserDefaultsStore(defaults: freshDefaults())
         let sessions = OpenSessionStore(defaults: freshDefaults())
         let enforcement = LimitEnforcement(
             snapshots: store, ledger: ledger, shields: shields, sessions: sessions)
@@ -611,9 +611,9 @@ struct ScheduleEnforcementTests {
     let mondayMorning = date(2025, 1, 6, 10, 0)
     let mondayEvening = date(2025, 1, 6, 19, 0)
 
-    private func makeEnforcement() -> (ScheduleEnforcement, MockShieldController, RuleSnapshotStore) {
+    private func makeEnforcement() -> (ScheduleEnforcement, MockShieldController, RuleSnapshotUserDefaultsStore) {
         let shields = MockShieldController()
-        let store = RuleSnapshotStore(defaults: freshDefaults())
+        let store = RuleSnapshotUserDefaultsStore(defaults: freshDefaults())
         return (ScheduleEnforcement(snapshots: store, shields: shields), shields, store)
     }
 

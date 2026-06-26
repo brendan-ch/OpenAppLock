@@ -1,5 +1,5 @@
 //
-//  RuleSnapshotStore.swift
+//  RuleSnapshotUserDefaultsStore.swift
 //  OpenAppLock
 //
 
@@ -8,7 +8,7 @@ import Foundation
 /// Persistence for the rule mirror in the shared app-group defaults. Stores
 /// `RuleSnapshotDTO`s written by the app and read back by the Screen Time
 /// extensions.
-final class RuleSnapshotStore {
+final class RuleSnapshotUserDefaultsStore {
     private static let key = "ruleSnapshots"
     private let defaults: UserDefaults
 

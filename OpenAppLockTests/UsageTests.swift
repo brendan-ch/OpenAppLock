@@ -72,51 +72,16 @@ struct UsageLedgerTests {
         #expect(ledger.usage(for: second, onDayContaining: monday, calendar: utc) == RuleUsageDTO())
     }
 
-    @Test("Effective minutes prefer a fresh authoritative reading, else fall back")
-    func effectiveMinutes() {
-        let now = date(2025, 1, 6, 10, 0)
-        var usage = RuleUsageDTO(minutesUsed: 12)
-        // No authoritative reading → threshold count.
-        #expect(usage.effectiveMinutesUsed(asOf: now) == 12)
-        // Fresh authoritative → wins.
-        usage.authoritativeMinutesUsed = 20
-        usage.authoritativeAsOf = now.addingTimeInterval(-30)
-        #expect(usage.effectiveMinutesUsed(asOf: now) == 20)
-        // Stale authoritative → threshold fallback.
-        usage.authoritativeAsOf = now.addingTimeInterval(-600)
-        #expect(usage.effectiveMinutesUsed(asOf: now) == 12)
-    }
-
-    @Test("Usage round-trips authoritative fields and decodes legacy blobs")
-    func authoritativeCodable() throws {
-        var usage = RuleUsageDTO(minutesUsed: 5, opensUsed: 2)
-        usage.authoritativeMinutesUsed = 30
-        usage.authoritativeAsOf = date(2025, 1, 6, 10, 0)
+    @Test("RuleUsageDTO round-trips minutes and opens; legacy blobs still decode")
+    func usageCodable() throws {
+        let usage = RuleUsageDTO(minutesUsed: 30, opensUsed: 2)
         let data = try JSONEncoder().encode(usage)
         #expect(try JSONDecoder().decode(RuleUsageDTO.self, from: data) == usage)
 
-        // A blob written before the authoritative fields existed still decodes.
-        let legacy = Data(#"{"minutesUsed":7,"opensUsed":1}"#.utf8)
+        // A blob written with the old authoritative keys still decodes (extra keys ignored).
+        let legacy = Data(#"{"minutesUsed":7,"opensUsed":1,"authoritativeMinutesUsed":9}"#.utf8)
         let decoded = try JSONDecoder().decode(RuleUsageDTO.self, from: legacy)
-        #expect(decoded.minutesUsed == 7)
-        #expect(decoded.authoritativeMinutesUsed == nil)
-        #expect(decoded.authoritativeAsOf == nil)
-    }
-
-    @Test("Authoritative minutes overwrite without disturbing the threshold count")
-    func recordAuthoritative() {
-        let ledger = makeLedger()
-        let id = UUID()
-        ledger.recordMinutesUsed(40, for: id, onDayContaining: monday, calendar: utc)
-
-        ledger.recordAuthoritativeMinutes(
-            12, for: id, onDayContaining: monday, asOf: monday, calendar: utc)
-        let read = ledger.usage(for: id, onDayContaining: monday, calendar: utc)
-        #expect(read.minutesUsed == 40)               // threshold untouched
-        #expect(read.authoritativeMinutesUsed == 12)  // authoritative recorded
-        #expect(read.authoritativeAsOf == monday)
-        // Effective prefers the (fresh) authoritative figure.
-        #expect(read.effectiveMinutesUsed(asOf: monday) == 12)
+        #expect(decoded == RuleUsageDTO(minutesUsed: 7, opensUsed: 1))
     }
 }
 

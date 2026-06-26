@@ -62,18 +62,6 @@ final class UsageLedger: UsageReading {
             "ledger.minutes rule-\(ruleID.uuidString.prefix(8)) \(prior)->\(usage.minutesUsed) (event=\(minutes))")
     }
 
-    /// Records the report's authoritative daily total without disturbing the
-    /// monotonic threshold count.
-    func recordAuthoritativeMinutes(
-        _ minutes: Int, for ruleID: UUID, onDayContaining date: Date, asOf: Date,
-        calendar: Calendar = .current
-    ) {
-        var usage = self.usage(for: ruleID, onDayContaining: date, calendar: calendar)
-        usage.authoritativeMinutesUsed = minutes
-        usage.authoritativeAsOf = asOf
-        setUsage(usage, for: ruleID, onDayContaining: date, calendar: calendar)
-    }
-
     @discardableResult
     func recordOpen(
         for ruleID: UUID, onDayContaining date: Date, calendar: Calendar = .current

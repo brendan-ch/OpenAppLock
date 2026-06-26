@@ -82,6 +82,18 @@ struct AppListEditorView: View {
                         attemptClose()
                     }
                     .accessibilityIdentifier("closeAppListButton")
+                    .confirmationDialog(
+                        "Discard Changes?",
+                        isPresented: $confirmingDiscard,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Discard Changes", role: .destructive) {
+                            dismiss()
+                        }
+                        Button("Keep Editing", role: .cancel) {}
+                    } message: {
+                        Text("Your edits to this list haven't been saved.")
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm) {
@@ -100,18 +112,6 @@ struct AppListEditorView: View {
         // Block the swipe-to-dismiss while there are unsaved edits so the only
         // way out is the Close button, which routes through the discard prompt.
         .interactiveDismissDisabled(hasOutstandingEdits)
-        .confirmationDialog(
-            "Discard Changes?",
-            isPresented: $confirmingDiscard,
-            titleVisibility: .visible
-        ) {
-            Button("Discard Changes", role: .destructive) {
-                dismiss()
-            }
-            Button("Keep Editing", role: .cancel) {}
-        } message: {
-            Text("Your edits to this list haven't been saved.")
-        }
     }
 
     private var countLabel: String {

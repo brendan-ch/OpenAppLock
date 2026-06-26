@@ -36,12 +36,12 @@ final class RuleScheduler {
     private static let fingerprintsKey = "monitoringFingerprints"
 
     private let monitor: ActivityMonitoring
-    private let snapshots: RuleSnapshotStore
+    private let snapshots: RuleSnapshotUserDefaultsStore
     private let defaults: UserDefaults
 
     init(
         monitor: ActivityMonitoring,
-        snapshots: RuleSnapshotStore = RuleSnapshotStore(),
+        snapshots: RuleSnapshotUserDefaultsStore = RuleSnapshotUserDefaultsStore(),
         defaults: UserDefaults = AppGroup.defaults
     ) {
         self.monitor = monitor

@@ -153,3 +153,50 @@ struct RuleStatusTests {
         #expect(rule.dto.rowContext(for: status, usage: usage, relativeTo: now) == "Blocked until tomorrow")
     }
 }
+
+@MainActor
+@Suite("Active Rules membership")
+struct ActiveRulesMembershipTests {
+    // Monday 08:00 — before the default 09:00–17:00 window, so a weekday
+    // schedule is upcoming-today (starts in 1h).
+    let now = date(2025, 1, 6, 8, 0)
+
+    @Test("A limit scheduled today and under budget belongs in Active Rules")
+    func underBudgetLimitIncluded() {
+        let rule = BlockingRule(
+            name: "Time Keeper",
+            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 45)),
+            days: Weekday.everyDay)
+        #expect(rule.dto.belongsInActiveRules(at: now, calendar: utc, usage: RuleUsageDTO(minutesUsed: 10)))
+    }
+
+    @Test("A spent (blocking) limit is excluded — it belongs in Currently Blocking")
+    func spentLimitExcluded() {
+        let rule = BlockingRule(
+            name: "Doom Scroll",
+            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 30)),
+            days: Weekday.everyDay)
+        #expect(!rule.dto.belongsInActiveRules(at: now, calendar: utc, usage: RuleUsageDTO(minutesUsed: 30)))
+    }
+
+    @Test("A schedule starting within 24h is included; beyond 24h is excluded")
+    func scheduleWithin24h() {
+        // Default 09:00 window, weekdays → from Monday 08:00, starts in 1h.
+        let soon = BlockingRule(name: "Sleep", days: Weekday.weekdays)
+        #expect(soon.dto.belongsInActiveRules(at: now, calendar: utc, usage: nil))
+
+        // Weekend-only → from Monday the next start is Saturday → beyond 24h.
+        let later = BlockingRule(name: "Weekend Off", days: Weekday.weekends)
+        #expect(!later.dto.belongsInActiveRules(at: now, calendar: utc, usage: nil))
+    }
+
+    @Test("A disabled rule is excluded")
+    func disabledExcluded() {
+        let rule = BlockingRule(
+            name: "Off",
+            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 45)),
+            isEnabled: false,
+            days: Weekday.everyDay)
+        #expect(!rule.dto.belongsInActiveRules(at: now, calendar: utc, usage: RuleUsageDTO()))
+    }
+}

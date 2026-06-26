@@ -145,29 +145,15 @@ final class RuleEnforcer {
         Diag.log(.dayStart, "rule-\(rid): foreground confirmed today's start (safety net)")
     }
 
-    /// EC4/EC9 diagnostics for a time-limit rule: surface the
-    /// authoritative-vs-threshold decision — which source the block decision used,
-    /// its freshness, and a WARN when the report's (app-token-only) authoritative
-    /// figure has lifted a block the threshold count says is real.
+    /// Surfaces the time-limit block decision: the threshold count vs the budget.
     private func logTimeLimitDecision(
         _ rule: BlockingRule, usage: RuleUsageDTO?, isBlocking: Bool, at now: Date
     ) {
         guard rule.kind == .timeLimit, let usage else { return }
         let rid = rule.id.uuidString.prefix(8)
-        let limit = rule.dailyLimitMinutes
-        let effective = usage.effectiveMinutesUsed(asOf: now)
-        let asOfAge = usage.authoritativeAsOf.map { Int(now.timeIntervalSince($0)) }
-        let usingAuthoritative =
-            usage.authoritativeMinutesUsed != nil
-            && (asOfAge.map { abs($0) <= Int(RuleUsageDTO.authoritativeFreshness) } ?? false)
         Diag.log(
             .usage,
-            "timeLimit rule-\(rid) threshold=\(usage.minutesUsed) auth=\(usage.authoritativeMinutesUsed.map(String.init) ?? "-")@\(asOfAge.map { "\($0)s" } ?? "-") effective=\(effective)/\(limit) source=\(usingAuthoritative ? "authoritative" : "threshold")")
-        if !isBlocking, usage.minutesUsed >= limit, effective < limit {
-            Diag.log(
-                .usage, .error,
-                "WARN rule-\(rid): authoritative lifted a real block (threshold=\(usage.minutesUsed)>=\(limit) but effective=\(effective)) — possible category/web undercount (EC4)")
-        }
+            "timeLimit rule-\(rid) used=\(usage.minutesUsed)/\(rule.dailyLimitMinutes) blocking=\(isBlocking)")
     }
 
     /// Records the rule's shield and writes it. Allow Only and Block Adult Content

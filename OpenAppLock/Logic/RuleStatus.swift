@@ -82,12 +82,34 @@ extension RuleSnapshotDTO {
             switch status {
             case .disabled, .dormant, .paused:
                 return status.label(relativeTo: now)
-            case .active, .upcoming:
-                let usedToday = usage.effectiveMinutesUsed(asOf: now) > 0 || usage.opensUsed > 0
-                return usedToday
-                    ? UsageDisplay.usagePhrase(for: self, usage: usage, asOf: now)
-                    : UsageDisplay.budgetPhrase(for: self)
+            case .active:
+                // A spent budget blocks for the rest of the day; the detail row
+                // ("Then block until: Tomorrow") names the same moment.
+                return "Blocked until tomorrow"
+            case .upcoming:
+                return UsageDisplay.budgetPhrase(for: self)
             }
+        }
+    }
+
+    /// Whether this rule belongs in Home's "Active Rules" section: enabled and
+    /// not currently blocking, and either a limit rule scheduled today or a
+    /// schedule rule whose next window starts within the next 24 hours. Rules
+    /// blocking now live in "Currently Blocking" instead.
+    func belongsInActiveRules(
+        at now: Date, calendar: Calendar = .current, usage: RuleUsageDTO?
+    ) -> Bool {
+        guard isEnabled else { return false }
+        let status = status(at: now, calendar: calendar, usage: usage)
+        if status.isActive { return false }
+        switch kind {
+        case .timeLimit, .openLimit:
+            return isScheduledToday(at: now, calendar: calendar)
+        case .schedule:
+            if case .upcoming(let startsAt) = status {
+                return startsAt.timeIntervalSince(now) <= 24 * 60 * 60
+            }
+            return false
         }
     }
 }

@@ -6,14 +6,15 @@
 import SwiftData
 import SwiftUI
 
-/// The Home tab: what's blocking right now, and live usage for today's limit
-/// rules. The rule list and rule creation live on the Rules tab.
+/// The Home tab: what's blocking right now, plus the rules armed for today
+/// ("Active Rules"). The rule list and rule creation live on the Rules tab.
 struct HomeView: View {
     @Environment(RuleEnforcer.self) private var enforcer
     @Query(sort: \BlockingRule.createdAt) private var rules: [BlockingRule]
 
     @State private var unblockCandidate: BlockingRule?
     @State private var hardModeBlockedAttempt = false
+    @State private var detailRule: BlockingRule?
 
     var body: some View {
         NavigationStack {
@@ -27,12 +28,15 @@ struct HomeView: View {
         } message: {
             Text("This block can't be lifted until it ends.")
         }
+        .sheet(item: $detailRule) { rule in
+            RuleDetailSheet(rule: rule)
+        }
     }
 
     private func homeList(now: Date) -> some View {
         List {
             blockingSection(now: now)
-            usageSection(now: now)
+            activeRulesSection(now: now)
         }
     }
 
@@ -125,45 +129,50 @@ struct HomeView: View {
             .accessibilityHidden(true)
     }
 
-    // MARK: - Usage
+    // MARK: - Active Rules
 
-    /// Live tracking for every limit rule scheduled today that is *not* already
-    /// blocking. Once a budget is spent (the rule is actively blocking) the row
-    /// moves up to "Currently Blocking"; a soft-unblocked rule (paused) stays
-    /// here reading "Paused".
+    /// Enabled rules that aren't currently blocking but are armed for today:
+    /// limit rules scheduled today (showing their budget) and schedule rules
+    /// whose next window starts within 24h (showing their next-start). Tapping a
+    /// row opens the rule's detail overlay.
     @ViewBuilder
-    private func usageSection(now: Date) -> some View {
-        let tracked = rules.filter {
-            $0.kind != .schedule && $0.isEnabled && $0.dto.isScheduledToday(at: now)
-                && !liveStatus(for: $0, now: now).isActive
+    private func activeRulesSection(now: Date) -> some View {
+        let active = rules.filter {
+            $0.dto.belongsInActiveRules(at: now, usage: enforcer.usage(for: $0.dto, at: now))
         }
-        if !tracked.isEmpty {
+        if !active.isEmpty {
             Section {
-                ForEach(tracked) { rule in
-                    usageRow(for: rule, now: now)
+                ForEach(active) { rule in
+                    activeRuleRow(for: rule, now: now)
                 }
             } header: {
-                Text("Usage").textCase(nil)
+                Text("Active Rules").textCase(nil)
             }
         }
     }
 
-    private func usageRow(for rule: BlockingRule, now: Date) -> some View {
+    private func activeRuleRow(for rule: BlockingRule, now: Date) -> some View {
         let dto = rule.dto
         let usage = enforcer.usage(for: dto, at: now) ?? RuleUsageDTO()
         let status = liveStatus(for: rule, now: now)
-        return HStack {
-            kindIcon(for: rule)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(rule.name)
-                    .foregroundStyle(Color.primary)
-                Text(UsageDisplay.homeSubtitle(for: dto, status: status, usage: usage, relativeTo: now))
+        return Button {
+            detailRule = rule
+        } label: {
+            HStack {
+                kindIcon(for: rule)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(rule.name)
+                        .foregroundStyle(Color.primary)
+                    Text(UsageDisplay.homeSubtitle(for: dto, status: status, usage: usage, relativeTo: now))
+                        .font(.caption)
+                        .foregroundStyle(Color.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundStyle(Color.secondary)
+                    .foregroundStyle(Color(.tertiaryLabel))
             }
-            Spacer()
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("usageRow-\(rule.name)")
+        .accessibilityIdentifier("activeRuleRow-\(rule.name)")
     }
 }

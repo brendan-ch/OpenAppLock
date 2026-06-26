@@ -6,18 +6,25 @@
 import DeviceActivity
 import SwiftUI
 
-/// Recomputes authoritative daily usage for time-limit rules as a side effect of
-/// rendering. The view is intentionally empty — the app consumes the ledger
-/// write, not the view. Runs only while the host app foregrounds a
-/// `DeviceActivityReport(.ruleUsage, …)`.
+/// Renders the filtered rule's combined foreground usage for today. The host
+/// (`RuleDetailSheet`) scopes the data via the report's filter, so this scene
+/// stays identity-agnostic and never reads the app group. Runs only while the
+/// host app foregrounds a `DeviceActivityReport(.ruleUsage, …)`.
 struct RuleUsageReport: DeviceActivityReportScene {
     let context: DeviceActivityReport.Context = .ruleUsage
-    let content: (Int) -> EmptyView = { _ in EmptyView() }
+    let content: (String) -> Text = { Text($0) }
 
     func makeConfiguration(
         representing data: DeviceActivityResults<DeviceActivityData>
-    ) async -> Int {
-        await RuleUsageReportWriter().write(from: data)
-        return 0
+    ) async -> String {
+        var seconds = 0.0
+        for await segment in data.flatMap(\.activitySegments) {
+            for await category in segment.categories {
+                for await app in category.applications {
+                    seconds += app.totalActivityDuration
+                }
+            }
+        }
+        return UsageReportFormatter.todayTotal(seconds: seconds)
     }
 }

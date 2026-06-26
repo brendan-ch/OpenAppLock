@@ -57,7 +57,7 @@ struct RuleDetailSheet: View {
         let usage = enforcer.usage(for: dto, at: now)
         let status = dto.status(at: now, usage: usage)
         return List {
-            Section {
+            Section("Details") {
                 detailRows
             }
             // Live Screen Time usage for this rule's apps, rendered inside the

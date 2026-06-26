@@ -14,7 +14,7 @@ import SwiftUI
 /// selections are not yet attributed (see spec §9 — confirm on device).
 struct RuleUsageReportWriter {
     func write(from data: DeviceActivityResults<DeviceActivityData>, now: Date = Date()) async {
-        let snapshots = RuleSnapshotStore().load()
+        let snapshots = RuleSnapshotUserDefaultsStore().load()
             .filter { $0.kind == .timeLimit && $0.isEnabled }
         guard !snapshots.isEmpty else { return }
         Diag.log(.report, "report run: \(snapshots.count) time-limit rules")

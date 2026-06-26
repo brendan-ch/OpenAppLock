@@ -13,7 +13,7 @@ import UserNotifications
 /// the monitor target (not `Shared/`) so `UserNotifications` doesn't leak into
 /// the other extensions.
 struct LimitWarningNotifier {
-    var snapshots = RuleSnapshotStore()
+    var snapshots = RuleSnapshotUserDefaultsStore()
     var ledger = UsageLedger()
     var preferences = NotificationPreferences()
     var center: UNUserNotificationCenter = .current()

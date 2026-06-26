@@ -3,6 +3,8 @@
 //  OpenAppLock
 //
 
+import DeviceActivity
+import FamilyControls
 import SwiftData
 import SwiftUI
 
@@ -58,6 +60,17 @@ struct RuleDetailSheet: View {
             Section {
                 detailRows
             }
+            // Live Screen Time usage for this rule's apps, rendered inside the
+            // report extension (the only place the data is available). Gated
+            // under UI testing — the system view does not run in the harness —
+            // and blank when there is no usage.
+            if !LaunchConfiguration.current.isUITesting {
+                Section("Usage") {
+                    DeviceActivityReport(.ruleUsage, filter: usageFilter)
+                        .frame(maxWidth: .infinity, minHeight: 22, alignment: .leading)
+                        .accessibilityIdentifier("ruleUsageReport")
+                }
+            }
             Section {
                 if RulePolicy.canEdit(dto, usage: usage, at: now) {
                     Button {
@@ -97,6 +110,21 @@ struct RuleDetailSheet: View {
                 }
             }
         }
+    }
+
+    /// Today's `.daily` filter scoped to this rule's selection, so the report
+    /// extension attributes only this rule's apps/categories/web domains.
+    private var usageFilter: DeviceActivityFilter {
+        let calendar = Calendar.current
+        let interval = DateInterval(start: calendar.startOfDay(for: .now), end: .now)
+        let selection = AppSelectionCodec.decode(rule.appList?.selectionData)
+        return DeviceActivityFilter(
+            segment: .daily(during: interval),
+            users: .all,
+            devices: .init([.iPhone, .iPad]),
+            applications: selection.applicationTokens,
+            categories: selection.categoryTokens,
+            webDomains: selection.webDomainTokens)
     }
 
     @ViewBuilder

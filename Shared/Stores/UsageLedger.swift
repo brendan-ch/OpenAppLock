@@ -5,42 +5,13 @@
 
 import Foundation
 
-/// What a limit rule has consumed on a given day. Written by the
-/// DeviceActivity monitor (minutes) and shield-action extension (opens);
-/// read by the app for display and enforcement.
-nonisolated struct RuleUsage: Codable, Equatable {
-    var minutesUsed = 0
-    var opensUsed = 0
-    /// The true daily total written by the DeviceActivityReport extension while
-    /// the app is foreground; preferred over `minutesUsed` when fresh.
-    var authoritativeMinutesUsed: Int?
-    /// When the authoritative total was computed.
-    var authoritativeAsOf: Date?
-
-    /// How long an authoritative reading is trusted before falling back to the
-    /// threshold count. Tunable on device.
-    static let authoritativeFreshness: TimeInterval = 120
-
-    /// The daily minutes to use for display and the block decision: the report's
-    /// authoritative total when fresh, else the threshold count.
-    func effectiveMinutesUsed(
-        asOf now: Date, freshness: TimeInterval = RuleUsage.authoritativeFreshness
-    ) -> Int {
-        if let authoritative = authoritativeMinutesUsed, let asOf = authoritativeAsOf,
-           abs(now.timeIntervalSince(asOf)) <= freshness {
-            return authoritative
-        }
-        return minutesUsed
-    }
-}
-
 /// Read access to per-rule, per-day usage.
 protocol UsageReading: AnyObject {
-    func usage(for ruleID: UUID, onDayContaining date: Date, calendar: Calendar) -> RuleUsage
+    func usage(for ruleID: UUID, onDayContaining date: Date, calendar: Calendar) -> RuleUsageDTO
 }
 
 extension UsageReading {
-    func usage(for ruleID: UUID, onDayContaining date: Date) -> RuleUsage {
+    func usage(for ruleID: UUID, onDayContaining date: Date) -> RuleUsageDTO {
         usage(for: ruleID, onDayContaining: date, calendar: .current)
     }
 }
@@ -62,15 +33,15 @@ final class UsageLedger: UsageReading {
 
     func usage(
         for ruleID: UUID, onDayContaining date: Date, calendar: Calendar = .current
-    ) -> RuleUsage {
+    ) -> RuleUsageDTO {
         guard let data = defaults.data(forKey: key(ruleID, date, calendar)),
-              let usage = try? JSONDecoder().decode(RuleUsage.self, from: data)
-        else { return RuleUsage() }
+              let usage = try? JSONDecoder().decode(RuleUsageDTO.self, from: data)
+        else { return RuleUsageDTO() }
         return usage
     }
 
     func setUsage(
-        _ usage: RuleUsage, for ruleID: UUID, onDayContaining date: Date,
+        _ usage: RuleUsageDTO, for ruleID: UUID, onDayContaining date: Date,
         calendar: Calendar = .current
     ) {
         guard let data = try? JSONEncoder().encode(usage) else { return }
@@ -106,7 +77,7 @@ final class UsageLedger: UsageReading {
     @discardableResult
     func recordOpen(
         for ruleID: UUID, onDayContaining date: Date, calendar: Calendar = .current
-    ) -> RuleUsage {
+    ) -> RuleUsageDTO {
         var usage = self.usage(for: ruleID, onDayContaining: date, calendar: calendar)
         usage.opensUsed += 1
         setUsage(usage, for: ruleID, onDayContaining: date, calendar: calendar)
@@ -122,11 +93,11 @@ final class UsageLedger: UsageReading {
 
 /// Seedable in-memory usage for tests and UI-test scenarios.
 final class MockUsageLedger: UsageReading {
-    var usageByRule: [UUID: RuleUsage] = [:]
+    var usageByRule: [UUID: RuleUsageDTO] = [:]
 
     func usage(
         for ruleID: UUID, onDayContaining date: Date, calendar: Calendar
-    ) -> RuleUsage {
-        usageByRule[ruleID] ?? RuleUsage()
+    ) -> RuleUsageDTO {
+        usageByRule[ruleID] ?? RuleUsageDTO()
     }
 }

@@ -87,7 +87,7 @@ struct HomeView: View {
     /// an Unblock button.
     private func blockingRow(for rule: BlockingRule, now: Date) -> some View {
         let dto = rule.dto
-        let usage = enforcer.usage(for: dto, at: now) ?? RuleUsage()
+        let usage = enforcer.usage(for: dto, at: now) ?? RuleUsageDTO()
         let status = liveStatus(for: rule, now: now)
         return Button {
             if RulePolicy.canUnblock(dto, usage: enforcer.usage(for: dto, at: now), at: now) {
@@ -152,7 +152,7 @@ struct HomeView: View {
 
     private func usageRow(for rule: BlockingRule, now: Date) -> some View {
         let dto = rule.dto
-        let usage = enforcer.usage(for: dto, at: now) ?? RuleUsage()
+        let usage = enforcer.usage(for: dto, at: now) ?? RuleUsageDTO()
         let status = liveStatus(for: rule, now: now)
         return HStack {
             kindIcon(for: rule)

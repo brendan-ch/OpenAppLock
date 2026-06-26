@@ -120,7 +120,7 @@ struct RuleStatusTests {
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
         let now = date(2025, 1, 6, 11, 38) // past the vestigial 09:00 window start
         let status = rule.dto.status(at: now, calendar: utc)
-        #expect(rule.dto.rowContext(for: status, usage: RuleUsage(), relativeTo: now) == "15m / day")
+        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "15m / day")
     }
 
     @Test("Untouched open-limit rule shows its daily opens budget")
@@ -129,7 +129,7 @@ struct RuleStatusTests {
             name: "Gate Keeper", configuration: .openLimit(OpenLimitConfig(maxOpens: 5)))
         let now = date(2025, 1, 6, 11, 38)
         let status = rule.dto.status(at: now, calendar: utc)
-        #expect(rule.dto.rowContext(for: status, usage: RuleUsage(), relativeTo: now) == "5 opens / day")
+        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "5 opens / day")
     }
 
     @Test("Schedule rule still shows the clock countdown")
@@ -137,7 +137,7 @@ struct RuleStatusTests {
         let weekend = BlockingRule(name: "Weekend Zen", days: Weekday.weekends)
         let friday = date(2025, 1, 10, 11, 28)
         let status = weekend.dto.status(at: friday, calendar: utc)
-        #expect(weekend.dto.rowContext(for: status, usage: RuleUsage(), relativeTo: friday) == "Starts in 22h")
+        #expect(weekend.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: friday) == "Starts in 22h")
     }
 
     /// Limit rules block by budget, not by the clock, so a spent one reads its
@@ -147,7 +147,7 @@ struct RuleStatusTests {
         let rule = BlockingRule(
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
         let now = date(2025, 1, 6, 11, 38)
-        let usage = RuleUsage(minutesUsed: 15)
+        let usage = RuleUsageDTO(minutesUsed: 15)
         let status = rule.dto.status(at: now, calendar: utc, usage: usage)
         #expect(status.isActive)
         #expect(rule.dto.rowContext(for: status, usage: usage, relativeTo: now) == "15m of 15m used")

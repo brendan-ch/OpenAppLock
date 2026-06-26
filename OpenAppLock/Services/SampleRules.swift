@@ -46,9 +46,9 @@ enum SampleRules {
                 name: "Doom Scroll",
                 configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 30)),
                 days: Weekday.everyDay)
-            usage?.usageByRule[timeKeeper.id] = RuleUsage(minutesUsed: 18)
-            usage?.usageByRule[gateKeeper.id] = RuleUsage(opensUsed: 2)
-            usage?.usageByRule[doomScroll.id] = RuleUsage(minutesUsed: 30)
+            usage?.usageByRule[timeKeeper.id] = RuleUsageDTO(minutesUsed: 18)
+            usage?.usageByRule[gateKeeper.id] = RuleUsageDTO(opensUsed: 2)
+            usage?.usageByRule[doomScroll.id] = RuleUsageDTO(minutesUsed: 30)
             rules = [timeKeeper, gateKeeper, doomScroll]
         }
         // Relationships are wired only after both sides are managed

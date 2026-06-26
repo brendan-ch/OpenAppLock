@@ -155,13 +155,13 @@ struct RuleActivationTests {
 
     @Test("A spent time-limit budget is active until the next midnight")
     func timeLimitSpent() {
-        #expect(limitSnapshot().activation(usage: RuleUsage(minutesUsed: 45), at: mon10, calendar: utc)
+        #expect(limitSnapshot().activation(usage: RuleUsageDTO(minutesUsed: 45), at: mon10, calendar: utc)
             == .active(until: tueMidnight))
     }
 
     @Test("A time-limit one minute under budget is inactive")
     func timeLimitUnderBudget() {
-        #expect(limitSnapshot().activation(usage: RuleUsage(minutesUsed: 44), at: mon10, calendar: utc)
+        #expect(limitSnapshot().activation(usage: RuleUsageDTO(minutesUsed: 44), at: mon10, calendar: utc)
             == .inactive(nextStart: tue9))
     }
 
@@ -174,21 +174,21 @@ struct RuleActivationTests {
     @Test("A spent time-limit not scheduled today is inactive (the scheduled-today guard)")
     func timeLimitSpentButNotScheduledToday() {
         #expect(limitSnapshot(days: [.tuesday])
-            .activation(usage: RuleUsage(minutesUsed: 99), at: mon10, calendar: utc)
+            .activation(usage: RuleUsageDTO(minutesUsed: 99), at: mon10, calendar: utc)
             == .inactive(nextStart: tue9))
     }
 
     @Test("A disabled time-limit with a spent budget is inactive with no next start")
     func timeLimitDisabledSpent() {
         #expect(limitSnapshot(isEnabled: false)
-            .activation(usage: RuleUsage(minutesUsed: 45), at: mon10, calendar: utc)
+            .activation(usage: RuleUsageDTO(minutesUsed: 45), at: mon10, calendar: utc)
             == .inactive(nextStart: nil))
     }
 
     @Test("A paused spent time-limit clamps the pause to the next midnight")
     func timeLimitPausedSpent() {
         #expect(limitSnapshot(pausedUntil: date(2025, 1, 7, 12, 0))
-            .activation(usage: RuleUsage(minutesUsed: 45), at: mon10, calendar: utc)
+            .activation(usage: RuleUsageDTO(minutesUsed: 45), at: mon10, calendar: utc)
             == .paused(until: tueMidnight))
     }
 
@@ -196,13 +196,13 @@ struct RuleActivationTests {
 
     @Test("Exhausted opens are active until the next midnight")
     func openLimitExhausted() {
-        #expect(openSnapshot().activation(usage: RuleUsage(opensUsed: 5), at: mon10, calendar: utc)
+        #expect(openSnapshot().activation(usage: RuleUsageDTO(opensUsed: 5), at: mon10, calendar: utc)
             == .active(until: tueMidnight))
     }
 
     @Test("Opens under budget are inactive")
     func openLimitUnderBudget() {
-        #expect(openSnapshot().activation(usage: RuleUsage(opensUsed: 4), at: mon10, calendar: utc)
+        #expect(openSnapshot().activation(usage: RuleUsageDTO(opensUsed: 4), at: mon10, calendar: utc)
             == .inactive(nextStart: tue9))
     }
 

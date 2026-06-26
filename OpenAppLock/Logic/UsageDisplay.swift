@@ -13,14 +13,14 @@ enum UsageDisplay {
     /// "Schedule · 6h left"). The Rules list omits the type prefix because its
     /// section header already conveys it.
     static func homeSubtitle(
-        for snapshot: RuleSnapshotDTO, status: RuleStatus, usage: RuleUsage, relativeTo now: Date
+        for snapshot: RuleSnapshotDTO, status: RuleStatus, usage: RuleUsageDTO, relativeTo now: Date
     ) -> String {
         "\(snapshot.kind.displayName) · \(snapshot.rowContext(for: status, usage: usage, relativeTo: now))"
     }
 
     /// "18m of 45m used" / "2 of 5 opens". Empty for schedule rules, which have
     /// no usage budget. ("today" is implied — usage always covers the current day.)
-    static func usagePhrase(for snapshot: RuleSnapshotDTO, usage: RuleUsage, asOf now: Date) -> String {
+    static func usagePhrase(for snapshot: RuleSnapshotDTO, usage: RuleUsageDTO, asOf now: Date) -> String {
         switch snapshot.kind {
         case .schedule:
             ""

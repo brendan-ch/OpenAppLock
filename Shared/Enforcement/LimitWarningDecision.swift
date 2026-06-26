@@ -19,7 +19,7 @@ enum LimitWarningDecision {
     /// not nag).
     static func content(
         for snapshot: RuleSnapshotDTO?,
-        usage: RuleUsage,
+        usage: RuleUsageDTO,
         preferences: NotificationPreferences,
         now: Date = .now,
         calendar: Calendar = .current

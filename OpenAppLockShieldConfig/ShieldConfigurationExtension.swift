@@ -37,7 +37,7 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     private func configuration(
         forApplicationToken token: ApplicationToken
     ) -> ShieldConfiguration {
-        let snapshots = RuleSnapshotStore().load()
+        let snapshots = RuleSnapshotUserDefaultsStore().load()
         guard
             let snapshot = ShieldLookup.openLimitSnapshot(
                 containingApplication: token, in: snapshots)

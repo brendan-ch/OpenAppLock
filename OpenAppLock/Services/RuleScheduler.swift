@@ -30,32 +30,46 @@ protocol ActivityMonitoring: AnyObject {
 /// Mirrors rules into the shared snapshot store and reconciles
 /// DeviceActivity monitoring with the enabled limit rules: each one gets a
 /// daily activity (time limits with one usage checkpoint per budget minute).
-/// Activities are only restarted when their configuration changes — a
-/// restart resets checkpoint accounting to "usage from now on".
+/// Activities are only restarted when their configuration changes, which is
+/// the purpose of the fingerprint given to each propagated rule.
 final class RuleScheduler {
     private static let fingerprintsKey = "monitoringFingerprints"
 
     private let monitor: ActivityMonitoring
-    private let snapshots: RuleSnapshotStore
+    private let snapshotsUserDefaultsStore: RuleSnapshotUserDefaultsStore
     private let defaults: UserDefaults
 
     init(
         monitor: ActivityMonitoring,
-        snapshots: RuleSnapshotStore = RuleSnapshotStore(),
+        snapshots: RuleSnapshotUserDefaultsStore = RuleSnapshotUserDefaultsStore(),
         defaults: UserDefaults = AppGroup.defaults
     ) {
         self.monitor = monitor
-        self.snapshots = snapshots
+        self.snapshotsUserDefaultsStore = snapshots
         self.defaults = defaults
     }
 
+    /// A DeviceActivity activity that `sync` wants running, described completely
+    /// so `reconcile` can (re)start it without re-deriving anything.
+    struct PlannedActivity {
+        enum Payload {
+            case daily(selectionData: Data?, eventMinutes: [String: Int])
+            case window(start: Int, end: Int)
+        }
+        let name: String
+        let fingerprint: String
+        let payload: Payload
+        /// Only the daily limit-enforcement activity resets usage-threshold
+        /// accounting when it restarts; carry that so `reconcile` logs the reset
+        /// for it and nothing else.
+        let resetsThresholdAccountingOnRestart: Bool
+    }
+
     func sync(rules: [BlockingRule], at now: Date = .now) {
-        snapshots.save(rules.map(\.dto))
+        snapshotsUserDefaultsStore.save(rules.map(\.dto))
         Diag.log(.scheduler, "sync: \(rules.count) rules; mirrored snapshots")
 
-        var fingerprints = storedFingerprints
-        var desiredNames: Set<String> = []
-
+        var plans: [PlannedActivity] = []
         for rule in rules {
             // A rule must be enabled, have days, and have apps to be monitored.
             guard rule.isEnabled, !rule.days.isEmpty,
@@ -64,82 +78,119 @@ final class RuleScheduler {
 
             switch rule.kind {
             case .timeLimit, .openLimit:
-                let name = MonitoringPlan.dailyActivityName(for: rule.id)
-                desiredNames.insert(name)
-                let events =
-                    rule.kind == .timeLimit
-                    ? MonitoringPlan.blockEvent(forLimit: rule.dailyLimitMinutes)
-                    : [:]
-                let fingerprint = "\(rule.kindRaw)|\(rule.dailyLimitMinutes)|"
-                    + Self.selectionFingerprint(selectionData)
-                if needsRestart(name, fingerprint, in: fingerprints) {
-                    // EC7: a restart resets threshold accounting to "from now".
-                    // Log the fingerprint change so a mid-day count reset can be
-                    // correlated to its cause (config change vs not-monitored).
-                    Diag.log(
-                        .scheduler, .event,
-                        "dailyActivity restart \(name): events=\(events) fp \(Self.shortFingerprint(fingerprints[name]))->\(Self.shortFingerprint(fingerprint)) (resets threshold accounting)")
-                    start(name: name) {
-                        try monitor.startDailyMonitoring(
-                            name: name, selectionData: selectionData, eventMinutes: events)
-                    } onStarted: { fingerprints[name] = fingerprint }
+                plans.append(limitPlan(for: rule, selectionData: selectionData))
+                if let warn = warnPlan(for: rule, selectionData: selectionData) {
+                    plans.append(warn)
                 }
-
-                // Opt-in "time limit almost up" warn activity, registered in its
-                // OWN activity. Keeping it separate from the enforcement activity
-                // above means enabling/disabling the nudge (or its absence) never
-                // restarts — and so never resets the usage threshold accounting
-                // of — the activity that actually blocks. Absent from
-                // `desiredNames` when off, so the stale sweep below stops it.
-                if rule.kind == .timeLimit,
-                    NotificationPreferences(defaults: defaults).timeLimitEndingEnabled,
-                    let warnEvents = MonitoringPlan.warnEvent(forLimit: rule.dailyLimitMinutes)
-                {
-                    let warnName = MonitoringPlan.warnActivityName(for: rule.id)
-                    desiredNames.insert(warnName)
-                    let warnFingerprint = "tlwarn|\(rule.dailyLimitMinutes)|"
-                        + Self.selectionFingerprint(selectionData)
-                    if needsRestart(warnName, warnFingerprint, in: fingerprints) {
-                        start(name: warnName) {
-                            try monitor.startDailyMonitoring(
-                                name: warnName, selectionData: selectionData,
-                                eventMinutes: warnEvents)
-                        } onStarted: { fingerprints[warnName] = warnFingerprint }
-                    }
-                }
-
             case .schedule:
-                // A window activity encodes only its interval (no events, no
-                // selection); days, mode and apps are read fresh by reconcile()
-                // at each callback, so only a start/end change needs a restart.
-                let fingerprint = "schedule|\(rule.startMinutes)|\(rule.endMinutes)"
-                for window in scheduleWindows(for: rule) {
-                    desiredNames.insert(window.name)
-                    guard needsRestart(window.name, fingerprint, in: fingerprints) else { continue }
-                    start(name: window.name) {
-                        try monitor.startWindowMonitoring(
-                            name: window.name,
-                            intervalStartMinutes: window.start,
-                            intervalEndMinutes: window.end)
-                    } onStarted: { fingerprints[window.name] = fingerprint }
-                }
+                plans.append(contentsOf: schedulePlans(for: rule))
             }
         }
 
-        let stale = monitor.monitoredNames.filter {
+        reconcile(plans)
+    }
+
+    /// The daily enforcement activity for a limit rule. Time limits carry one
+    /// block event at the budget; open limits carry none. Restarting it resets
+    /// usage-threshold accounting, so it is fingerprinted on kind, budget, and
+    /// selection — the field that must stay process-stable (see EC7).
+    func limitPlan(for rule: BlockingRule, selectionData: Data) -> PlannedActivity {
+        let events =
+            rule.kind == .timeLimit
+            ? MonitoringPlan.blockEvent(forLimit: rule.dailyLimitMinutes)
+            : [:]
+        let fingerprint = "\(rule.kindRaw)|\(rule.dailyLimitMinutes)|"
+            + Self.selectionFingerprint(selectionData)
+        return PlannedActivity(
+            name: MonitoringPlan.dailyActivityName(for: rule.id),
+            fingerprint: fingerprint,
+            payload: .daily(selectionData: selectionData, eventMinutes: events),
+            resetsThresholdAccountingOnRestart: true)
+    }
+
+    /// The opt-in "time limit almost up" warn activity, registered in its OWN
+    /// activity so toggling the nudge never restarts — and so never resets the
+    /// usage threshold accounting of — the activity that actually blocks. Nil
+    /// unless the rule is a time limit, the nudge is enabled, and the budget
+    /// exceeds the warn lead time.
+    func warnPlan(for rule: BlockingRule, selectionData: Data) -> PlannedActivity? {
+        guard rule.kind == .timeLimit,
+            NotificationPreferences(defaults: defaults).timeLimitEndingEnabled,
+            let warnEvents = MonitoringPlan.warnEvent(forLimit: rule.dailyLimitMinutes)
+        else { return nil }
+        let fingerprint = "tlwarn|\(rule.dailyLimitMinutes)|"
+            + Self.selectionFingerprint(selectionData)
+        return PlannedActivity(
+            name: MonitoringPlan.warnActivityName(for: rule.id),
+            fingerprint: fingerprint,
+            payload: .daily(selectionData: selectionData, eventMinutes: warnEvents),
+            resetsThresholdAccountingOnRestart: false)
+    }
+
+    /// The window activities for a schedule rule (one, or two for a midnight
+    /// crossing). A window encodes only its interval — days, mode and apps are
+    /// read fresh by reconcile() at each callback — so it is fingerprinted on
+    /// start/end alone.
+    func schedulePlans(for rule: BlockingRule) -> [PlannedActivity] {
+        let fingerprint = "schedule|\(rule.startMinutes)|\(rule.endMinutes)"
+        return scheduleWindows(for: rule).map { window in
+            PlannedActivity(
+                name: window.name,
+                fingerprint: fingerprint,
+                payload: .window(start: window.start, end: window.end),
+                resetsThresholdAccountingOnRestart: false)
+        }
+    }
+
+    /// Starts the activities whose configuration changed, stops any rule-owned
+    /// activity no longer desired, and persists the fingerprints. The only place
+    /// that touches the monitor or the stored fingerprints.
+    private func reconcile(_ plans: [PlannedActivity]) {
+        var fingerprints = storedFingerprints
+
+        for plan in plans where needsRestart(plan.name, plan.fingerprint, in: fingerprints) {
+            if plan.resetsThresholdAccountingOnRestart,
+                case let .daily(_, events) = plan.payload
+            {
+                // EC7: a restart resets threshold accounting to "from now".
+                // Log the fingerprint change so a mid-day count reset can be
+                // correlated to its cause (config change vs not-monitored).
+                Diag.log(
+                    .scheduler, .event,
+                    "dailyActivity restart \(plan.name): events=\(events) fp \(Self.shortFingerprint(fingerprints[plan.name]))->\(Self.shortFingerprint(plan.fingerprint)) (resets threshold accounting)")
+            }
+            attemptWithFallback(name: plan.name) {
+                try start(plan.payload, named: plan.name)
+            } onSuccess: { fingerprints[plan.name] = plan.fingerprint }
+        }
+
+        let desiredActivityNames = Set(plans.map(\.name))
+        let staleActivityNames = monitor.monitoredNames.filter {
             (MonitoringPlan.ruleID(fromDailyActivityName: $0) != nil
                 || MonitoringPlan.ruleID(fromScheduleWindowName: $0) != nil
                 || MonitoringPlan.ruleID(fromWarnActivityName: $0) != nil)
-                && !desiredNames.contains($0)
+                && !desiredActivityNames.contains($0)
         }
-        if !stale.isEmpty {
-            Diag.log(.scheduler, "stop \(stale.count) stale activities: \(stale.joined(separator: ","))")
-            monitor.stopMonitoring(names: stale)
-            for name in stale {
+        if !staleActivityNames.isEmpty {
+            Diag.log(.scheduler, "stop \(staleActivityNames.count) stale activities: \(staleActivityNames.joined(separator: ","))")
+            monitor.stopMonitoring(names: staleActivityNames)
+            for name in staleActivityNames {
                 fingerprints[name] = nil
             }
         }
         storedFingerprints = fingerprints
+    }
+
+    /// Dispatches a plan's payload to the matching monitor start call.
+    private func start(_ payload: PlannedActivity.Payload, named name: String) throws {
+        switch payload {
+        case let .daily(selectionData, eventMinutes):
+            try monitor.startDailyMonitoring(
+                name: name, selectionData: selectionData, eventMinutes: eventMinutes)
+        case let .window(start, end):
+            try monitor.startWindowMonitoring(
+                name: name, intervalStartMinutes: start, intervalEndMinutes: end)
+        }
     }
 
     /// Whether `name` should be (re)started: its configuration changed, or the
@@ -150,12 +201,7 @@ final class RuleScheduler {
         fingerprints[name] != fingerprint || !monitor.monitoredNames.contains(name)
     }
 
-    /// Process-stable fingerprint of an app selection. `Data.hashValue` is
-    /// seeded randomly per process, so feeding it into the monitoring
-    /// fingerprint changed the fingerprint on every launch — restarting each
-    /// limit activity and resetting its threshold accounting. SHA-256 is
-    /// deterministic across launches, so an unchanged selection keeps the same
-    /// fingerprint and the activity is left running.
+    /// Process-stable fingerprint of an app selection.
     static func selectionFingerprint(_ data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
@@ -168,13 +214,12 @@ final class RuleScheduler {
         return String(fingerprint.suffix(12))
     }
 
-    /// Runs a best-effort `startMonitoring` call. Monitoring throws on the
-    /// simulator, when authorization is missing, and when the activity cap or
-    /// minimum interval is exceeded; the next sync retries.
-    private func start(name: String, _ body: () throws -> Void, onStarted: () -> Void) {
+    /// Run a best-effort callback, failing via a log, and notifying
+    /// if the method ran without throwing.
+    private func attemptWithFallback(name: String, _ body: () throws -> Void, onSuccess: () -> Void) {
         do {
             try body()
-            onStarted()
+            onSuccess()
             Diag.log(.scheduler, .event, "started monitoring \(name)")
         } catch {
             // Best-effort; the foreground reconciliation loop is the safety net.

@@ -12,7 +12,7 @@ import Foundation
 /// step with hard-mode blocks even while the app is closed — mirroring what
 /// `RuleEnforcer.refresh` does in the foreground.
 struct UninstallProtectionEnforcer {
-    let snapshots: RuleSnapshotStore
+    let snapshots: RuleSnapshotUserDefaultsStore
     let shields: ShieldApplying
     /// Day-usage source for limit rules; reads the shared ledger by default.
     var ledger = UsageLedger()

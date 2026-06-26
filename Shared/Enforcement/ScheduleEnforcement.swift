@@ -15,7 +15,7 @@ import Foundation
 /// end) also makes the two activities of a midnight-crossing window — and any
 /// late or duplicated interval callback — converge on the correct state.
 struct ScheduleEnforcement {
-    let snapshots: RuleSnapshotStore
+    let snapshots: RuleSnapshotUserDefaultsStore
     let shields: ShieldApplying
 
     func reconcile(ruleID: UUID, now: Date = .now, calendar: Calendar = .current) {

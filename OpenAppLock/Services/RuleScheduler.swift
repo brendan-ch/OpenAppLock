@@ -30,13 +30,13 @@ protocol ActivityMonitoring: AnyObject {
 /// Mirrors rules into the shared snapshot store and reconciles
 /// DeviceActivity monitoring with the enabled limit rules: each one gets a
 /// daily activity (time limits with one usage checkpoint per budget minute).
-/// Activities are only restarted when their configuration changes — a
-/// restart resets checkpoint accounting to "usage from now on".
+/// Activities are only restarted when their configuration changes, which is
+/// the purpose of the fingerprint given to each propagated rule.
 final class RuleScheduler {
     private static let fingerprintsKey = "monitoringFingerprints"
 
     private let monitor: ActivityMonitoring
-    private let snapshots: RuleSnapshotUserDefaultsStore
+    private let snapshotsUserDefaultsStore: RuleSnapshotUserDefaultsStore
     private let defaults: UserDefaults
 
     init(
@@ -45,16 +45,16 @@ final class RuleScheduler {
         defaults: UserDefaults = AppGroup.defaults
     ) {
         self.monitor = monitor
-        self.snapshots = snapshots
+        self.snapshotsUserDefaultsStore = snapshots
         self.defaults = defaults
     }
 
     func sync(rules: [BlockingRule], at now: Date = .now) {
-        snapshots.save(rules.map(\.dto))
+        snapshotsUserDefaultsStore.save(rules.map(\.dto))
         Diag.log(.scheduler, "sync: \(rules.count) rules; mirrored snapshots")
 
         var fingerprints = storedFingerprints
-        var desiredNames: Set<String> = []
+        var desiredActivityNames: Set<String> = []
 
         for rule in rules {
             // A rule must be enabled, have days, and have apps to be monitored.
@@ -65,7 +65,7 @@ final class RuleScheduler {
             switch rule.kind {
             case .timeLimit, .openLimit:
                 let name = MonitoringPlan.dailyActivityName(for: rule.id)
-                desiredNames.insert(name)
+                desiredActivityNames.insert(name)
                 let events =
                     rule.kind == .timeLimit
                     ? MonitoringPlan.blockEvent(forLimit: rule.dailyLimitMinutes)
@@ -79,32 +79,28 @@ final class RuleScheduler {
                     Diag.log(
                         .scheduler, .event,
                         "dailyActivity restart \(name): events=\(events) fp \(Self.shortFingerprint(fingerprints[name]))->\(Self.shortFingerprint(fingerprint)) (resets threshold accounting)")
-                    start(name: name) {
+                    attemptWithFallback(name: name) {
                         try monitor.startDailyMonitoring(
                             name: name, selectionData: selectionData, eventMinutes: events)
-                    } onStarted: { fingerprints[name] = fingerprint }
+                    } onSuccess: { fingerprints[name] = fingerprint }
                 }
 
                 // Opt-in "time limit almost up" warn activity, registered in its
-                // OWN activity. Keeping it separate from the enforcement activity
-                // above means enabling/disabling the nudge (or its absence) never
-                // restarts — and so never resets the usage threshold accounting
-                // of — the activity that actually blocks. Absent from
-                // `desiredNames` when off, so the stale sweep below stops it.
+                // OWN activity.
                 if rule.kind == .timeLimit,
                     NotificationPreferences(defaults: defaults).timeLimitEndingEnabled,
                     let warnEvents = MonitoringPlan.warnEvent(forLimit: rule.dailyLimitMinutes)
                 {
                     let warnName = MonitoringPlan.warnActivityName(for: rule.id)
-                    desiredNames.insert(warnName)
+                    desiredActivityNames.insert(warnName)
                     let warnFingerprint = "tlwarn|\(rule.dailyLimitMinutes)|"
                         + Self.selectionFingerprint(selectionData)
                     if needsRestart(warnName, warnFingerprint, in: fingerprints) {
-                        start(name: warnName) {
+                        attemptWithFallback(name: warnName) {
                             try monitor.startDailyMonitoring(
                                 name: warnName, selectionData: selectionData,
                                 eventMinutes: warnEvents)
-                        } onStarted: { fingerprints[warnName] = warnFingerprint }
+                        } onSuccess: { fingerprints[warnName] = warnFingerprint }
                     }
                 }
 
@@ -114,28 +110,28 @@ final class RuleScheduler {
                 // at each callback, so only a start/end change needs a restart.
                 let fingerprint = "schedule|\(rule.startMinutes)|\(rule.endMinutes)"
                 for window in scheduleWindows(for: rule) {
-                    desiredNames.insert(window.name)
+                    desiredActivityNames.insert(window.name)
                     guard needsRestart(window.name, fingerprint, in: fingerprints) else { continue }
-                    start(name: window.name) {
+                    attemptWithFallback(name: window.name) {
                         try monitor.startWindowMonitoring(
                             name: window.name,
                             intervalStartMinutes: window.start,
                             intervalEndMinutes: window.end)
-                    } onStarted: { fingerprints[window.name] = fingerprint }
+                    } onSuccess: { fingerprints[window.name] = fingerprint }
                 }
             }
         }
 
-        let stale = monitor.monitoredNames.filter {
+        let staleActivityNames = monitor.monitoredNames.filter {
             (MonitoringPlan.ruleID(fromDailyActivityName: $0) != nil
                 || MonitoringPlan.ruleID(fromScheduleWindowName: $0) != nil
                 || MonitoringPlan.ruleID(fromWarnActivityName: $0) != nil)
-                && !desiredNames.contains($0)
+                && !desiredActivityNames.contains($0)
         }
-        if !stale.isEmpty {
-            Diag.log(.scheduler, "stop \(stale.count) stale activities: \(stale.joined(separator: ","))")
-            monitor.stopMonitoring(names: stale)
-            for name in stale {
+        if !staleActivityNames.isEmpty {
+            Diag.log(.scheduler, "stop \(staleActivityNames.count) stale activities: \(staleActivityNames.joined(separator: ","))")
+            monitor.stopMonitoring(names: staleActivityNames)
+            for name in staleActivityNames {
                 fingerprints[name] = nil
             }
         }
@@ -150,12 +146,7 @@ final class RuleScheduler {
         fingerprints[name] != fingerprint || !monitor.monitoredNames.contains(name)
     }
 
-    /// Process-stable fingerprint of an app selection. `Data.hashValue` is
-    /// seeded randomly per process, so feeding it into the monitoring
-    /// fingerprint changed the fingerprint on every launch — restarting each
-    /// limit activity and resetting its threshold accounting. SHA-256 is
-    /// deterministic across launches, so an unchanged selection keeps the same
-    /// fingerprint and the activity is left running.
+    /// Process-stable fingerprint of an app selection.
     static func selectionFingerprint(_ data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
@@ -168,13 +159,12 @@ final class RuleScheduler {
         return String(fingerprint.suffix(12))
     }
 
-    /// Runs a best-effort `startMonitoring` call. Monitoring throws on the
-    /// simulator, when authorization is missing, and when the activity cap or
-    /// minimum interval is exceeded; the next sync retries.
-    private func start(name: String, _ body: () throws -> Void, onStarted: () -> Void) {
+    /// Run a best-effort callback, failing via a log, and notifying
+    /// if the method ran without throwing.
+    private func attemptWithFallback(name: String, _ body: () throws -> Void, onSuccess: () -> Void) {
         do {
             try body()
-            onStarted()
+            onSuccess()
             Diag.log(.scheduler, .event, "started monitoring \(name)")
         } catch {
             // Best-effort; the foreground reconciliation loop is the safety net.

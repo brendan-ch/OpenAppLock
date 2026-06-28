@@ -167,20 +167,6 @@ struct RuleEnforcerTests {
 
         #expect(shields.shieldedRuleIDs.isEmpty)
     }
-
-    @Test("The adult-content flag is forwarded to the shield layer")
-    func forwardsAdultContentFlag() {
-        let shields = MockShieldController()
-        let enforcer = RuleEnforcer(shields: shields)
-        let filtered = BlockingRule(
-            name: "Clean Mode", configuration: .schedule(ScheduleConfig(blockAdultContent: true)))
-        let unfiltered = BlockingRule(name: "Plain")
-
-        enforcer.refresh(rules: [filtered, unfiltered], at: mondayDuringWork, calendar: utc)
-
-        #expect(shields.appliedAdultContentFlags[filtered.id] == true)
-        #expect(shields.appliedAdultContentFlags[unfiltered.id] == false)
-    }
 }
 
 /// Validates the "strictest enforcement wins" model for rules that target the

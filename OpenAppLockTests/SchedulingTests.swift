@@ -24,7 +24,7 @@ struct RuleSnapshotTests {
         let store = RuleSnapshotUserDefaultsStore(defaults: freshDefaults())
         let snapshot = RuleSnapshotDTO(
             id: UUID(), name: "Time Keeper", kindRaw: "timeLimit", isEnabled: true,
-            hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
+            hardMode: false, selectionModeRaw: "block",
             selectionData: Data([1]), dayNumbers: [2, 3], startMinutes: 540, endMinutes: 1020,
             dailyLimitMinutes: 45, maxOpens: 5, pausedUntil: nil
         )
@@ -64,7 +64,7 @@ struct RuleSnapshotTests {
         let id = UUID()
         let legacy = """
             [{"id":"\(id.uuidString)","name":"Old","kindRaw":"timeLimit","isEnabled":true,\
-            "hardMode":false,"blockAdultContent":false,"selectionModeRaw":"block",\
+            "hardMode":false,"selectionModeRaw":"block",\
             "dayNumbers":[2,3],"dailyLimitMinutes":45,"maxOpens":5}]
             """
         let defaults = freshDefaults()
@@ -403,7 +403,7 @@ struct LimitEnforcementTests {
     ) -> RuleSnapshotDTO {
         RuleSnapshotDTO(
             id: UUID(), name: "Rule", kindRaw: kind.rawValue, isEnabled: true,
-            hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
+            hardMode: false, selectionModeRaw: "block",
             selectionData: Data([1]), dayNumbers: days.map(\.rawValue),
             startMinutes: 0, endMinutes: 0,
             dailyLimitMinutes: limit, maxOpens: maxOpens, pausedUntil: pausedUntil
@@ -441,7 +441,7 @@ struct LimitEnforcementTests {
         let snap = snapshot(kind: .timeLimit)
         store.save([snap])
         shields.applyShield(
-            ruleID: snap.id, selectionData: nil, mode: .block, blockAdultContent: false)
+            ruleID: snap.id, selectionData: nil, mode: .block)
 
         enforcement.handleDayStart(ruleID: snap.id, now: monday, calendar: utc)
 
@@ -623,7 +623,7 @@ struct ScheduleEnforcementTests {
     ) -> RuleSnapshotDTO {
         RuleSnapshotDTO(
             id: UUID(), name: "Work Time", kindRaw: RuleKind.schedule.rawValue,
-            isEnabled: isEnabled, hardMode: false, blockAdultContent: false,
+            isEnabled: isEnabled, hardMode: false,
             selectionModeRaw: mode.rawValue, selectionData: Data([1]),
             dayNumbers: days.map(\.rawValue), startMinutes: start, endMinutes: end,
             dailyLimitMinutes: 45, maxOpens: 5, pausedUntil: pausedUntil
@@ -647,7 +647,7 @@ struct ScheduleEnforcementTests {
         let snap = snapshot()
         store.save([snap])
         shields.applyShield(
-            ruleID: snap.id, selectionData: nil, mode: .block, blockAdultContent: false)
+            ruleID: snap.id, selectionData: nil, mode: .block)
 
         enforcement.reconcile(ruleID: snap.id, now: mondayEvening, calendar: utc)
 

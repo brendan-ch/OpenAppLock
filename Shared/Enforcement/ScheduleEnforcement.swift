@@ -29,8 +29,7 @@ struct ScheduleEnforcement {
             shields.applyShield(
                 ruleID: snapshot.id,
                 selectionData: snapshot.selectionData,
-                mode: snapshot.selectionMode,
-                blockAdultContent: snapshot.blockAdultContent
+                mode: snapshot.selectionMode
             )
         } else {
             Diag.log(

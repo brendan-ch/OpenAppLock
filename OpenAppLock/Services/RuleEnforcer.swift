@@ -156,9 +156,9 @@ final class RuleEnforcer {
             "timeLimit rule-\(rid) used=\(usage.minutesUsed)/\(rule.dailyLimitMinutes) blocking=\(isBlocking)")
     }
 
-    /// Records the rule's shield and writes it. Allow Only and Block Adult Content
-    /// are Schedule-only options; the model already forces `.block`/`false` on
-    /// limit rules, so we forward the rule's values directly.
+    /// Records the rule's shield and writes it. Allow Only is a Schedule-only
+    /// option; the model already forces `.block` on limit rules, so we forward
+    /// the rule's values directly.
     private func applyShield(
         for snapshot: RuleSnapshotDTO, status: RuleStatus, usage: RuleUsageDTO?, isBlocking: Bool
     ) {
@@ -169,8 +169,7 @@ final class RuleEnforcer {
         shields.applyShield(
             ruleID: snapshot.id,
             selectionData: snapshot.selectionData,
-            mode: snapshot.selectionMode,
-            blockAdultContent: snapshot.blockAdultContent
+            mode: snapshot.selectionMode
         )
     }
 

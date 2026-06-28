@@ -178,8 +178,6 @@ struct UsageEnforcementTests {
 
         #expect(shields.shieldedRuleIDs == [rule.id])
         #expect(shields.appliedModes[rule.id] == .block)
-        // Limit rules never engage the adult-content filter (Schedule-only).
-        #expect(shields.appliedAdultContentFlags[rule.id] == false)
     }
 
     @Test("A time-limit rule with budget left is not shielded")

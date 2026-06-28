@@ -10,9 +10,7 @@ import ManagedSettings
 /// Applies and clears app shields for rules. One implementation talks to
 /// ManagedSettings; the mock records calls for tests.
 protocol ShieldApplying: AnyObject {
-    func applyShield(
-        ruleID: UUID, selectionData: Data?, mode: SelectionMode, blockAdultContent: Bool
-    )
+    func applyShield(ruleID: UUID, selectionData: Data?, mode: SelectionMode)
     /// Clears the shield of a single rule (used by the extensions for day
     /// resets and granted opens).
     func clearShield(ruleID: UUID)
@@ -36,9 +34,7 @@ final class ManagedSettingsShieldController: ShieldApplying {
         self.defaults = defaults
     }
 
-    func applyShield(
-        ruleID: UUID, selectionData: Data?, mode: SelectionMode, blockAdultContent: Bool
-    ) {
+    func applyShield(ruleID: UUID, selectionData: Data?, mode: SelectionMode) {
         let store = store(for: ruleID)
         let selection = AppSelectionCodec.decode(selectionData)
         switch mode {
@@ -58,12 +54,10 @@ final class ManagedSettingsShieldController: ShieldApplying {
             store.shield.applicationCategories = .all(except: selection.applicationTokens)
             store.shield.webDomainCategories = .all(except: selection.webDomainTokens)
         }
-        // Screen Time's "Limit Adult Websites" filter for the rule's lifetime.
-        store.webContent.blockedByFilter = blockAdultContent ? .auto() : nil
         track(ruleID: ruleID)
         Diag.log(
             .shield, .event,
-            "apply rule-\(ruleID.uuidString.prefix(8)) mode=\(mode) adult=\(blockAdultContent) apps=\(selection.applicationTokens.count) cats=\(selection.categoryTokens.count) web=\(selection.webDomainTokens.count)")
+            "apply rule-\(ruleID.uuidString.prefix(8)) mode=\(mode) apps=\(selection.applicationTokens.count) cats=\(selection.categoryTokens.count) web=\(selection.webDomainTokens.count)")
     }
 
     func clearShield(ruleID: UUID) {
@@ -120,35 +114,27 @@ final class ManagedSettingsShieldController: ShieldApplying {
 final class MockShieldController: ShieldApplying {
     private(set) var shieldedRuleIDs: Set<UUID> = []
     private(set) var appliedModes: [UUID: SelectionMode] = [:]
-    private(set) var appliedAdultContentFlags: [UUID: Bool] = [:]
     private(set) var appliedSelectionData: [UUID: Data?] = [:]
     /// The device-wide app-removal denial. Deliberately separate from the
     /// per-rule shield bookkeeping, mirroring the dedicated store in the real
     /// controller — `clearShields(except:)` must not disturb it.
     private(set) var appRemovalDenied = false
 
-    func applyShield(
-        ruleID: UUID, selectionData: Data?, mode: SelectionMode, blockAdultContent: Bool
-    ) {
+    func applyShield(ruleID: UUID, selectionData: Data?, mode: SelectionMode) {
         shieldedRuleIDs.insert(ruleID)
         appliedModes[ruleID] = mode
-        appliedAdultContentFlags[ruleID] = blockAdultContent
         appliedSelectionData[ruleID] = selectionData
     }
 
     func clearShield(ruleID: UUID) {
         shieldedRuleIDs.remove(ruleID)
         appliedModes[ruleID] = nil
-        appliedAdultContentFlags[ruleID] = nil
         appliedSelectionData[ruleID] = nil
     }
 
     func clearShields(except activeRuleIDs: Set<UUID>) {
         shieldedRuleIDs.formIntersection(activeRuleIDs)
         appliedModes = appliedModes.filter { activeRuleIDs.contains($0.key) }
-        appliedAdultContentFlags = appliedAdultContentFlags.filter {
-            activeRuleIDs.contains($0.key)
-        }
         appliedSelectionData = appliedSelectionData.filter { activeRuleIDs.contains($0.key) }
         // Note: appRemovalDenied is intentionally left untouched here.
     }

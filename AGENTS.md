@@ -107,8 +107,7 @@ un-prefixed doc remains off-limits to agent edits.
   Soft rules can be "unblocked", which sets `pausedUntil` = window end (the
   rule re-arms at its next window).
 - Shields: one `ManagedSettingsStore` per rule (`rule-<uuid>`), tracked in
-  UserDefaults for stray cleanup. `blockAdultContent` engages
-  `webContent.blockedByFilter = .auto()` alongside the shield.
+  UserDefaults for stray cleanup.
 - `RuleEnforcer.refresh` is the only place shields change; the post-onboarding
   shell (`MainView`) runs it on rule changes and a 30s loop while the app is open,
   regardless of the active layout (compact `TabView` vs regular-width sidebar).
@@ -229,7 +228,7 @@ them): `newRuleButton`, `ruleCard-<name>`, `ruleStatus-<name>`,
 `blockedTile-<name>`, `nothingBlockedLabel`, `emptyRulesCard`,
 `closeNewRuleButton`, `ruleKind-<kind>`, `preset-<id>`, `ruleEditorTitle`,
 `fromTimePicker`/`toTimePicker`, `dayToggle-1…7`, `selectedAppsRow`,
-`hardModeToggle`, `adultContentToggle`, `dailyLimitStepper(+Value)`,
+`hardModeToggle`, `dailyLimitStepper(+Value)`,
 `maxOpensStepper(+Value)`, `commitRuleButton`, `doneButton`,
 `toggleEnabledButton`, `deleteRuleButton`, `closeDetailButton`,
 `detailRuleName`, `detailStatusLabel`, `detailRow-<label>`,

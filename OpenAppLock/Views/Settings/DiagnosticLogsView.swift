@@ -113,7 +113,7 @@ private func previewLogStore() -> LogStore {
         for: Calendar.current.date(byAdding: .day, value: -1, to: .now) ?? .now)
     let app = [
         "2026-06-22T09:00:01.120Z [INFO] [app/enforcer] refresh: 2 rules [RuleEnforcer.swift:84 refresh(rules:at:calendar:)]",
-        "2026-06-22T09:00:01.140Z [EVENT] [app/shield] apply rule-1A2B mode=block adult=false [ShieldController.swift:63 applyShield(ruleID:selectionData:mode:blockAdultContent:)]",
+        "2026-06-22T09:00:01.140Z [EVENT] [app/shield] apply rule-1A2B mode=block [ShieldController.swift:61 applyShield(ruleID:selectionData:mode:)]",
     ]
     let monitor = [
         "2026-06-22T09:14:55.300Z [EVENT] [monitor/monitor] eventDidReachThreshold minutes-15 [DeviceActivityMonitorExtension.swift:40 eventDidReachThreshold(_:activity:)]"

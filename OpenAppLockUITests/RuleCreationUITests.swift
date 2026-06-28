@@ -126,62 +126,6 @@ final class RuleCreationUITests: XCTestCase {
         app.buttons["ruleCard-Time Keeper"].waitToAppear()
     }
 
-    func testAdultContentToggleFlowsToDetail() throws {
-        let app = XCUIApplication.launchOpenAppLock()
-        app.goToRulesTab()
-        app.buttons["newRuleButton"].waitToAppear().tap()
-        app.buttons["ruleKind-schedule"].waitToAppear().tap()
-
-        // The toggle lives at the bottom of the form; scroll it clear of the
-        // commit bar before tapping.
-        app.staticTexts["ruleEditorTitle"].waitToAppear()
-        app.swipeUp()
-        let adultToggle = app.switches["adultContentToggle"].waitToAppear()
-        XCTAssertEqual(adultToggle.label, "Block Adult Content")
-        // Labeled Toggle fills the row; tap the switch at the trailing edge.
-        adultToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
-        app.buttons["commitRuleButton"].waitToAppear().tap()
-
-        app.buttons["ruleCard-In the Zone"].waitToAppear().tap()
-        let row = app.element("detailRow-Adult websites").waitToAppear()
-        XCTAssertTrue(row.label.contains("Blocked"), "Got: \(row.label)")
-    }
-
-    func testAdultContentDefaultsToAllowed() throws {
-        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
-        app.goToRulesTab()
-        app.buttons["ruleCard-Work Time"].waitToAppear().tap()
-        let row = app.element("detailRow-Adult websites").waitToAppear()
-        XCTAssertTrue(row.label.contains("Allowed"), "Got: \(row.label)")
-    }
-
-    /// Block Adult Content is a Schedule-only option: the Time Limit editor must
-    /// not offer the toggle, and the rule's detail must not show the row.
-    func testTimeLimitOmitsAdultContent() throws {
-        let app = XCUIApplication.launchOpenAppLock()
-        app.goToRulesTab()
-        app.buttons["newRuleButton"].waitToAppear().tap()
-        app.buttons["ruleKind-timeLimit"].waitToAppear().tap()
-
-        // Scroll to the bottom of the form, where Hard Mode lives. The adult
-        // toggle (which would sit beside it on a Schedule rule) is absent.
-        app.staticTexts["ruleEditorTitle"].waitToAppear()
-        app.swipeUp()
-        app.switches["hardModeToggle"].waitToAppear()
-        XCTAssertFalse(
-            app.switches["adultContentToggle"].exists,
-            "Time-limit rules must not offer Block Adult Content"
-        )
-
-        app.buttons["commitRuleButton"].waitToAppear().tap()
-        app.buttons["ruleCard-Time Keeper"].waitToAppear().tap()
-        app.element("detailRuleName").waitToAppear()
-        XCTAssertFalse(
-            app.element("detailRow-Adult websites").exists,
-            "Time-limit detail must not show the Adult websites row"
-        )
-    }
-
     func testEditorSupportsNativeSwipeBack() throws {
         // The edge-swipe starts at the window's left edge, which only lands on the
         // editor when the sheet spans the full width (iPhone). On iPad the editor

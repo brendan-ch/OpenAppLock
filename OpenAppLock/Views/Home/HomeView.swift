@@ -168,9 +168,6 @@ struct HomeView: View {
                         .foregroundStyle(Color.secondary)
                 }
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(Color(.tertiaryLabel))
             }
         }
         .accessibilityIdentifier("activeRuleRow-\(rule.name)")

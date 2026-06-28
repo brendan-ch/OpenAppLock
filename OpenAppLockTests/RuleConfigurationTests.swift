@@ -24,7 +24,6 @@ struct RuleConfigurationTests {
         #expect(schedule?.startMinutes == 9 * 60)
         #expect(schedule?.endMinutes == 17 * 60)
         #expect(schedule?.selectionMode == .block)
-        #expect(schedule?.blockAdultContent == false)
 
         #expect(RuleConfiguration.default(for: .timeLimit).timeLimitConfig?.dailyLimitMinutes == 45)
         #expect(RuleConfiguration.default(for: .openLimit).openLimitConfig?.maxOpens == 5)
@@ -32,8 +31,8 @@ struct RuleConfigurationTests {
 
     @Test("Typed projections only unwrap the matching case")
     func projections() {
-        let schedule = RuleConfiguration.schedule(ScheduleConfig(blockAdultContent: true))
-        #expect(schedule.scheduleConfig?.blockAdultContent == true)
+        let schedule = RuleConfiguration.schedule(ScheduleConfig(selectionMode: .allowOnly))
+        #expect(schedule.scheduleConfig?.selectionMode == .allowOnly)
         #expect(schedule.timeLimitConfig == nil)
         #expect(schedule.openLimitConfig == nil)
 

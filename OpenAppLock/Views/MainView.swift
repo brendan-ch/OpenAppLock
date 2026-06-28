@@ -56,7 +56,7 @@ struct MainView: View {
     /// Changes whenever any rule's blocking-relevant state changes.
     private var ruleChangeToken: String {
         rules.map {
-            "\($0.id)|\($0.isEnabled)|\($0.hardMode)|\($0.blockAdultContent)|"
+            "\($0.id)|\($0.isEnabled)|\($0.hardMode)|"
                 + "\($0.startMinutes)|\($0.endMinutes)|\($0.dayNumbers)|"
                 + "\($0.selectionModeRaw)|\($0.appList?.id.uuidString ?? "-")|"
                 + "\($0.appList?.selectionCount ?? 0)|"

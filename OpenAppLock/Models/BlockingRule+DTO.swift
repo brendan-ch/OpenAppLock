@@ -16,7 +16,6 @@ extension RuleSnapshotDTO {
             kindRaw: rule.kindRaw,
             isEnabled: rule.isEnabled,
             hardMode: rule.hardMode,
-            blockAdultContent: rule.blockAdultContent,
             selectionModeRaw: rule.selectionModeRaw,
             selectionData: rule.appList?.selectionData,
             dayNumbers: rule.dayNumbers,

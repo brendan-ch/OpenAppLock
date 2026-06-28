@@ -33,6 +33,7 @@ struct NotificationSettingsView: View {
             typesSection
         }
         .navigationTitle("Notifications")
+        .navigationBarTitleDisplayMode(.inline)
         // Pick up changes the user made in the system Settings app (including a
         // revocation, which surfaces the denied state and disables delivery).
         .task { await authorization.refresh() }

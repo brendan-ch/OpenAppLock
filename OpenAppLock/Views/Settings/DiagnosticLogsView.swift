@@ -68,6 +68,7 @@ struct DiagnosticLogsView: View {
             }
         }
         .navigationTitle("Logs")
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear { days = logStore.availableDays() }
     }
 }

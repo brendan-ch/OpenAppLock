@@ -75,20 +75,14 @@ struct SettingsView: View {
                         Label("Manage App Lists", systemImage: "square.stack.3d.up")
                     }
                     .accessibilityIdentifier("manageAppListsButton")
-                } header: {
-                    Text("App Lists").textCase(nil)
-                }
-                Section {
+                    
                     NavigationLink {
                         NotificationSettingsView()
                     } label: {
                         Label("Notifications", systemImage: "bell.badge")
                     }
                     .accessibilityIdentifier("notificationSettingsButton")
-                } header: {
-                    Text("Notifications").textCase(nil)
-                }
-                Section {
+                    
                     NavigationLink {
                         DiagnosticLogsView()
                     } label: {
@@ -96,12 +90,9 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("diagnosticsLogsRow")
                 } header: {
-                    Text("Diagnostics").textCase(nil)
-                } footer: {
-                    Text(
-                        "Records how and when blocks execute, for troubleshooting. Export a day "
-                            + "to share it.")
+                    Text("More Settings").textCase(nil)
                 }
+                
                 linkSection
                 if launch.isUITesting {
                     // Test-only probe: the destination of the last intercepted

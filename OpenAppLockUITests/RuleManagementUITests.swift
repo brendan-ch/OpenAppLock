@@ -23,7 +23,7 @@ final class RuleManagementUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["detailStatusLabel"].label.contains("left"))
         app.element("detailRow-During this time").waitToAppear()
         XCTAssertTrue(app.element("detailRow-On these days").exists)
-        XCTAssertTrue(app.element("detailRow-Unblocks allowed").exists)
+        XCTAssertTrue(app.element("detailRow-Pausing allowed").exists)
         app.buttons["editRuleButton"].waitToAppear()
 
         app.buttons["closeDetailButton"].tap()
@@ -50,9 +50,9 @@ final class RuleManagementUITests: XCTestCase {
         hardMode.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         app.buttons["doneButton"].tap()
 
-        // Back on the detail view, unblocks are no longer allowed.
-        let row = app.element("detailRow-Unblocks allowed").waitToAppear()
-        XCTAssertTrue(row.label.contains("No"), "Expected 'Unblocks allowed: No', got: \(row.label)")
+        // Back on the detail view, pausing is no longer allowed.
+        let row = app.element("detailRow-Pausing allowed").waitToAppear()
+        XCTAssertTrue(row.label.contains("No"), "Expected 'Pausing allowed: No', got: \(row.label)")
     }
 
     func testDisableRule() throws {
@@ -108,6 +108,24 @@ final class RuleManagementUITests: XCTestCase {
         app.goToRulesTab()
         XCTAssertEqual(app.staticTexts["ruleStatus-Work Time"].waitToAppear().label, "Paused")
     }
+
+    func testPauseActiveSoftRuleFromDetail() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToRulesTab()
+        app.buttons["ruleCard-Work Time"].waitToAppear().tap()
+
+        app.buttons["pauseRuleButton"].waitToAppear().tap()
+        // The confirmation dialog's button shares the row label, so scope to the sheet.
+        app.sheets.buttons["Pause for 15 minutes"].waitToAppear().tap()
+
+        // Paused → Resume replaces Pause, and the status reads a resume countdown.
+        app.buttons["resumeRuleButton"].waitToAppear()
+        XCTAssertTrue(app.staticTexts["detailStatusLabel"].label.contains("Resumes in"))
+
+        // Resume re-blocks immediately.
+        app.buttons["resumeRuleButton"].tap()
+        app.buttons["pauseRuleButton"].waitToAppear()
+    }
 }
 
 /// Hard block behavior — seeded with an actively-blocking Hard Mode rule.
@@ -125,7 +143,7 @@ final class HardModeUITests: XCTestCase {
         // The lock notice replaces Edit Rule entirely.
         app.element("hardModeLockedNotice").waitToAppear()
         XCTAssertFalse(app.buttons["editRuleButton"].exists)
-        XCTAssertTrue(app.element("detailRow-Unblocks allowed").label.contains("No"))
+        XCTAssertTrue(app.element("detailRow-Pausing allowed").label.contains("No"))
     }
 
     func testHardLockedRuleCannotBeUnblocked() throws {

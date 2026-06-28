@@ -242,7 +242,7 @@ struct UsageDisplayTests {
         #expect(timeRule.dto.rowContext(for: active, usage: used, relativeTo: now) == "45m / day")
     }
 
-    @Test("A spent limit reads 'Blocked until tomorrow'; unblocking it reads Paused")
+    @Test("A spent limit reads 'Blocked until tomorrow'; pausing it reads a resume countdown")
     func spentLimitContext() {
         let spent = RuleUsageDTO(minutesUsed: 45)
         let blocking = timeRule.dto.status(at: now, calendar: utc, usage: spent)
@@ -251,7 +251,7 @@ struct UsageDisplayTests {
 
         timeRule.pausedUntil = utc.date(byAdding: .hour, value: 5, to: now)
         let paused = timeRule.dto.status(at: now, calendar: utc, usage: spent)
-        #expect(timeRule.dto.rowContext(for: paused, usage: spent, relativeTo: now) == "Paused")
+        #expect(timeRule.dto.rowContext(for: paused, usage: spent, relativeTo: now) == "Resumes in 5h")
     }
 
     @Test("Home subtitles prefix the rule kind")

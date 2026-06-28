@@ -204,3 +204,27 @@ struct RuleDetailSheet: View {
             .accessibilityIdentifier("detailRow-\(label)")
     }
 }
+
+// All-day (start == end) schedule rules so the previews are actively blocking
+// whenever they render — the pausable one offers "Pause for 15 minutes" above
+// "Edit Rule"; the hard-mode one shows the lock notice and no Pause control.
+#Preview("Active — pausable") {
+    RuleDetailSheet(
+        rule: BlockingRule(
+            name: "Work Time",
+            configuration: .schedule(ScheduleConfig(startMinutes: 0, endMinutes: 0)),
+            days: Weekday.everyDay))
+        .environment(RuleEnforcer(shields: MockShieldController()))
+        .modelContainer(for: [BlockingRule.self, AppList.self], inMemory: true)
+}
+
+#Preview("Hard locked") {
+    RuleDetailSheet(
+        rule: BlockingRule(
+            name: "Locked In",
+            configuration: .schedule(ScheduleConfig(startMinutes: 0, endMinutes: 0)),
+            hardMode: true,
+            days: Weekday.everyDay))
+        .environment(RuleEnforcer(shields: MockShieldController()))
+        .modelContainer(for: [BlockingRule.self, AppList.self], inMemory: true)
+}

@@ -13,7 +13,7 @@ import SwiftData
 /// (`startMinutes`, `selectionModeRaw`, `dailyLimitMinutes`, …) are persistence
 /// detail: they are read and written *only* via `configuration`, which keeps a
 /// rule from ever carrying another kind's options (e.g. a Time Limit rule can
-/// never hold Block Adult Content — see `applyConfiguration`).
+/// never hold a Block/Allow-Only mode — see `applyConfiguration`).
 ///
 /// Times are stored as minutes from midnight so the schedule repeats cleanly and
 /// is independent of time zones at creation. A window whose end is at or before
@@ -51,8 +51,6 @@ final class BlockingRule {
     var endMinutes: Int
     /// Schedule-only; forced to `.block` for limit kinds by `applyConfiguration`.
     var selectionModeRaw: String
-    /// Schedule-only; forced to `false` for limit kinds by `applyConfiguration`.
-    var blockAdultContent: Bool
     /// Daily usage budget for `.timeLimit` rules.
     var dailyLimitMinutes: Int
     /// Daily open budget for `.openLimit` rules.
@@ -84,7 +82,6 @@ final class BlockingRule {
         self.startMinutes = 9 * 60
         self.endMinutes = 17 * 60
         self.selectionModeRaw = SelectionMode.block.rawValue
-        self.blockAdultContent = false
         self.dailyLimitMinutes = 45
         self.maxOpens = 5
         applyConfiguration(configuration)
@@ -101,8 +98,7 @@ final class BlockingRule {
                     ScheduleConfig(
                         startMinutes: startMinutes,
                         endMinutes: endMinutes,
-                        selectionMode: selectionMode,
-                        blockAdultContent: blockAdultContent))
+                        selectionMode: selectionMode))
             case .timeLimit:
                 .timeLimit(TimeLimitConfig(dailyLimitMinutes: dailyLimitMinutes))
             case .openLimit:
@@ -113,8 +109,8 @@ final class BlockingRule {
     }
 
     /// Writes a configuration onto the raw columns. Limit kinds explicitly
-    /// reset the Schedule-only options so a rule can never carry Block / Allow
-    /// Only or Block Adult Content unless it is a Schedule rule.
+    /// reset the Schedule-only options so a rule can never carry a Block /
+    /// Allow-Only mode unless it is a Schedule rule.
     private func applyConfiguration(_ configuration: RuleConfiguration) {
         kindRaw = configuration.kind.rawValue
         switch configuration {
@@ -122,15 +118,12 @@ final class BlockingRule {
             startMinutes = config.startMinutes
             endMinutes = config.endMinutes
             selectionModeRaw = config.selectionMode.rawValue
-            blockAdultContent = config.blockAdultContent
         case .timeLimit(let config):
             dailyLimitMinutes = config.dailyLimitMinutes
             selectionModeRaw = SelectionMode.block.rawValue
-            blockAdultContent = false
         case .openLimit(let config):
             maxOpens = config.maxOpens
             selectionModeRaw = SelectionMode.block.rawValue
-            blockAdultContent = false
         }
     }
 

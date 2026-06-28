@@ -16,7 +16,6 @@ nonisolated struct RuleSnapshotDTO: Codable, Equatable {
     var kindRaw: String
     var isEnabled: Bool
     var hardMode: Bool
-    var blockAdultContent: Bool
     var selectionModeRaw: String
     var selectionData: Data?
     var dayNumbers: [Int]
@@ -62,7 +61,7 @@ nonisolated struct RuleSnapshotDTO: Codable, Equatable {
 
 nonisolated extension RuleSnapshotDTO {
     private enum CodingKeys: String, CodingKey {
-        case id, name, kindRaw, isEnabled, hardMode, blockAdultContent
+        case id, name, kindRaw, isEnabled, hardMode
         case selectionModeRaw, selectionData, dayNumbers, startMinutes, endMinutes
         case dailyLimitMinutes, maxOpens, pausedUntil
     }
@@ -77,7 +76,6 @@ nonisolated extension RuleSnapshotDTO {
         kindRaw = try container.decode(String.self, forKey: .kindRaw)
         isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
         hardMode = try container.decode(Bool.self, forKey: .hardMode)
-        blockAdultContent = try container.decode(Bool.self, forKey: .blockAdultContent)
         selectionModeRaw = try container.decode(String.self, forKey: .selectionModeRaw)
         selectionData = try container.decodeIfPresent(Data.self, forKey: .selectionData)
         dayNumbers = try container.decode([Int].self, forKey: .dayNumbers)

@@ -194,10 +194,8 @@ struct LimitEnforcement {
         shields.applyShield(
             ruleID: snapshot.id,
             selectionData: snapshot.selectionData,
-            // Limit rules are always Block and never engage the adult-content
-            // filter — those are Schedule-only options.
-            mode: .block,
-            blockAdultContent: false
+            // Limit rules are always Block — selection mode is a Schedule-only option.
+            mode: .block
         )
     }
 }

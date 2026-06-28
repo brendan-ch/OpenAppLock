@@ -130,9 +130,6 @@ struct RuleEditorView: View {
                     .textCase(nil)
             }
             hardModeSection
-            // Block Adult Content is a Schedule-only option: a usage budget
-            // does not pair with a web-content filter (see `RuleConfiguration`).
-            adultContentSection
         case .timeLimit:
             Section {
                 appListRow
@@ -216,16 +213,6 @@ struct RuleEditorView: View {
                 .accessibilityIdentifier("hardModeToggle")
         } footer: {
             Text("No unblocks allowed while the rule is blocking.")
-        }
-    }
-
-    /// Schedule-only: filter adult websites while the rule's window is active.
-    private var adultContentSection: some View {
-        Section {
-            Toggle("Block Adult Content", isOn: $draft.scheduleConfig.blockAdultContent)
-                .accessibilityIdentifier("adultContentToggle")
-        } footer: {
-            Text("Filter adult websites while this rule is active.")
         }
     }
 

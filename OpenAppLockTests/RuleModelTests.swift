@@ -18,7 +18,6 @@ struct RuleModelTests {
         #expect(rule.kind == .schedule)
         #expect(rule.isEnabled)
         #expect(!rule.hardMode)
-        #expect(!rule.blockAdultContent)
         #expect(rule.selectionMode == .block)
         #expect(rule.days == Weekday.weekdays)
         #expect(rule.startMinutes == 9 * 60)
@@ -52,14 +51,12 @@ struct RuleModelTests {
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 30)))
         #expect(timeLimit.kind == .timeLimit)
         #expect(timeLimit.selectionMode == .block)
-        #expect(!timeLimit.blockAdultContent)
         #expect(timeLimit.dailyLimitMinutes == 30)
 
         let openLimit = BlockingRule(
             name: "Gate Keeper", configuration: .openLimit(OpenLimitConfig(maxOpens: 3)))
         #expect(openLimit.kind == .openLimit)
         #expect(openLimit.selectionMode == .block)
-        #expect(!openLimit.blockAdultContent)
         #expect(openLimit.maxOpens == 3)
     }
 
@@ -68,11 +65,11 @@ struct RuleModelTests {
         let config = RuleConfiguration.schedule(
             ScheduleConfig(
                 startMinutes: 22 * 60, endMinutes: 6 * 60,
-                selectionMode: .allowOnly, blockAdultContent: true))
+                selectionMode: .allowOnly))
         let rule = BlockingRule(name: "Deep Sleep", configuration: config)
         #expect(rule.configuration == config)
         #expect(rule.startMinutes == 22 * 60)
-        #expect(rule.blockAdultContent)
+        #expect(rule.selectionMode == .allowOnly)
     }
 
     @Test("Rules persist and fetch through SwiftData")
@@ -122,12 +119,11 @@ struct RuleDraftTests {
         draft.configuration = .schedule(
             ScheduleConfig(
                 startMinutes: 22 * 60, endMinutes: 6 * 60,
-                selectionMode: .allowOnly, blockAdultContent: true))
+                selectionMode: .allowOnly))
         draft.hardMode = true
         draft.appList = list
 
         let rule = draft.insertRule(into: context)
-        #expect(rule.blockAdultContent)
         #expect(rule.selectionMode == .allowOnly)
         #expect(RuleDraft(rule: rule) == draft)
     }
@@ -136,12 +132,11 @@ struct RuleDraftTests {
     func limitDraftHasNoScheduleOptions() {
         let draft = RuleDraft(kind: .openLimit)
         // The configuration is an open-limit case, so there is structurally no
-        // selection mode or adult-content flag to set.
+        // selection mode to set.
         #expect(draft.configuration.scheduleConfig == nil)
         #expect(draft.openLimitConfig.maxOpens == 5)
 
         let rule = BlockingRule(name: draft.name, configuration: draft.configuration)
-        #expect(!rule.blockAdultContent)
         #expect(rule.selectionMode == .block)
     }
 

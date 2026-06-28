@@ -12,7 +12,7 @@ enum RuleStatus: Equatable, Sendable {
     case dormant
     /// Currently blocking; ends at the associated date.
     case active(until: Date)
-    /// The user unblocked the current window; blocking resumes at the next window.
+    /// The user temporarily paused the current block; it resumes at the associated date.
     case paused(until: Date)
     case upcoming(startsAt: Date)
 
@@ -22,12 +22,12 @@ enum RuleStatus: Equatable, Sendable {
     }
 
     /// Short status label shown on rule cards and detail sheets:
-    /// "6h left", "Starts in 22h", "Paused", "Disabled".
+    /// "6h left", "Starts in 22h", "Resumes in 12m", "Disabled".
     func label(relativeTo now: Date) -> String {
         switch self {
         case .disabled: "Disabled"
         case .dormant: "No days selected"
-        case .paused: "Paused"
+        case .paused(let until): "Resumes in \(Self.countdown(from: now, to: until))"
         case .active(let until): "\(Self.countdown(from: now, to: until)) left"
         case .upcoming(let start): "Starts in \(Self.countdown(from: now, to: start))"
         }

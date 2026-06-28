@@ -44,13 +44,14 @@ struct RuleStatusTests {
         #expect(rule.dto.status(at: date(2025, 1, 6, 10, 0), calendar: utc) == .dormant)
     }
 
-    @Test("A paused rule reports paused until the window ends")
+    @Test("A paused rule reports paused with a resume countdown")
     func paused() {
         let rule = workTime()
-        rule.pausedUntil = date(2025, 1, 6, 17, 0)
+        rule.pausedUntil = date(2025, 1, 6, 10, 15)
         let status = rule.dto.status(at: date(2025, 1, 6, 10, 0), calendar: utc)
-        #expect(status == .paused(until: date(2025, 1, 6, 17, 0)))
+        #expect(status == .paused(until: date(2025, 1, 6, 10, 15)))
         #expect(!status.isActive)
+        #expect(status.label(relativeTo: date(2025, 1, 6, 10, 0)) == "Resumes in 15m")
     }
 
     @Test("An expired pause no longer affects status")
@@ -107,7 +108,7 @@ struct RuleStatusTests {
         let now = date(2025, 1, 6, 0, 0)
         #expect(RuleStatus.disabled.label(relativeTo: now) == "Disabled")
         #expect(RuleStatus.dormant.label(relativeTo: now) == "No days selected")
-        #expect(RuleStatus.paused(until: now).label(relativeTo: now) == "Paused")
+        #expect(RuleStatus.paused(until: now.addingTimeInterval(15 * 60)).label(relativeTo: now) == "Resumes in 15m")
     }
 
     // MARK: - Kind-aware row context

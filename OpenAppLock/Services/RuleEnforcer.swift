@@ -97,6 +97,38 @@ final class RuleEnforcer {
         syncStartingSoonNotifications(rules: rules)
     }
 
+    /// Temporarily pauses the rule's current block: sets `pausedUntil` via
+    /// `RulePolicy`, schedules the background re-arm, and refreshes so the
+    /// shield clears immediately. No-op (returns false) when the rule can't be
+    /// paused. `pausedUntil` is set before the refresh, so the scheduler's
+    /// reaping pass keeps the just-started re-arm.
+    @discardableResult
+    func pause(
+        _ rule: BlockingRule, rules: [BlockingRule],
+        at now: Date = .now, calendar: Calendar = .current
+    ) -> Bool {
+        guard RulePolicy.pause(
+            rule, usage: usage(for: rule.dto, at: now, calendar: calendar),
+            at: now, calendar: calendar)
+        else { return false }
+        if let pausedUntil = rule.pausedUntil {
+            scheduler?.scheduleResumeReArm(for: rule.id, until: pausedUntil, now: now, calendar: calendar)
+        }
+        refresh(rules: rules, at: now, calendar: calendar)
+        return true
+    }
+
+    /// Ends a temporary pause now: clears `pausedUntil`, cancels the background
+    /// re-arm, and refreshes so the shield re-engages immediately.
+    func resume(
+        _ rule: BlockingRule, rules: [BlockingRule],
+        at now: Date = .now, calendar: Calendar = .current
+    ) {
+        RulePolicy.resume(rule)
+        scheduler?.cancelResumeReArm(for: rule.id)
+        refresh(rules: rules, at: now, calendar: calendar)
+    }
+
     /// Runs one rule through the refresh pipeline — expire a stale pause, confirm
     /// today's day-start, then decide whether it is actively blocking and whether
     /// it should carry a shield (an active block, or an open-limit's proactive

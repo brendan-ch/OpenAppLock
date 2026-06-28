@@ -40,4 +40,20 @@ struct MonitoringPlanWarnTests {
         // Exactly one over the lead is the smallest budget that warns (at 1 min).
         #expect(MonitoringPlan.warnEvent(forLimit: 6)?["warn-1"] == 1)
     }
+
+    @Test("Pause activity names round-trip rule IDs and don't collide with other activities")
+    func pauseNameRoundTrip() {
+        let id = UUID()
+        let pause = MonitoringPlan.pauseActivityName(for: id)
+        #expect(MonitoringPlan.ruleID(fromPauseActivityName: pause) == id)
+        // Not mistaken for the daily, schedule-window, or warn activities…
+        #expect(MonitoringPlan.ruleID(fromDailyActivityName: pause) == nil)
+        #expect(MonitoringPlan.ruleID(fromScheduleWindowName: pause) == nil)
+        #expect(MonitoringPlan.ruleID(fromWarnActivityName: pause) == nil)
+        // …and their names are not mistaken for a pause activity.
+        #expect(MonitoringPlan.ruleID(fromPauseActivityName: MonitoringPlan.dailyActivityName(for: id)) == nil)
+        #expect(MonitoringPlan.ruleID(fromPauseActivityName: MonitoringPlan.scheduleWindowName(for: id)) == nil)
+        #expect(MonitoringPlan.ruleID(fromPauseActivityName: "garbage") == nil)
+        #expect(MonitoringPlan.temporaryPauseMinutes == 15)
+    }
 }

@@ -22,7 +22,7 @@ enum RuleActivation: Equatable, Sendable {
     case inactive(nextStart: Date?)
     /// Currently blocking; ends at the associated date.
     case active(until: Date)
-    /// Would be blocking, but the user unblocked it until the associated date.
+    /// Would be blocking, but the user temporarily paused it until the associated date.
     case paused(until: Date)
 
     var isBlocking: Bool {

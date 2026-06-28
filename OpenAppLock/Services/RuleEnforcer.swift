@@ -72,7 +72,7 @@ final class RuleEnforcer {
     /// *any* covering rule blocks it and rules never cancel each other out:
     /// whichever limit's budget is spent first blocks the app regardless of the
     /// other's remaining budget; an Allow-Only schedule cannot punch a hole
-    /// through another rule's block (see `ShieldController`); and a soft unblock
+    /// through another rule's block (see `ShieldController`); and a temporary pause
     /// pauses only the rule it was invoked on. There is deliberately no central
     /// merge of selections — that would be the one place a block could be
     /// accidentally dropped.
@@ -155,7 +155,7 @@ final class RuleEnforcer {
         return (isBlocking, true)
     }
 
-    /// Clears a pause that has elapsed so the rule re-arms at its next window.
+    /// Clears a pause that has elapsed so the rule re-arms once the pause lapses.
     private func expireStalePauseIfNeeded(_ rule: BlockingRule, at now: Date) {
         guard let pausedUntil = rule.pausedUntil, pausedUntil <= now else { return }
         rule.pausedUntil = nil
@@ -242,7 +242,7 @@ final class RuleEnforcer {
     }
 
     /// Whether an open-limit rule should carry its proactive gate right now:
-    /// enabled, scheduled today, not unblocked, and not inside a granted open
+    /// enabled, scheduled today, not paused, and not inside a granted open
     /// session (which would otherwise be cut short). Mirrors
     /// `LimitEnforcement.handleDayStart` so the foreground and background agree.
     private func shouldGateOpenLimit(

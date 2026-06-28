@@ -24,7 +24,7 @@ final class BlockingRule {
     var name: String
     var kindRaw: String
     var isEnabled: Bool
-    /// Hard block: while the rule is active it cannot be disabled, edited, or unblocked.
+    /// Hard block: while the rule is active it cannot be disabled, edited, or paused.
     var hardMode: Bool
     /// The reusable app list this rule blocks (or allows, in Allow Only mode).
     ///
@@ -39,7 +39,7 @@ final class BlockingRule {
     /// Legacy denormalized count; superseded by `appList?.selectionCount`.
     var selectionCount: Int
     var dayNumbers: [Int]
-    /// When set, the rule's current window is suspended (user tapped Unblock).
+    /// When set, the rule's current block is temporarily paused (user tapped Pause).
     /// Cleared automatically once the date passes; never set while Hard Mode is active.
     var pausedUntil: Date?
     var createdAt: Date

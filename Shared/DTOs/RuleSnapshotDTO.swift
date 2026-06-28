@@ -52,7 +52,7 @@ nonisolated struct RuleSnapshotDTO: Codable, Equatable {
         }
     }
 
-    /// Whether the user unblocked this rule for the rest of the day.
+    /// Whether the user temporarily paused this rule (the pause has not yet elapsed).
     func isPaused(at now: Date) -> Bool {
         guard let pausedUntil else { return false }
         return pausedUntil > now

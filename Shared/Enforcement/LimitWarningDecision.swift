@@ -14,7 +14,7 @@ enum LimitWarningDecision {
     ///
     /// Eligible only when the time-limit notification is on (toggle AND
     /// authorization, via ``NotificationPreferences``), the rule is an enabled
-    /// time limit that is scheduled today and not unblocked, and its budget is
+    /// time limit that is scheduled today and not paused, and its budget is
     /// not already spent (a late/stale warn after the block already fired must
     /// not nag).
     static func content(

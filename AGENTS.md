@@ -14,7 +14,7 @@ OpenAppLock/                    App target (iOS 26, SwiftUI + SwiftData)
                             RulePreset
   Logic/                    Pure, heavily unit-tested:
                             RuleStatus (derived status + labels, usage-aware),
-                            RulePolicy (Hard Mode gating, unblock/pause,
+                            RulePolicy (Hard Mode gating, temporary pause,
                             app-list lock), UsageDisplay (Usage-section text)
   Services/                 ScreenTimeAuthorization (FamilyControls behind a
                             protocol + mock), RuleEnforcer (rules → shields),
@@ -103,9 +103,11 @@ un-prefixed doc remains off-limits to agent edits.
   `disabled / dormant / active(until:) / paused(until:) / upcoming(startsAt:)`.
   Countdown labels round hours **up** (e.g. "6h left").
 - **Hard Mode**: `RulePolicy` is the single gate — while a hard-mode rule is
-  actively blocking, canEdit/canDisable/canDelete/canUnblock are all false.
-  Soft rules can be "unblocked", which sets `pausedUntil` = window end (the
-  rule re-arms at its next window).
+  actively blocking, canEdit/canDisable/canDelete/canPause are all false.
+  Soft schedule/time-limit rules with >15 min left support a **Temporary Pause**
+  (`RulePolicy.pause`): a 15-minute lift (`pausedUntil = now + 15m`), re-armed in
+  the background by a one-shot `pause-<uuid>` DeviceActivity. Open-limit and
+  Hard Mode rules can't be paused.
 - Shields: one `ManagedSettingsStore` per rule (`rule-<uuid>`), tracked in
   UserDefaults for stray cleanup.
 - `RuleEnforcer.refresh` is the only place shields change; the post-onboarding
@@ -143,7 +145,7 @@ Where each topic is documented:
 | App lists (model, picker, library, edit) + legacy migration | `OpenAppLock/Models/AppList.swift`, `OpenAppLock/Views/AppLists/*`, `OpenAppLock/Services/AppListMigration.swift` |
 | Home: Currently Blocking + Usage, row strings | `OpenAppLock/Views/Home/HomeView.swift`, `OpenAppLock/Logic/UsageDisplay.swift` |
 | Schedule activation / time-window math (incl. midnight crossing) | `Shared/Models/RuleSchedule.swift`, `Shared/Enforcement/ScheduleEnforcement.swift` |
-| Unblock / disable / delete / Hard Mode gating | `OpenAppLock/Logic/RulePolicy.swift` |
+| Temporary pause / disable / delete / Hard Mode gating | `OpenAppLock/Logic/RulePolicy.swift` |
 | Foreground reconciliation; **overlapping rules → strictest wins** | `OpenAppLock/Services/RuleEnforcer.swift`, `Shared/Enforcement/ShieldController.swift` |
 | Time/open-limit behavior, granted opens, proactive gate | `Shared/Enforcement/LimitEnforcement.swift`, `Shared/Stores/UsageLedger.swift` (+ `Shared/DTOs/RuleUsageDTO.swift`), `Shared/Stores/OpenSessionStore.swift` |
 | Shield text + "Open" button / press handling | `Shared/Enforcement/ShieldPresentation.swift`, `OpenAppLockShieldConfig/ShieldConfigurationExtension.swift`, `OpenAppLockShieldAction/ShieldActionExtension.swift` |
@@ -231,6 +233,7 @@ them): `newRuleButton`, `ruleCard-<name>`, `ruleStatus-<name>`,
 `hardModeToggle`, `dailyLimitStepper(+Value)`,
 `maxOpensStepper(+Value)`, `commitRuleButton`, `doneButton`,
 `toggleEnabledButton`, `deleteRuleButton`, `closeDetailButton`,
+`pauseRuleButton`, `resumeRuleButton`,
 `detailRuleName`, `detailStatusLabel`, `detailRow-<label>`,
 `hardModeLockedNotice`, `sidebarItem-<section>` (iPad sidebar rows: `home` /
 `rules` / `settings`), settings About links: `githubLinkButton` /
@@ -254,8 +257,10 @@ Gotchas learned the hard way:
 - Inside tinted Button rows, hierarchical `.primary`/`.secondary`/`.tertiary`
   foreground styles resolve to the tint (e.g. blue chevrons); use concrete
   `Color.primary`/`Color.secondary`/`Color(.tertiaryLabel)`.
-- The unblock confirmation dialog is queried via `app.sheets.buttons[...]`
-  (a bare `buttons["Unblock"]` is ambiguous with the row label).
+- The pause confirmation dialog is queried via `app.sheets.buttons[...]`
+  (a bare `buttons["Pause for 15 minutes"]` is ambiguous with the
+  `pauseRuleButton` row label). Pause/Resume live on the rule detail overlay;
+  Home's Currently Blocking rows navigate to it.
 - **iPad presentation differs and the UI suite runs on both** (CI matrix:
   iPhone + iPad). On iPad the shell is a sidebar, not a tab bar — navigate with
   the idiom-aware `goToHomeTab()/…` and `waitForMainUI()` helpers, never bare

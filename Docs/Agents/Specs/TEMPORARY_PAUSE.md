@@ -238,13 +238,13 @@ Two documented caveats:
 Above the **Edit Rule** button, in the actions section:
 
 - if the rule is currently paused → **Resume Blocking** (instant; no
-  confirmation; not destructive; e.g. `play.fill`), `accessibilityIdentifier`
+  confirmation; e.g. `play.fill`), `accessibilityIdentifier`
   `resumeRuleButton`, calls `enforcer.resume(rule, rules:)`;
-- else if `canPause` → **Pause for 15 minutes** (`role: .destructive`; e.g.
+- else if `canPause` → **Pause for 15 minutes** (a plain button — **not**
+  styled destructive, so its icon and title share the standard tint; e.g.
   `pause.circle`), `accessibilityIdentifier` `pauseRuleButton`, opens a
-  `confirmationDialog` ("Pause apps for 15 minutes? Blocking resumes
-  automatically." with a destructive confirm) that calls
-  `enforcer.pause(rule, rules:)`;
+  `confirmationDialog` ("Apps unblock for 15 minutes, then blocking resumes
+  automatically.") that calls `enforcer.pause(rule, rules:)`;
 - else → nothing (just Edit Rule, or the Hard Mode lock notice).
 
 The detail **"Unblocks allowed"** row is renamed to **"Pausing allowed"**, valued

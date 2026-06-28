@@ -818,10 +818,11 @@ git commit -m "feat: re-engage shields when a temporary pause activity ends"
   Add the builder (e.g. below `detailList`):
 
 ```swift
-    /// Resume when paused; otherwise a destructive, confirmed "Pause for 15
-    /// minutes" when the block is pausable (schedule/time-limit, not Hard Mode,
-    /// >15 min left). Nothing for an open-limit, hard-locked, or nearly-finished
-    /// block.
+    /// Resume when paused; otherwise a confirmed "Pause for 15 minutes" when the
+    /// block is pausable (schedule/time-limit, not Hard Mode, >15 min left).
+    /// Nothing for an open-limit, hard-locked, or nearly-finished block. The
+    /// Pause button is a plain (non-destructive) button so its icon and title
+    /// share the standard tint.
     @ViewBuilder
     private func pauseOrResumeButton(
         dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date
@@ -834,7 +835,7 @@ git commit -m "feat: re-engage shields when a temporary pause activity ends"
             }
             .accessibilityIdentifier("resumeRuleButton")
         } else if RulePolicy.canPause(dto, usage: usage, at: now) {
-            Button(role: .destructive) {
+            Button {
                 pendingPause = true
             } label: {
                 Label("Pause for 15 minutes", systemImage: "pause.circle")
@@ -845,7 +846,7 @@ git commit -m "feat: re-engage shields when a temporary pause activity ends"
                 isPresented: $pendingPause,
                 titleVisibility: .visible
             ) {
-                Button("Pause for 15 minutes", role: .destructive) {
+                Button("Pause for 15 minutes") {
                     enforcer.pause(rule, rules: rules)
                     pendingPause = false
                 }

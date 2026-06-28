@@ -134,7 +134,7 @@ struct RuleDetailSheet: View {
             }
             .accessibilityIdentifier("resumeRuleButton")
         } else if RulePolicy.canPause(dto, usage: usage, at: now) {
-            Button(role: .destructive) {
+            Button {
                 pendingPause = true
             } label: {
                 Label("Pause for 15 minutes", systemImage: "pause.circle")
@@ -145,7 +145,7 @@ struct RuleDetailSheet: View {
                 isPresented: $pendingPause,
                 titleVisibility: .visible
             ) {
-                Button("Pause for 15 minutes", role: .destructive) {
+                Button("Pause for 15 minutes") {
                     enforcer.pause(rule, rules: rules)
                     pendingPause = false
                 }

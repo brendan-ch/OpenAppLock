@@ -58,37 +58,29 @@ struct SettingsView: View {
                 } footer: {
                     if isUninstallProtectionLocked {
                         Text(
-                            "Locked while a Hard Mode rule is actively blocking — Uninstall "
-                                + "Protection can't be changed until the block ends.")
+                            "Locked while a Hard Mode rule is actively blocking.")
                             .accessibilityIdentifier("uninstallProtectionLockedNotice")
                     } else {
                         Text(
                             "While on, apps can't be deleted from this device whenever a "
-                                + "Hard Mode rule is actively blocking — so the block can't be "
-                                + "removed by uninstalling.")
+                                + "Hard Mode rule is actively blocking.")
                     }
                 }
                 Section {
                     NavigationLink {
                         ManageAppListsView()
                     } label: {
-                        Label("Manage App Lists", systemImage: "square.stack.3d.up")
+                        Label("App Lists", systemImage: "square.stack.3d.up")
                     }
                     .accessibilityIdentifier("manageAppListsButton")
-                } header: {
-                    Text("App Lists").textCase(nil)
-                }
-                Section {
+                    
                     NavigationLink {
                         NotificationSettingsView()
                     } label: {
                         Label("Notifications", systemImage: "bell.badge")
                     }
                     .accessibilityIdentifier("notificationSettingsButton")
-                } header: {
-                    Text("Notifications").textCase(nil)
-                }
-                Section {
+                    
                     NavigationLink {
                         DiagnosticLogsView()
                     } label: {
@@ -96,12 +88,9 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("diagnosticsLogsRow")
                 } header: {
-                    Text("Diagnostics").textCase(nil)
-                } footer: {
-                    Text(
-                        "Records how and when blocks execute, for troubleshooting. Export a day "
-                            + "to share it.")
+                    Text("More Settings").textCase(nil)
                 }
+                
                 linkSection
                 if launch.isUITesting {
                     // Test-only probe: the destination of the last intercepted

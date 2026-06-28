@@ -428,6 +428,21 @@ struct RuleSchedulerTests {
         scheduler.sync(rules: [rule])
         #expect(monitor.monitoredNames.contains(pauseName))
     }
+
+    @Test("sync reaps a pause re-arm for a rule that no longer exists")
+    func reapsPauseReArmForDeletedRule() throws {
+        let (scheduler, monitor, _) = makeScheduler()
+        let rule = try scheduleRule(name: "Work Time", start: 9 * 60, end: 17 * 60)
+        let pauseName = MonitoringPlan.pauseActivityName(for: rule.id)
+        scheduler.scheduleResumeReArm(
+            for: rule.id, until: date(2025, 1, 6, 10, 15),
+            now: date(2025, 1, 6, 10, 0), calendar: utc)
+        #expect(monitor.monitoredNames.contains(pauseName))
+
+        // The rule is gone from the sync set (deleted mid-pause) → reaped.
+        scheduler.sync(rules: [])
+        #expect(!monitor.monitoredNames.contains(pauseName))
+    }
 }
 
 @MainActor

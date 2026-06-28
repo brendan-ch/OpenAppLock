@@ -11,9 +11,9 @@ import SwiftUI
 /// Rule summary presented as a plain sheet: inline title with a live status
 /// caption, the rule's facts as labeled rows, and — above "Edit Rule" — a
 /// Pause/Resume control. A blocking, pausable soft rule offers "Pause for 15
-/// minutes" (a confirmed, destructive temporary lift); a paused rule offers
-/// "Resume Blocking". "Edit Rule" pushes the editor; a hard-locked rule shows a
-/// lock notice instead.
+/// minutes" (a confirmed temporary lift); a paused rule offers "Resume
+/// Blocking". "Edit Rule" pushes the editor; a hard-locked rule shows a lock
+/// notice instead.
 struct RuleDetailSheet: View {
     let rule: BlockingRule
 
@@ -118,10 +118,10 @@ struct RuleDetailSheet: View {
         }
     }
 
-    /// Resume when paused; otherwise a destructive, confirmed "Pause for 15
-    /// minutes" when the block is pausable (schedule/time-limit, not Hard Mode,
-    /// >15 min left). Nothing for an open-limit, hard-locked, or nearly-finished
-    /// block.
+    /// Resume when paused; otherwise a confirmed "Pause for 15 minutes" when the
+    /// block is pausable (schedule/time-limit, not Hard Mode, >15 min left). A
+    /// plain (non-destructive) button, so its icon and title share one tint.
+    /// Nothing for an open-limit, hard-locked, or nearly-finished block.
     @ViewBuilder
     private func pauseOrResumeButton(
         dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date

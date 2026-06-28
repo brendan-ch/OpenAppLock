@@ -21,7 +21,7 @@ private func scheduleSnapshot(
 ) -> RuleSnapshotDTO {
     RuleSnapshotDTO(
         id: id, name: name, kindRaw: RuleKind.schedule.rawValue, isEnabled: enabled,
-        hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
+        hardMode: false, selectionModeRaw: "block",
         selectionData: hasApps ? Data([1]) : nil,
         dayNumbers: days.map(\.rawValue), startMinutes: start, endMinutes: end,
         dailyLimitMinutes: 0, maxOpens: 0, pausedUntil: nil)

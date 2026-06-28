@@ -40,7 +40,7 @@ struct LimitWarningDecisionTests {
     ) -> RuleSnapshotDTO {
         RuleSnapshotDTO(
             id: UUID(), name: "Social", kindRaw: kind.rawValue, isEnabled: enabled,
-            hardMode: false, blockAdultContent: false, selectionModeRaw: "block",
+            hardMode: false, selectionModeRaw: "block",
             selectionData: Data([1]), dayNumbers: days.map(\.rawValue),
             startMinutes: 0, endMinutes: 0, dailyLimitMinutes: limit, maxOpens: 3,
             pausedUntil: paused)

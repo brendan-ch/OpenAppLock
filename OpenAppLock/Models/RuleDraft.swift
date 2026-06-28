@@ -12,7 +12,7 @@ import SwiftData
 ///
 /// The kind-specific options live in `configuration`, so each editor branch
 /// only ever sees the options that belong to its kind (the Schedule editor
-/// gets Block/Allow-Only and Block Adult Content; the limit editors do not).
+/// gets Block/Allow-Only mode; the limit editors do not).
 struct RuleDraft: Hashable {
     var name: String
     var days: Set<Weekday>

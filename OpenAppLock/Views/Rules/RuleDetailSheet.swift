@@ -72,14 +72,7 @@ struct RuleDetailSheet: View {
                 }
             }
             Section {
-                if RulePolicy.canEdit(dto, usage: usage, at: now) {
-                    Button {
-                        isEditing = true
-                    } label: {
-                        Label("Edit Rule", systemImage: "pencil")
-                    }
-                    .accessibilityIdentifier("editRuleButton")
-                } else {
+                if !RulePolicy.canEdit(dto, usage: usage, at: now) {
                     Label(
                         "Hard Mode is on — this rule is locked until the block ends.",
                         systemImage: "lock.fill"
@@ -97,7 +90,18 @@ struct RuleDetailSheet: View {
                     dismiss()
                 }
                 .accessibilityIdentifier("closeDetailButton")
+                
             }
+            
+            if RulePolicy.canEdit(dto, usage: usage, at: now) {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Edit", systemImage: "pencil") {
+                        isEditing = true
+                    }
+                    .accessibilityIdentifier("editRuleButton")
+                }
+            }
+            
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 1) {
                     Text(rule.name)
@@ -163,3 +167,70 @@ struct RuleDetailSheet: View {
             .accessibilityIdentifier("detailRow-\(label)")
     }
 }
+
+#if DEBUG
+/// Renders the detail sheet for one scenario against an in-memory rule, so the
+/// previews exercise realistic layouts (app list attached, days, hard mode)
+/// without touching the on-disk store. The view keeps the container alive via
+/// `.modelContainer`, which is also what supplies its `modelContext`.
+@MainActor
+private func ruleDetailPreview(
+    name: String,
+    configuration: RuleConfiguration,
+    hardMode: Bool,
+    days: Set<Weekday> = Weekday.weekdays,
+    appList: (name: String, appCount: Int)? = ("Focus Apps", 4)
+) -> some View {
+    let container = try! ModelContainer(
+        for: BlockingRule.self, AppList.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let rule = BlockingRule(
+        name: name, configuration: configuration, hardMode: hardMode, days: days)
+    // Relationship assignment is only safe once both models are inserted.
+    container.mainContext.insert(rule)
+    if let appList {
+        let list = AppList(name: appList.name, selectionCount: appList.appCount)
+        container.mainContext.insert(list)
+        rule.appList = list
+    }
+    return RuleDetailSheet(rule: rule)
+        .modelContainer(container)
+        .environment(RuleEnforcer(shields: MockShieldController()))
+}
+
+#Preview("Schedule") {
+    ruleDetailPreview(
+        name: "Work Time",
+        configuration: .schedule(
+            ScheduleConfig(
+                startMinutes: 9 * 60, endMinutes: 17 * 60,
+                selectionMode: .block, blockAdultContent: true)),
+        hardMode: false)
+}
+
+#Preview("Schedule · Hard Mode") {
+    // A full-day window (start == end) on every day reads as actively blocking
+    // whenever the preview runs, surfacing the Hard Mode lock notice and hiding
+    // Edit — the state that is otherwise hard to catch in a static preview.
+    ruleDetailPreview(
+        name: "Locked In",
+        configuration: .schedule(ScheduleConfig(startMinutes: 0, endMinutes: 0)),
+        hardMode: true,
+        days: Weekday.everyDay)
+}
+
+#Preview("Time Limit") {
+    ruleDetailPreview(
+        name: "Time Keeper",
+        configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 45)),
+        hardMode: false)
+}
+
+#Preview("Open Limit") {
+    ruleDetailPreview(
+        name: "Gate Keeper",
+        configuration: .openLimit(OpenLimitConfig(maxOpens: 5)),
+        hardMode: false,
+        days: Weekday.everyDay)
+}
+#endif

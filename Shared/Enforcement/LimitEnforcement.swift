@@ -154,6 +154,29 @@ struct LimitEnforcement {
         shield(snapshot)
     }
 
+    /// A temporary pause on a time-limit rule reached an edge of its one-shot
+    /// re-arm activity. Re-engage the shield when the budget is still spent and
+    /// the rule is otherwise eligible, else clear. Called on both edges, so it
+    /// clears while the pause is still in effect (`isPaused`) and re-shields a
+    /// spent budget once it lapses. Schedule rules use `ScheduleEnforcement`.
+    func handlePauseEnded(
+        ruleID: UUID, now: Date = .now, calendar: Calendar = .current
+    ) {
+        let rid = ruleID.uuidString.prefix(8)
+        guard let snapshot = snapshots.snapshot(for: ruleID), snapshot.isEnabled,
+              snapshot.kind == .timeLimit, !snapshot.isPaused(at: now),
+              snapshot.isScheduledToday(at: now, calendar: calendar),
+              snapshot.limitReached(
+                given: ledger.usage(for: ruleID, onDayContaining: now, calendar: calendar), at: now)
+        else {
+            Diag.log(.scheduler, "pauseEnded rule-\(rid): clear (ineligible/under budget/still paused)")
+            shields.clearShield(ruleID: ruleID)
+            return
+        }
+        Diag.log(.scheduler, .event, "pauseEnded rule-\(rid): re-shield (budget spent)")
+        shield(snapshot)
+    }
+
     /// "Open" pressed on the shield. Spends one open and lifts the rule's
     /// shield when the budget allows; returns whether a session was granted.
     @discardableResult

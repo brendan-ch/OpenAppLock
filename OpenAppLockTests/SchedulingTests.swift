@@ -602,6 +602,34 @@ struct LimitEnforcementTests {
 
         #expect(shields.shieldedRuleIDs.isEmpty)
     }
+
+    @Test("handlePauseEnded re-shields a spent, eligible time-limit rule")
+    func pauseEndedReshieldsSpentTimeLimit() {
+        let (enforcement, shields, ledger, store) = makeEnforcement()
+        let snap = snapshot(kind: .timeLimit, limit: 45)
+        store.save([snap])
+        ledger.setUsage(
+            RuleUsageDTO(minutesUsed: 45), for: snap.id, onDayContaining: monday, calendar: utc)
+
+        enforcement.handlePauseEnded(ruleID: snap.id, now: monday, calendar: utc)
+
+        #expect(shields.shieldedRuleIDs == [snap.id])
+    }
+
+    @Test("handlePauseEnded clears the shield while the pause is still in effect")
+    func pauseEndedClearsWhilePaused() {
+        let (enforcement, shields, ledger, store) = makeEnforcement()
+        let snap = snapshot(kind: .timeLimit, limit: 45, pausedUntil: date(2025, 1, 6, 10, 15))
+        store.save([snap])
+        ledger.setUsage(
+            RuleUsageDTO(minutesUsed: 45), for: snap.id, onDayContaining: monday, calendar: utc)
+        shields.applyShield(ruleID: snap.id, selectionData: nil, mode: .block)
+
+        // monday (10:00) is before pausedUntil (10:15), so the pause is still active.
+        enforcement.handlePauseEnded(ruleID: snap.id, now: monday, calendar: utc)
+
+        #expect(shields.shieldedRuleIDs.isEmpty)
+    }
 }
 
 @MainActor

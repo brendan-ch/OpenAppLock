@@ -1,7 +1,7 @@
 # Temporary Pause
 
-Status: **Designed** (2026-06-28) — not yet implemented · Branch:
-`feat/temporary-pauses`
+Status: **Implemented** (2026-06-28) — full suite green (351/351); on-device
+re-arm verification pending (see §7) · Branch: `feat/temporary-pauses`
 
 Design spec for replacing the current "Unblock" affordance with a **Temporary
 Pause** that lifts an individual block for 15 minutes and re-engages it

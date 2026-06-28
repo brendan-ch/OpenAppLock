@@ -377,6 +377,57 @@ struct RuleSchedulerTests {
             RuleScheduler.selectionFingerprint(Data([1]))
                 == "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a")
     }
+
+    @Test("scheduleResumeReArm starts a one-shot pause activity padded one minute past the pause")
+    func schedulesPauseReArm() {
+        let (scheduler, monitor, _) = makeScheduler()
+        let id = UUID()
+        scheduler.scheduleResumeReArm(
+            for: id, until: date(2025, 1, 6, 10, 15),
+            now: date(2025, 1, 6, 10, 0), calendar: utc)
+        let name = MonitoringPlan.pauseActivityName(for: id)
+        #expect(monitor.monitoredNames.contains(name))
+        #expect(monitor.startedOneShots[name]?.end == date(2025, 1, 6, 10, 16))  // +1 padding
+    }
+
+    @Test("cancelResumeReArm stops the pause activity")
+    func cancelsPauseReArm() {
+        let (scheduler, monitor, _) = makeScheduler()
+        let id = UUID()
+        scheduler.scheduleResumeReArm(
+            for: id, until: date(2025, 1, 6, 10, 15),
+            now: date(2025, 1, 6, 10, 0), calendar: utc)
+        scheduler.cancelResumeReArm(for: id)
+        #expect(!monitor.monitoredNames.contains(MonitoringPlan.pauseActivityName(for: id)))
+    }
+
+    @Test("sync reaps a pause re-arm whose rule is no longer paused")
+    func reapsStalePauseReArm() throws {
+        let (scheduler, monitor, _) = makeScheduler()
+        let rule = try scheduleRule(name: "Work Time", start: 9 * 60, end: 17 * 60)
+        let pauseName = MonitoringPlan.pauseActivityName(for: rule.id)
+        scheduler.scheduleResumeReArm(
+            for: rule.id, until: date(2025, 1, 6, 10, 15),
+            now: date(2025, 1, 6, 10, 0), calendar: utc)
+        #expect(monitor.monitoredNames.contains(pauseName))
+
+        scheduler.sync(rules: [rule])  // rule.pausedUntil == nil → reaped
+        #expect(!monitor.monitoredNames.contains(pauseName))
+    }
+
+    @Test("sync keeps a pause re-arm for a still-paused rule")
+    func keepsActivePauseReArm() throws {
+        let (scheduler, monitor, _) = makeScheduler()
+        let rule = try scheduleRule(name: "Work Time", start: 9 * 60, end: 17 * 60)
+        rule.pausedUntil = date(2025, 1, 6, 10, 15)
+        let pauseName = MonitoringPlan.pauseActivityName(for: rule.id)
+        scheduler.scheduleResumeReArm(
+            for: rule.id, until: rule.pausedUntil!,
+            now: date(2025, 1, 6, 10, 0), calendar: utc)
+
+        scheduler.sync(rules: [rule])
+        #expect(monitor.monitoredNames.contains(pauseName))
+    }
 }
 
 @MainActor

@@ -133,16 +133,16 @@ struct UsageStatusTests {
         #expect(!status.isActive)
     }
 
-    @Test("Unblocking a limit-blocked rule pauses it until midnight")
-    func unblockPausesUntilMidnight() {
+    @Test("Pausing a limit-blocked rule sets a 15-minute pause")
+    func pausePausesLimitRule() {
         let rule = timeLimitRule(limit: 45)
         let usage = RuleUsageDTO(minutesUsed: 45)
-        #expect(RulePolicy.canUnblock(rule.dto, usage: usage, at: mondayMorning, calendar: utc))
-        #expect(RulePolicy.unblock(rule, usage: usage, at: mondayMorning, calendar: utc))
-        #expect(rule.pausedUntil == date(2025, 1, 7, 0, 0))
+        #expect(RulePolicy.canPause(rule.dto, usage: usage, at: mondayMorning, calendar: utc))
+        #expect(RulePolicy.pause(rule, usage: usage, at: mondayMorning, calendar: utc))
+        #expect(rule.pausedUntil == date(2025, 1, 6, 10, 15))
         #expect(
             rule.dto.status(at: mondayMorning, calendar: utc, usage: usage)
-                == .paused(until: date(2025, 1, 7, 0, 0)))
+                == .paused(until: date(2025, 1, 6, 10, 15)))
     }
 
     @Test("Hard Mode locks a limit-blocked rule and its app lists")
@@ -151,7 +151,7 @@ struct UsageStatusTests {
         rule.hardMode = true
         let usage = RuleUsageDTO(minutesUsed: 45)
         #expect(RulePolicy.isHardLocked(rule.dto, usage: usage, at: mondayMorning, calendar: utc))
-        #expect(!RulePolicy.canUnblock(rule.dto, usage: usage, at: mondayMorning, calendar: utc))
+        #expect(!RulePolicy.canPause(rule.dto, usage: usage, at: mondayMorning, calendar: utc))
         #expect(
             !RulePolicy.canEditAppLists(
                 snapshots: [rule].map(\.dto), usageFor: { _ in usage }, at: mondayMorning, calendar: utc))

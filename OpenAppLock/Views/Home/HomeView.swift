@@ -76,7 +76,7 @@ struct HomeView: View {
         let usage = enforcer.usage(for: dto, at: now) ?? RuleUsageDTO()
         let status = liveStatus(for: rule, now: now)
         return Button {
-            if RulePolicy.canUnblock(dto, usage: enforcer.usage(for: dto, at: now), at: now) {
+            if RulePolicy.canPause(dto, usage: enforcer.usage(for: dto, at: now), at: now) {
                 unblockCandidate = rule
             } else {
                 hardModeBlockedAttempt = true
@@ -111,7 +111,7 @@ struct HomeView: View {
             titleVisibility: .visible
         ) {
             Button("Unblock", role: .destructive) {
-                RulePolicy.unblock(rule, usage: enforcer.usage(for: rule.dto))
+                RulePolicy.pause(rule, usage: enforcer.usage(for: rule.dto))
                 enforcer.refresh(rules: rules)
                 unblockCandidate = nil
             }

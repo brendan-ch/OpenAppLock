@@ -58,7 +58,7 @@ struct RuleEnforcerTests {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(name: "Work Time")
-        RulePolicy.unblock(rule, at: mondayDuringWork, calendar: utc)
+        RulePolicy.pause(rule, at: mondayDuringWork, calendar: utc)
 
         enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 

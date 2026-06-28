@@ -212,7 +212,7 @@ struct RuleEditorView: View {
             Toggle("Hard Mode", isOn: $draft.hardMode)
                 .accessibilityIdentifier("hardModeToggle")
         } footer: {
-            Text("No unblocks allowed while the rule is blocking.")
+            Text("This block can't be paused while it's active.")
         }
     }
 

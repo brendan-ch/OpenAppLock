@@ -12,8 +12,6 @@ struct HomeView: View {
     @Environment(RuleEnforcer.self) private var enforcer
     @Query(sort: \BlockingRule.createdAt) private var rules: [BlockingRule]
 
-    @State private var unblockCandidate: BlockingRule?
-    @State private var hardModeBlockedAttempt = false
     @State private var detailRule: BlockingRule?
 
     var body: some View {
@@ -22,11 +20,6 @@ struct HomeView: View {
                 homeList(now: timeline.date)
             }
             .navigationTitle("Home")
-        }
-        .alert("Hard Mode is on", isPresented: $hardModeBlockedAttempt) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("This block can't be lifted until it ends.")
         }
         .sheet(item: $detailRule) { rule in
             RuleDetailSheet(rule: rule)
@@ -68,19 +61,15 @@ struct HomeView: View {
     }
 
     /// A blocking rule: leading kind icon, name, and a "<Type> · <context>"
-    /// subtitle (a schedule shows its countdown, a limit its usage). Trailing
-    /// affordance: a lock when Hard Mode (the block can't be lifted), otherwise
-    /// an Unblock button.
+    /// subtitle (a schedule shows its countdown, a limit its usage). Tapping
+    /// opens the rule's detail overlay, where Pause/Resume (for supported soft
+    /// rules) lives.
     private func blockingRow(for rule: BlockingRule, now: Date) -> some View {
         let dto = rule.dto
         let usage = enforcer.usage(for: dto, at: now) ?? RuleUsageDTO()
         let status = liveStatus(for: rule, now: now)
         return Button {
-            if RulePolicy.canPause(dto, usage: enforcer.usage(for: dto, at: now), at: now) {
-                unblockCandidate = rule
-            } else {
-                hardModeBlockedAttempt = true
-            }
+            detailRule = rule
         } label: {
             HStack {
                 kindIcon(for: rule)
@@ -92,32 +81,9 @@ struct HomeView: View {
                         .foregroundStyle(Color.secondary)
                 }
                 Spacer()
-                if rule.hardMode {
-                    Image(systemName: "lock.fill")
-                        .foregroundStyle(.red)
-                } else {
-                    Text("Unblock")
-                        .foregroundStyle(.tint)
-                }
             }
         }
         .accessibilityIdentifier("blockedTile-\(rule.name)")
-        .confirmationDialog(
-            "Unblock \(rule.name)?",
-            isPresented: Binding(
-                get: { unblockCandidate?.id == rule.id },
-                set: { if !$0 { unblockCandidate = nil } }
-            ),
-            titleVisibility: .visible
-        ) {
-            Button("Unblock", role: .destructive) {
-                RulePolicy.pause(rule, usage: enforcer.usage(for: rule.dto))
-                enforcer.refresh(rules: rules)
-                unblockCandidate = nil
-            }
-        } message: {
-            Text("Blocking resumes with the rule's next window.")
-        }
     }
 
     /// The rule's kind icon, tinted, sized to align row text. Decorative — the

@@ -96,17 +96,14 @@ final class RuleManagementUITests: XCTestCase {
         XCTAssertTrue(app.buttons["ruleCard-Work Time"].exists)
     }
 
-    func testUnblockActiveSoftRule() throws {
+    func testCurrentlyBlockingRowOpensDetail() throws {
         let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
 
-        // The active rule surfaces in Currently Blocking (Home tab); unblocking pauses it.
+        // The blocking rule's Home row now navigates to the detail overlay,
+        // where Pause/Resume lives — no inline unblock dialog.
         app.buttons["blockedTile-Work Time"].waitToAppear().tap()
-        app.sheets.buttons["Unblock"].waitToAppear().tap()
-
-        app.staticTexts["nothingBlockedLabel"].waitToAppear()
-        // The paused state shows on the rule's card over on the Rules tab.
-        app.goToRulesTab()
-        XCTAssertEqual(app.staticTexts["ruleStatus-Work Time"].waitToAppear().label, "Paused")
+        XCTAssertEqual(app.staticTexts["detailRuleName"].waitToAppear().label, "Work Time")
+        app.buttons["pauseRuleButton"].waitToAppear()
     }
 
     func testPauseActiveSoftRuleFromDetail() throws {
@@ -146,29 +143,14 @@ final class HardModeUITests: XCTestCase {
         XCTAssertTrue(app.element("detailRow-Pausing allowed").label.contains("No"))
     }
 
-    func testHardLockedRuleCannotBeUnblocked() throws {
+    func testHardLockedBlockingRowOffersNoPause() throws {
         let app = XCUIApplication.launchOpenAppLock(seedScenario: "hard-mode-active")
 
-        // The hard rule shows a lock (not an Unblock button) in Currently Blocking;
-        // tapping the row still explains why it can't be lifted.
+        // The hard rule's Home row opens the detail overlay, which shows the
+        // lock notice and no Pause button.
         app.buttons["blockedTile-Locked In"].waitToAppear().tap()
-
-        // No unblock dialog — just the refusal alert.
-        let alert = app.alerts["Hard Mode is on"].waitToAppear()
-        XCTAssertTrue(alert.staticTexts["This block can't be lifted until it ends."].exists)
-        alert.buttons["OK"].tap()
-
-        // Still blocked.
-        XCTAssertTrue(app.buttons["blockedTile-Locked In"].exists)
-        XCTAssertFalse(app.staticTexts["nothingBlockedLabel"].exists)
-    }
-
-    func testSoftRuleUnblockOfferedButHardRuleRefused() throws {
-        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
-
-        app.buttons["blockedTile-Work Time"].waitToAppear().tap()
-        // Soft rule: the confirmation dialog appears instead of the refusal alert.
-        app.sheets.buttons["Unblock"].waitToAppear()
-        XCTAssertFalse(app.alerts["Hard Mode is on"].exists)
+        app.element("hardModeLockedNotice").waitToAppear()
+        XCTAssertFalse(app.buttons["pauseRuleButton"].exists)
+        XCTAssertFalse(app.buttons["resumeRuleButton"].exists)
     }
 }

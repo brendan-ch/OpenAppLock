@@ -40,16 +40,12 @@ final class UsageUITests: XCTestCase {
             "A spent rule should leave Active Rules for Currently Blocking")
     }
 
-    func testSpentBudgetCanBeUnblockedUntilTomorrow() throws {
+    func testSpentBudgetRowOpensDetail() throws {
         let app = XCUIApplication.launchOpenAppLock(seedScenario: "limits")
 
+        // A spent budget's Currently Blocking row opens the detail overlay.
         app.buttons["blockedTile-Doom Scroll"].waitToAppear().tap()
-        app.sheets.buttons["Unblock"].waitToAppear().tap()
-
-        // Unblocked → paused (not blocking), so it drops back into Active Rules.
-        app.staticTexts["nothingBlockedLabel"].waitToAppear()
-        let row = app.element("activeRuleRow-Doom Scroll").waitToAppear()
-        XCTAssertTrue(row.label.contains("Paused"), "Got: \(row.label)")
+        XCTAssertEqual(app.staticTexts["detailRuleName"].waitToAppear().label, "Doom Scroll")
     }
 
     func testTappingActiveRuleOpensDetail() throws {

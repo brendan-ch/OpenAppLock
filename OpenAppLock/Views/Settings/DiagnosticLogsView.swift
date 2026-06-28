@@ -41,9 +41,7 @@ struct DiagnosticLogsView: View {
                 } header: {
                     Text("Days").textCase(nil)
                 } footer: {
-                    Text(
-                        "Each day merges the app and all Screen Time extensions, oldest entries "
-                            + "first. Logs older than 14 days are removed automatically.")
+                    Text("Logs stay on-device and do not include information about which apps are blocked.")
                 }
                 Section {
                     Button(role: .destructive) {

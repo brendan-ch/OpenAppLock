@@ -69,13 +69,12 @@ final class RuleManagementUITests: XCTestCase {
         app.goToRulesTab()
 
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
-        app.buttons["editRuleButton"].waitToAppear().tap()
 
-        // Disable lives in the ellipsis menu in the navigation bar.
+        // Disable lives in the detail overlay's ellipsis options menu.
         let actionsMenu = app.navigationBars.buttons["ruleActionsMenu"].waitToAppear()
         XCTAssertEqual(actionsMenu.label, "Rule Actions")
         actionsMenu.tap()
-        app.buttons["Disable Rule"].waitToAppear().tap()
+        app.buttons["Disable"].waitToAppear().tap()
 
         // The detail caption now reports the rule as disabled.
         let status = app.staticTexts["detailStatusLabel"].waitToAppear()
@@ -91,11 +90,10 @@ final class RuleManagementUITests: XCTestCase {
         app.goToRulesTab()
 
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
-        app.buttons["editRuleButton"].waitToAppear().tap()
 
-        // Delete lives in the ellipsis menu in the navigation bar.
+        // Delete lives in the detail overlay's ellipsis options menu.
         app.navigationBars.buttons["ruleActionsMenu"].waitToAppear().tap()
-        app.buttons["Delete Rule"].waitToAppear().tap()
+        app.buttons["Delete"].waitToAppear().tap()
 
         app.buttons["newRuleButton"].waitToAppear()
         XCTAssertFalse(
@@ -109,9 +107,10 @@ final class RuleManagementUITests: XCTestCase {
         let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
 
         // The blocking rule's Home row now navigates to the detail overlay,
-        // where Pause/Resume lives — no inline unblock dialog.
+        // whose options menu offers Pause — no inline unblock dialog.
         app.buttons["blockedTile-Work Time"].waitToAppear().tap()
         XCTAssertEqual(app.staticTexts["detailRuleName"].waitToAppear().label, "Work Time")
+        app.navigationBars.buttons["ruleActionsMenu"].waitToAppear().tap()
         app.buttons["pauseRuleButton"].waitToAppear()
     }
 
@@ -120,16 +119,19 @@ final class RuleManagementUITests: XCTestCase {
         app.goToRulesTab()
         app.buttons["ruleCard-Work Time"].waitToAppear().tap()
 
+        // Pause lives in the options menu; its confirmation shares the row label.
+        app.navigationBars.buttons["ruleActionsMenu"].waitToAppear().tap()
         app.buttons["pauseRuleButton"].waitToAppear().tap()
-        // The confirmation dialog's button shares the row label, so scope to the sheet.
         app.sheets.buttons["Pause for 15 minutes"].waitToAppear().tap()
 
-        // Paused → Resume replaces Pause, and the status reads a resume countdown.
-        app.buttons["resumeRuleButton"].waitToAppear()
-        XCTAssertTrue(app.staticTexts["detailStatusLabel"].label.contains("Resumes in"))
+        // Paused → the status reads a resume countdown and the menu offers Resume.
+        XCTAssertTrue(
+            app.staticTexts["detailStatusLabel"].waitToAppear().label.contains("Resumes in"))
+        app.navigationBars.buttons["ruleActionsMenu"].tap()
+        app.buttons["resumeRuleButton"].waitToAppear().tap()
 
-        // Resume re-blocks immediately.
-        app.buttons["resumeRuleButton"].tap()
+        // Resume re-blocks immediately, so Pause is offered again.
+        app.navigationBars.buttons["ruleActionsMenu"].waitToAppear().tap()
         app.buttons["pauseRuleButton"].waitToAppear()
     }
 }
@@ -156,9 +158,10 @@ final class HardModeUITests: XCTestCase {
         let app = XCUIApplication.launchOpenAppLock(seedScenario: "hard-mode-active")
 
         // The hard rule's Home row opens the detail overlay, which shows the
-        // lock notice and no Pause button.
+        // lock notice and hides the options menu (so no Pause/Resume).
         app.buttons["blockedTile-Locked In"].waitToAppear().tap()
         app.element("hardModeLockedNotice").waitToAppear()
+        XCTAssertFalse(app.buttons["ruleActionsMenu"].exists)
         XCTAssertFalse(app.buttons["pauseRuleButton"].exists)
         XCTAssertFalse(app.buttons["resumeRuleButton"].exists)
     }

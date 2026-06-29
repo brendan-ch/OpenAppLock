@@ -8,12 +8,12 @@ import FamilyControls
 import SwiftData
 import SwiftUI
 
-/// Rule summary presented as a plain sheet: inline title with a live status
-/// caption, the rule's facts as labeled rows, and — above "Edit Rule" — a
-/// Pause/Resume control. A blocking, pausable soft rule offers "Pause for 15
-/// minutes" (a confirmed temporary lift); a paused rule offers "Resume
-/// Blocking". "Edit Rule" pushes the editor; a hard-locked rule shows a lock
-/// notice instead.
+/// Rule summary presented as a plain sheet: an inline title with a live status
+/// caption, the rule's facts as labeled rows, an "Edit" button, and an options
+/// menu (ellipsis) mirroring the editor's. The menu offers a temporary Pause (a
+/// confirmed 15-minute lift) or Resume on a pausable/paused block, plus Disable/
+/// Enable and Delete. A hard-locked rule hides both the menu and Edit and shows
+/// a lock notice instead.
 struct RuleDetailSheet: View {
     let rule: BlockingRule
 
@@ -87,7 +87,6 @@ struct RuleDetailSheet: View {
                 }
             }
             Section {
-                pauseOrResumeButton(dto: dto, usage: usage, now: now)
                 if !RulePolicy.canEdit(dto, usage: usage, at: now) {
                     Label(
                         "Hard Mode is on — this rule is locked until the block ends.",
@@ -110,6 +109,9 @@ struct RuleDetailSheet: View {
             }
             
             if RulePolicy.canEdit(dto, usage: usage, at: now) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ruleActionsMenu(dto: dto, usage: usage, now: now)
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Edit", systemImage: "pencil") {
                         isEditing = true
@@ -130,43 +132,62 @@ struct RuleDetailSheet: View {
                 }
             }
         }
+        // Pause confirmation, triggered by the options menu's "Pause" item.
+        // Attached here (outside the Menu) so the menu dismisses first and the
+        // dialog then presents reliably.
+        .confirmationDialog(
+            "Pause \(rule.name)?",
+            isPresented: $pendingPause,
+            titleVisibility: .visible
+        ) {
+            Button("Pause for 15 minutes") {
+                enforcer.pause(rule, rules: rules)
+                pendingPause = false
+            }
+        } message: {
+            Text("Apps unblock for 15 minutes, then blocking resumes automatically.")
+        }
     }
 
-    /// Resume when paused; otherwise a confirmed "Pause for 15 minutes" when the
-    /// block is pausable (schedule/time-limit, not Hard Mode, >15 min left). A
-    /// plain (non-destructive) button, so its icon and title share one tint.
-    /// Nothing for an open-limit, hard-locked, or nearly-finished block.
+    /// The viewing-view options menu, mirroring the editor's. A temporary Pause
+    /// (when the block is pausable) or Resume (when paused) leads, then Disable/
+    /// Enable and Delete. Surfaced only when the rule is not hard-locked, so a
+    /// hard block exposes no weakening action — the lock notice shows instead.
     @ViewBuilder
-    private func pauseOrResumeButton(
+    private func ruleActionsMenu(
         dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date
     ) -> some View {
-        if dto.isPaused(at: now) {
-            Button {
-                enforcer.resume(rule, rules: rules)
-            } label: {
-                Label("Resume Blocking", systemImage: "play.fill")
-            }
-            .accessibilityIdentifier("resumeRuleButton")
-        } else if RulePolicy.canPause(dto, usage: usage, at: now) {
-            Button {
-                pendingPause = true
-            } label: {
-                Label("Pause for 15 minutes", systemImage: "pause.circle")
-            }
-            .accessibilityIdentifier("pauseRuleButton")
-            .confirmationDialog(
-                "Pause \(rule.name)?",
-                isPresented: $pendingPause,
-                titleVisibility: .visible
-            ) {
-                Button("Pause for 15 minutes") {
-                    enforcer.pause(rule, rules: rules)
-                    pendingPause = false
+        Menu {
+            if dto.isPaused(at: now) {
+                Button {
+                    enforcer.resume(rule, rules: rules)
+                } label: {
+                    Label("Resume Blocking", systemImage: "play.fill")
                 }
-            } message: {
-                Text("Apps unblock for 15 minutes, then blocking resumes automatically.")
+                .accessibilityIdentifier("resumeRuleButton")
+            } else if RulePolicy.canPause(dto, usage: usage, at: now) {
+                Button {
+                    pendingPause = true
+                } label: {
+                    Label("Pause for 15 minutes", systemImage: "pause.circle")
+                }
+                .accessibilityIdentifier("pauseRuleButton")
             }
+            Button(rule.isEnabled ? "Disable" : "Enable") {
+                rule.isEnabled.toggle()
+                rule.pausedUntil = nil
+            }
+            .accessibilityIdentifier("disableRuleButton")
+            Button("Delete", role: .destructive) {
+                pendingDeletion = true
+                dismiss()
+            }
+            .accessibilityIdentifier("deleteRuleButton")
+        } label: {
+            Image(systemName: "ellipsis")
         }
+        .accessibilityLabel("Rule Actions")
+        .accessibilityIdentifier("ruleActionsMenu")
     }
 
     /// Whether this rule selects any app/category/web domain to scope the report

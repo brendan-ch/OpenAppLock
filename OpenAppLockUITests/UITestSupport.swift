@@ -110,10 +110,14 @@ extension XCUIApplication {
 }
 
 extension XCUIElement {
-    /// Asserts the element appears within the timeout, then returns it.
+    /// Asserts the element appears within the timeout, then returns it. The
+    /// default is generous (15s) because the CI runners are frequently
+    /// overloaded — sheet/picker presentations and SwiftData-backed renders can
+    /// take well over 5s there, which flaked positive "wait for it" assertions
+    /// across the UI suite. A wrong/absent element still fails, just later.
     @discardableResult
     func waitToAppear(
-        timeout: TimeInterval = 5, file: StaticString = #filePath, line: UInt = #line
+        timeout: TimeInterval = 15, file: StaticString = #filePath, line: UInt = #line
     ) -> XCUIElement {
         XCTAssertTrue(
             waitForExistence(timeout: timeout),

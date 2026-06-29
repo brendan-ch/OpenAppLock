@@ -92,11 +92,9 @@ final class AppListUITests: XCTestCase {
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
         app.buttons["editRuleButton"].waitToAppear().tap()
 
-        // Open the "Distractions" list for editing (a sheet overlay). The picker
-        // sheet + list render can take a while on an overloaded CI runner, so
-        // give the edit button a longer-than-default appearance window.
+        // Open the "Distractions" list for editing (a sheet overlay).
         app.element("selectedAppsRow").waitToAppear().tap()
-        app.buttons["editAppListButton-Distractions"].waitToAppear(timeout: 15).tap()
+        app.buttons["editAppListButton-Distractions"].waitToAppear().tap()
 
         // Make an outstanding edit by renaming the list (submit to drop the
         // keyboard, which otherwise interferes with resolving the dialog).

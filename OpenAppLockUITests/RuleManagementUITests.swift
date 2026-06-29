@@ -37,18 +37,27 @@ final class RuleManagementUITests: XCTestCase {
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
         app.buttons["editRuleButton"].waitToAppear().tap()
 
-        // On iPad the editor is a shorter, centered form sheet; the Hard Mode row
-        // can start below the fold and isn't rendered until scrolled into view.
-        let hardMode = app.switches["hardModeToggle"]
-        if !hardMode.waitForExistence(timeout: 2) {
+        // Wait for the editor to render the Hard Mode row, then scroll it into
+        // view only if it is actually below the fold. (The previous
+        // `waitForExistence(timeout: 2)` gate could flake `false` on a slow runner
+        // before the editor had rendered and trigger a spurious `swipeUp()`, which
+        // destabilized the iPad form sheet and made the next tap dismiss it.)
+        let hardMode = app.switches["hardModeToggle"].waitToAppear()
+        if !hardMode.isHittable {
             app.swipeUp()
+            hardMode.waitToAppear()
         }
-        hardMode.waitToAppear()
         XCTAssertEqual(hardMode.label, "Hard Mode", "The Hard Mode switch must carry its label for VoiceOver")
-        // A labeled Toggle fills the row, so a centered `.tap()` lands on the
-        // label; tap the switch itself at the trailing edge to flip it.
+        XCTAssertEqual(hardMode.value as? String, "0", "Hard Mode starts off")
+
+        // A centered `.tap()` lands on the row label and doesn't flip a SwiftUI
+        // Toggle; tap the switch itself at the trailing edge. The asserted value
+        // change fails loudly here if the tap misses, rather than surfacing later
+        // as an unreachable `doneButton`.
         hardMode.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
-        app.buttons["doneButton"].tap()
+        XCTAssertEqual(hardMode.value as? String, "1", "Tapping Hard Mode should turn it on")
+
+        app.buttons["doneButton"].waitToAppear().tap()
 
         // Back on the detail view, unblocks are no longer allowed.
         let row = app.element("detailRow-Unblocks allowed").waitToAppear()

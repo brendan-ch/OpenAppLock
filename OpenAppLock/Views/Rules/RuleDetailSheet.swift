@@ -66,14 +66,24 @@ struct RuleDetailSheet: View {
                 detailRows
             }
             // Live Screen Time usage for this rule's apps, rendered inside the
-            // report extension (the only place the data is available). Gated
-            // under UI testing — the system view does not run in the harness —
-            // and blank when there is no usage.
-            if !LaunchConfiguration.current.isUITesting {
-                Section("Usage") {
-                    DeviceActivityReport(.ruleUsage, filter: usageFilter)
-                        .frame(maxWidth: .infinity, minHeight: 22, alignment: .leading)
-                        .accessibilityIdentifier("ruleUsageReport")
+            // report extension (the only place the data is available). Pushed to a
+            // full page rather than embedded here: a `DeviceActivityReport` renders
+            // out-of-process and never reports its content height back, so in a
+            // List row it clips at whatever fixed frame it is given — a full page
+            // lets it use the whole screen. Time-limit rules only (schedules have
+            // no budget; open limits are governed by opens, not duration), and only
+            // with a non-empty selection — an empty `DeviceActivityFilter` matches
+            // *all* device activity. Gated under UI testing (the system view does
+            // not run in the harness).
+            if rule.kind == .timeLimit && hasUsageSelection
+                && !LaunchConfiguration.current.isUITesting {
+                Section {
+                    NavigationLink {
+                        RuleUsageReportPage(filter: usageFilter)
+                    } label: {
+                        Label("Today's Usage", systemImage: "chart.bar")
+                    }
+                    .accessibilityIdentifier("usageReportLink")
                 }
             }
             Section {
@@ -155,11 +165,28 @@ struct RuleDetailSheet: View {
         }
     }
 
+    /// Whether this rule selects any app/category/web domain to scope the report
+    /// to. An empty selection makes `usageFilter`'s token sets empty, which
+    /// `DeviceActivityFilter` treats as "no restriction" (all device activity), so
+    /// the panel is hidden rather than enumerating every app.
+    private var hasUsageSelection: Bool {
+        let selection = AppSelectionCodec.decode(rule.appList?.selectionData)
+        return !selection.applicationTokens.isEmpty
+            || !selection.categoryTokens.isEmpty
+            || !selection.webDomainTokens.isEmpty
+    }
+
     /// Today's `.daily` filter scoped to this rule's selection, so the report
-    /// extension attributes only this rule's apps/categories/web domains.
+    /// extension attributes only this rule's apps/categories/web domains. The
+    /// interval is the whole day (start-of-day to start-of-next-day), not
+    /// `…end: .now` — a stable value so the filter doesn't change on every 30s
+    /// `TimelineView` tick and reload/flash the pushed report while it's open. The
+    /// daily segment still reports today's usage-so-far (no future activity to add).
     private var usageFilter: DeviceActivityFilter {
         let calendar = Calendar.current
-        let interval = DateInterval(start: calendar.startOfDay(for: .now), end: .now)
+        let startOfDay = calendar.startOfDay(for: .now)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
+        let interval = DateInterval(start: startOfDay, end: endOfDay)
         let selection = AppSelectionCodec.decode(rule.appList?.selectionData)
         return DeviceActivityFilter(
             segment: .daily(during: interval),
@@ -202,6 +229,22 @@ struct RuleDetailSheet: View {
         LabeledContent(label, value: value)
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("detailRow-\(label)")
+    }
+}
+
+/// A full-page host for a rule's usage `DeviceActivityReport`, pushed from the
+/// detail sheet. The report renders out-of-process and never reports its content
+/// height to the host, so a `List` row clips it; a full page gives it the whole
+/// screen to render the total and per-app rows (it scrolls if there are many).
+private struct RuleUsageReportPage: View {
+    let filter: DeviceActivityFilter
+
+    var body: some View {
+        DeviceActivityReport(.ruleUsage, filter: filter)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .navigationTitle("Usage")
+            .navigationBarTitleDisplayMode(.inline)
+            .accessibilityIdentifier("ruleUsageReport")
     }
 }
 

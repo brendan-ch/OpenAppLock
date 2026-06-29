@@ -271,13 +271,92 @@ struct UsageDisplayTests {
 @MainActor
 @Suite("Usage report formatter")
 struct UsageReportFormatterTests {
-    @Test("Formats today's total; blank under a minute")
+    @Test("Today's total: '<1m today' under a minute, 'No usage today' only at zero")
     func formatsTotal() {
         #expect(UsageReportFormatter.todayTotal(seconds: 0) == "No usage today")
-        #expect(UsageReportFormatter.todayTotal(seconds: 59) == "No usage today")
+        #expect(UsageReportFormatter.todayTotal(seconds: 59) == "<1m today")
         #expect(UsageReportFormatter.todayTotal(seconds: 60) == "1m today")
         #expect(UsageReportFormatter.todayTotal(seconds: 22 * 60) == "22m today")
         #expect(UsageReportFormatter.todayTotal(seconds: 72 * 60) == "1h 12m today")
         #expect(UsageReportFormatter.todayTotal(seconds: 120 * 60) == "2h today")
+    }
+
+    @Test("duration renders whole hours and minutes, '0m' for zero")
+    func durationStyle() {
+        #expect(UsageReportFormatter.duration(minutes: 0) == "0m")
+        #expect(UsageReportFormatter.duration(minutes: 45) == "45m")
+        #expect(UsageReportFormatter.duration(minutes: 60) == "1h")
+        #expect(UsageReportFormatter.duration(minutes: 72) == "1h 12m")
+        #expect(UsageReportFormatter.duration(minutes: 125) == "2h 5m")
+    }
+
+    @Test("durationLabel reads '<1m' for non-zero sub-minute usage")
+    func durationLabelStyle() {
+        #expect(UsageReportFormatter.durationLabel(seconds: 0) == "0m")
+        #expect(UsageReportFormatter.durationLabel(seconds: 1) == "<1m")
+        #expect(UsageReportFormatter.durationLabel(seconds: 59) == "<1m")
+        #expect(UsageReportFormatter.durationLabel(seconds: 60) == "1m")
+        #expect(UsageReportFormatter.durationLabel(seconds: 72 * 60) == "1h 12m")
+    }
+
+    @Test("report sums the total and lists apps heaviest-first")
+    func reportSortsApps() {
+        let data = UsageReportFormatter.report(apps: [
+            (name: "Mail", seconds: 5 * 60),
+            (name: "Instagram", seconds: 72 * 60),
+            (name: "Safari", seconds: 18 * 60),
+        ])
+        #expect(data.total == "1h 35m today")            // (5 + 72 + 18) = 95 min
+        #expect(data.apps.map(\.name) == ["Instagram", "Safari", "Mail"])
+        #expect(data.apps.map(\.durationLabel) == ["1h 12m", "18m", "5m"])
+    }
+
+    @Test("equal-usage apps are ordered by name")
+    func reportTiebreak() {
+        let data = UsageReportFormatter.report(apps: [
+            (name: "Reddit", seconds: 20 * 60),
+            (name: "Mastodon", seconds: 20 * 60),
+        ])
+        #expect(data.apps.map(\.name) == ["Mastodon", "Reddit"])
+    }
+
+    @Test("a sub-minute app is kept as a '<1m' row; a zero-second app is dropped")
+    func reportKeepsSubMinuteDropsZero() {
+        let data = UsageReportFormatter.report(apps: [
+            (name: "Instagram", seconds: 90 * 60),
+            (name: "Blip", seconds: 30),
+            (name: "Ghost", seconds: 0),
+        ])
+        #expect(data.apps.map(\.name) == ["Instagram", "Blip"])
+        #expect(data.apps.map(\.durationLabel) == ["1h 30m", "<1m"])
+    }
+
+    @Test("sub-minute apps still sum into the total")
+    func reportSubMinuteAppsSumIntoTotal() {
+        let data = UsageReportFormatter.report(apps: [
+            (name: "Apollo", seconds: 40),
+            (name: "Bree", seconds: 40),
+        ])
+        #expect(data.total == "1m today")                // 80s rounds to 1 min
+        #expect(data.apps.map(\.name) == ["Apollo", "Bree"])
+        #expect(data.apps.map(\.durationLabel) == ["<1m", "<1m"])
+    }
+
+    @Test("entries sharing a display name merge into one row (unique row identity)")
+    func reportMergesSameNameApps() {
+        let data = UsageReportFormatter.report(apps: [
+            (name: "Chat", seconds: 10 * 60),
+            (name: "Chat", seconds: 5 * 60),
+        ])
+        #expect(data.apps.map(\.name) == ["Chat"])
+        #expect(data.apps.map(\.durationLabel) == ["15m"])
+        #expect(data.total == "15m today")
+    }
+
+    @Test("report with no usage has no rows and reads 'No usage today'")
+    func reportEmpty() {
+        let data = UsageReportFormatter.report(apps: [])
+        #expect(data.total == "No usage today")
+        #expect(data.apps.isEmpty)
     }
 }

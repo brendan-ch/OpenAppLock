@@ -59,7 +59,9 @@ final class RuleCreationUITests: XCTestCase {
         let deletions = String(repeating: XCUIKeyboardKey.delete.rawValue, count: 24)
         nameField.typeText(deletions + "My Focus\n")
 
-        XCTAssertEqual(app.staticTexts["ruleEditorTitle"].label, "My Focus")
+        // The title mirrors the typed name via a SwiftUI re-render, which lags
+        // typeText on a slow runner — wait for it rather than reading it raw.
+        app.staticTexts["ruleEditorTitle"].waitForLabel("My Focus")
         app.buttons["commitRuleButton"].waitToAppear().tap()
         app.buttons["ruleCard-My Focus"].waitToAppear()
     }

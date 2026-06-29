@@ -58,7 +58,7 @@ struct RuleEnforcerTests {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(name: "Work Time")
-        RulePolicy.unblock(rule, at: mondayDuringWork, calendar: utc)
+        RulePolicy.pause(rule, at: mondayDuringWork, calendar: utc)
 
         enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
@@ -166,6 +166,52 @@ struct RuleEnforcerTests {
         enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.shieldedRuleIDs.isEmpty)
+    }
+
+    @Test("Pausing an active rule clears its shield and sets a 15-minute pause")
+    func pauseClearsShield() {
+        let shields = MockShieldController()
+        let enforcer = RuleEnforcer(shields: shields)
+        let rule = BlockingRule(name: "Work Time")
+        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        #expect(shields.shieldedRuleIDs == [rule.id])
+
+        let didPause = enforcer.pause(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
+        #expect(didPause)
+        #expect(rule.pausedUntil == date(2025, 1, 6, 10, 15))
+        #expect(shields.shieldedRuleIDs.isEmpty)
+    }
+
+    @Test("Resuming re-applies the shield and clears the pause")
+    func resumeReshields() {
+        let shields = MockShieldController()
+        let enforcer = RuleEnforcer(shields: shields)
+        let rule = BlockingRule(name: "Work Time")
+        enforcer.pause(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
+        #expect(shields.shieldedRuleIDs.isEmpty)
+
+        enforcer.resume(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
+        #expect(rule.pausedUntil == nil)
+        #expect(shields.shieldedRuleIDs == [rule.id])
+    }
+
+    @Test("Pausing schedules a background re-arm; resuming cancels it")
+    func pauseAndResumeManageReArm() {
+        let shields = MockShieldController()
+        let monitor = MockActivityMonitor()
+        let suite = "enforcer-pause-\(UUID().uuidString)"
+        let scheduler = RuleScheduler(
+            monitor: monitor,
+            snapshots: RuleSnapshotUserDefaultsStore(defaults: UserDefaults(suiteName: suite)!))
+        let enforcer = RuleEnforcer(shields: shields, scheduler: scheduler)
+        let rule = BlockingRule(name: "Work Time")
+        let pauseName = MonitoringPlan.pauseActivityName(for: rule.id)
+
+        enforcer.pause(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
+        #expect(monitor.monitoredNames.contains(pauseName))
+
+        enforcer.resume(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
+        #expect(!monitor.monitoredNames.contains(pauseName))
     }
 }
 

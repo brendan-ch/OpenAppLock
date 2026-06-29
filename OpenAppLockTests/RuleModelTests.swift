@@ -153,6 +153,21 @@ struct RuleDraftTests {
         #expect(rule.hardMode)
     }
 
+    @Test("Enabling Hard Mode via a draft edit clears any pending pause")
+    func applyHardModeClearsPause() throws {
+        let context = try makeInMemoryContext()
+        let rule = BlockingRule(name: "Work Time")
+        context.insert(rule)
+        rule.pausedUntil = date(2025, 1, 6, 10, 15)
+        var draft = RuleDraft(rule: rule)
+        draft.hardMode = true
+
+        draft.apply(to: rule)
+
+        #expect(rule.hardMode)
+        #expect(rule.pausedUntil == nil)
+    }
+
     @Test("Sanitizing trims whitespace and falls back to the kind default")
     func sanitizedName() {
         var draft = RuleDraft(kind: .schedule)

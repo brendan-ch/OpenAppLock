@@ -9,16 +9,21 @@ import SwiftData
 import SwiftUI
 
 /// Rule summary presented as a plain sheet: inline title with a live status
-/// caption, the rule's facts as labeled rows, and "Edit Rule" — which pushes
-/// the editor. A hard-locked rule shows a lock notice instead.
+/// caption, the rule's facts as labeled rows, and — above "Edit Rule" — a
+/// Pause/Resume control. A blocking, pausable soft rule offers "Pause for 15
+/// minutes" (a confirmed temporary lift); a paused rule offers "Resume
+/// Blocking". "Edit Rule" pushes the editor; a hard-locked rule shows a lock
+/// notice instead.
 struct RuleDetailSheet: View {
     let rule: BlockingRule
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(RuleEnforcer.self) private var enforcer
+    @Query(sort: \BlockingRule.createdAt) private var rules: [BlockingRule]
     @State private var isEditing = false
     @State private var pendingDeletion = false
+    @State private var pendingPause = false
 
     var body: some View {
         NavigationStack {
@@ -82,6 +87,7 @@ struct RuleDetailSheet: View {
                 }
             }
             Section {
+                pauseOrResumeButton(dto: dto, usage: usage, now: now)
                 if !RulePolicy.canEdit(dto, usage: usage, at: now) {
                     Label(
                         "Hard Mode is on — this rule is locked until the block ends.",
@@ -126,6 +132,43 @@ struct RuleDetailSheet: View {
         }
     }
 
+    /// Resume when paused; otherwise a confirmed "Pause for 15 minutes" when the
+    /// block is pausable (schedule/time-limit, not Hard Mode, >15 min left). A
+    /// plain (non-destructive) button, so its icon and title share one tint.
+    /// Nothing for an open-limit, hard-locked, or nearly-finished block.
+    @ViewBuilder
+    private func pauseOrResumeButton(
+        dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date
+    ) -> some View {
+        if dto.isPaused(at: now) {
+            Button {
+                enforcer.resume(rule, rules: rules)
+            } label: {
+                Label("Resume Blocking", systemImage: "play.fill")
+            }
+            .accessibilityIdentifier("resumeRuleButton")
+        } else if RulePolicy.canPause(dto, usage: usage, at: now) {
+            Button {
+                pendingPause = true
+            } label: {
+                Label("Pause for 15 minutes", systemImage: "pause.circle")
+            }
+            .accessibilityIdentifier("pauseRuleButton")
+            .confirmationDialog(
+                "Pause \(rule.name)?",
+                isPresented: $pendingPause,
+                titleVisibility: .visible
+            ) {
+                Button("Pause for 15 minutes") {
+                    enforcer.pause(rule, rules: rules)
+                    pendingPause = false
+                }
+            } message: {
+                Text("Apps unblock for 15 minutes, then blocking resumes automatically.")
+            }
+        }
+    }
+
     /// Whether this rule selects any app/category/web domain to scope the report
     /// to. An empty selection makes `usageFilter`'s token sets empty, which
     /// `DeviceActivityFilter` treats as "no restriction" (all device activity), so
@@ -165,19 +208,19 @@ struct RuleDetailSheet: View {
             row("During this time", rule.schedule.timeRangeLabel)
             row("On these days", rule.days.summary)
             row(config.selectionMode.displayName, appCountLabel)
-            row("Unblocks allowed", rule.hardMode ? "No" : "Yes")
+            row("Pausing allowed", rule.hardMode ? "No" : "Yes")
         case .timeLimit(let config):
             row("When I use", appCountLabel)
             row("For this long", "\(config.dailyLimitMinutes)m daily")
             row("On these days", rule.days.summary)
             row("Then block until", "Tomorrow")
-            row("Unblocks allowed", rule.hardMode ? "No" : "Yes")
+            row("Pausing allowed", rule.hardMode ? "No" : "Yes")
         case .openLimit(let config):
             row("When I open", appCountLabel)
             row("More than", "\(config.maxOpens) opens daily")
             row("On these days", rule.days.summary)
             row("Then block until", "Tomorrow")
-            row("Unblocks allowed", rule.hardMode ? "No" : "Yes")
+            row("Pausing allowed", "No")
         }
     }
 
@@ -247,6 +290,16 @@ private func ruleDetailPreview(
                 startMinutes: 9 * 60, endMinutes: 17 * 60,
                 selectionMode: .block)),
         hardMode: false)
+}
+
+#Preview("Active · pausable") {
+    // A full-day (start == end) non-Hard-Mode schedule reads as actively blocking
+    // whenever the preview runs, so the Pause control is offered.
+    ruleDetailPreview(
+        name: "Work Time",
+        configuration: .schedule(ScheduleConfig(startMinutes: 0, endMinutes: 0)),
+        hardMode: false,
+        days: Weekday.everyDay)
 }
 
 #Preview("Schedule · Hard Mode") {

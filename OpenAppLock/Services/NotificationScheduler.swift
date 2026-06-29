@@ -108,7 +108,7 @@ actor NotificationScheduler {
 
     /// Captures everything that changes the desired set: the master enable flag,
     /// the lead time, and each schedule rule's identity/window/days/has-apps.
-    /// Pause is deliberately excluded — a soft unblock only affects an already
+    /// Pause is deliberately excluded — a temporary pause only affects an already
     /// active window whose start has passed, so it never collides with a
     /// "starting soon" notification.
     private static func fingerprint(enabled: Bool, snapshots: [RuleSnapshotDTO]) -> String {

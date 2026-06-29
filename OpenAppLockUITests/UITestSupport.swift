@@ -122,4 +122,23 @@ extension XCUIElement {
         )
         return self
     }
+
+    /// Polls until the element's `label` equals `expected`, then returns it.
+    /// Use instead of reading `.label` straight after an action that updates it
+    /// asynchronously (e.g. a SwiftUI re-render after `typeText`): on a slow CI
+    /// runner the label lags the action, and a bare `XCTAssertEqual` races it.
+    @discardableResult
+    func waitForLabel(
+        _ expected: String, timeout: TimeInterval = 10,
+        file: StaticString = #filePath, line: UInt = #line
+    ) -> XCUIElement {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label == %@", expected), object: self)
+        let result = XCTWaiter().wait(for: [expectation], timeout: timeout)
+        XCTAssertEqual(
+            result, .completed,
+            "Expected label \"\(expected)\" within \(timeout)s, got \"\(label)\"",
+            file: file, line: line)
+        return self
+    }
 }

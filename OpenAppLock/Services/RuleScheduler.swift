@@ -23,6 +23,10 @@ protocol ActivityMonitoring: AnyObject {
     func startWindowMonitoring(
         name: String, intervalStartMinutes: Int, intervalEndMinutes: Int
     ) throws
+    /// Starts (or replaces) a one-shot activity spanning `start`…`end`
+    /// wall-clock, carrying no events — used to re-engage a shield when a
+    /// temporary pause ends (its `intervalDidEnd` wakes the monitor).
+    func startOneShotMonitoring(name: String, from start: Date, to end: Date) throws
     func stopMonitoring(names: [String])
     var monitoredNames: [String] { get }
 }
@@ -88,6 +92,49 @@ final class RuleScheduler {
         }
 
         reconcile(plans)
+        reapStalePauseActivities(rules: rules)
+    }
+
+    /// Starts the one-shot re-arm that re-engages `ruleID`'s shield when its
+    /// temporary pause ends. The interval runs one minute past `pausedUntil` so
+    /// it stays above DeviceActivity's 15-minute floor and `intervalDidEnd`
+    /// fires after the pause has lapsed. Best-effort: the foreground
+    /// reconciliation loop is the safety net.
+    func scheduleResumeReArm(
+        for ruleID: UUID, until pausedUntil: Date,
+        now: Date = .now, calendar: Calendar = .current
+    ) {
+        guard let end = calendar.date(byAdding: .minute, value: 1, to: pausedUntil) else { return }
+        let name = MonitoringPlan.pauseActivityName(for: ruleID)
+        do {
+            try monitor.startOneShotMonitoring(name: name, from: now, to: end)
+            Diag.log(.scheduler, .event, "scheduled pause re-arm \(name)")
+        } catch {
+            Diag.error(.scheduler, "pause re-arm start failed \(name): \(error.localizedDescription)")
+        }
+    }
+
+    /// Cancels a rule's pending pause re-arm (on resume, or when the pause is
+    /// otherwise cleared). Safe to call when none is running.
+    func cancelResumeReArm(for ruleID: UUID) {
+        monitor.stopMonitoring(names: [MonitoringPlan.pauseActivityName(for: ruleID)])
+    }
+
+    /// Stops any `pause-` re-arm activity whose rule is no longer paused (or no
+    /// longer exists) — the stop-only hygiene step that frees an activity slot
+    /// after a disable/delete/resume/pause-clearing edit. Never starts a re-arm
+    /// (that would push its interval forward every refresh and it would never
+    /// fire), and keeps re-arms for not-yet-cleared (still `pausedUntil`) rules
+    /// so a natural expiry's background re-shield still fires.
+    private func reapStalePauseActivities(rules: [BlockingRule]) {
+        let pausedRuleIDs = Set(rules.filter { $0.pausedUntil != nil }.map(\.id))
+        let stale = monitor.monitoredNames.filter { name in
+            guard let id = MonitoringPlan.ruleID(fromPauseActivityName: name) else { return false }
+            return !pausedRuleIDs.contains(id)
+        }
+        guard !stale.isEmpty else { return }
+        Diag.log(.scheduler, "reap \(stale.count) stale pause activities: \(stale.joined(separator: ","))")
+        monitor.stopMonitoring(names: stale)
     }
 
     /// The daily enforcement activity for a limit rule. Time limits carry one
@@ -306,6 +353,17 @@ final class DeviceActivityCenterMonitor: ActivityMonitoring {
         try center.startMonitoring(DeviceActivityName(name), during: schedule)
     }
 
+    func startOneShotMonitoring(name: String, from start: Date, to end: Date) throws {
+        let calendar = Calendar.current
+        let components: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
+        let schedule = DeviceActivitySchedule(
+            intervalStart: calendar.dateComponents(components, from: start),
+            intervalEnd: calendar.dateComponents(components, from: end),
+            repeats: false
+        )
+        try center.startMonitoring(DeviceActivityName(name), during: schedule)
+    }
+
     func stopMonitoring(names: [String]) {
         center.stopMonitoring(names.map { DeviceActivityName($0) })
     }
@@ -315,6 +373,7 @@ final class DeviceActivityCenterMonitor: ActivityMonitoring {
 final class MockActivityMonitor: ActivityMonitoring {
     private(set) var startedEvents: [String: [String: Int]] = [:]
     private(set) var startedWindows: [String: (start: Int, end: Int)] = [:]
+    private(set) var startedOneShots: [String: (start: Date, end: Date)] = [:]
     private(set) var startCallCount = 0
     private(set) var monitoredNames: [String] = []
 
@@ -333,6 +392,14 @@ final class MockActivityMonitor: ActivityMonitoring {
     ) throws {
         startCallCount += 1
         startedWindows[name] = (intervalStartMinutes, intervalEndMinutes)
+        if !monitoredNames.contains(name) {
+            monitoredNames.append(name)
+        }
+    }
+
+    func startOneShotMonitoring(name: String, from start: Date, to end: Date) throws {
+        startCallCount += 1
+        startedOneShots[name] = (start, end)
         if !monitoredNames.contains(name) {
             monitoredNames.append(name)
         }

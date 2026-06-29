@@ -13,6 +13,7 @@ import Testing
 struct RulePolicyTests {
     let mondayDuringWork = date(2025, 1, 6, 10, 0)
     let mondayEvening = date(2025, 1, 6, 19, 0)
+    let mondayNearWindowEnd = date(2025, 1, 6, 16, 50)  // 10 min left in 09–17
 
     func rule(hardMode: Bool) -> BlockingRule {
         BlockingRule(name: "Work Time", hardMode: hardMode)
@@ -25,7 +26,7 @@ struct RulePolicyTests {
         #expect(!RulePolicy.canEdit(rule.dto, at: mondayDuringWork, calendar: utc))
         #expect(!RulePolicy.canDisable(rule.dto, at: mondayDuringWork, calendar: utc))
         #expect(!RulePolicy.canDelete(rule.dto, at: mondayDuringWork, calendar: utc))
-        #expect(!RulePolicy.canUnblock(rule.dto, at: mondayDuringWork, calendar: utc))
+        #expect(!RulePolicy.canPause(rule.dto, at: mondayDuringWork, calendar: utc))
         #expect(!RulePolicy.canTurnOffHardMode(rule.dto, at: mondayDuringWork, calendar: utc))
     }
 
@@ -47,35 +48,73 @@ struct RulePolicyTests {
         #expect(RulePolicy.canEdit(rule.dto, at: mondayDuringWork, calendar: utc))
     }
 
-    @Test("Active non-Hard-Mode rules may be unblocked")
-    func softRuleUnblockable() {
+    @Test("Active non-Hard-Mode rules may be paused")
+    func softRulePausable() {
         let rule = rule(hardMode: false)
-        #expect(RulePolicy.canUnblock(rule.dto, at: mondayDuringWork, calendar: utc))
+        #expect(RulePolicy.canPause(rule.dto, at: mondayDuringWork, calendar: utc))
     }
 
-    @Test("Unblocking pauses the rule until its window ends")
-    func unblockPausesUntilWindowEnd() {
+    @Test("Pausing sets pausedUntil 15 minutes out and reports paused")
+    func pauseSetsFifteenMinutes() {
         let rule = rule(hardMode: false)
-        let didUnblock = RulePolicy.unblock(rule, at: mondayDuringWork, calendar: utc)
-        #expect(didUnblock)
-        #expect(rule.pausedUntil == date(2025, 1, 6, 17, 0))
+        let didPause = RulePolicy.pause(rule, at: mondayDuringWork, calendar: utc)
+        #expect(didPause)
+        #expect(rule.pausedUntil == date(2025, 1, 6, 10, 15))
         #expect(rule.dto.status(at: mondayDuringWork, calendar: utc)
-            == .paused(until: date(2025, 1, 6, 17, 0)))
+            == .paused(until: date(2025, 1, 6, 10, 15)))
     }
 
-    @Test("Unblocking a Hard Mode rule is refused and changes nothing")
-    func hardModeUnblockRefused() {
+    @Test("Pausing a Hard Mode rule is refused and changes nothing")
+    func hardModePauseRefused() {
         let rule = rule(hardMode: true)
-        let didUnblock = RulePolicy.unblock(rule, at: mondayDuringWork, calendar: utc)
-        #expect(!didUnblock)
+        #expect(!RulePolicy.pause(rule, at: mondayDuringWork, calendar: utc))
         #expect(rule.pausedUntil == nil)
         #expect(rule.dto.status(at: mondayDuringWork, calendar: utc).isActive)
     }
 
-    @Test("Unblocking an inactive rule is refused")
-    func inactiveUnblockRefused() {
+    @Test("Pausing an inactive rule is refused")
+    func inactivePauseRefused() {
         let rule = rule(hardMode: false)
-        #expect(!RulePolicy.unblock(rule, at: mondayEvening, calendar: utc))
+        #expect(!RulePolicy.pause(rule, at: mondayEvening, calendar: utc))
+        #expect(rule.pausedUntil == nil)
+    }
+
+    @Test("Pause is unavailable when the block has 15 minutes or less left")
+    func pauseHiddenNearWindowEnd() {
+        let rule = rule(hardMode: false)
+        #expect(!RulePolicy.canPause(rule.dto, at: mondayNearWindowEnd, calendar: utc))
+        #expect(!RulePolicy.pause(rule, at: mondayNearWindowEnd, calendar: utc))
+    }
+
+    @Test("Open-limit rules are never pausable, even when blocking")
+    func openLimitNotPausable() {
+        let rule = BlockingRule(
+            name: "Gate Keeper",
+            configuration: .openLimit(OpenLimitConfig(maxOpens: 5)),
+            days: Weekday.everyDay)
+        let spent = RuleUsageDTO(opensUsed: 5)
+        #expect(rule.dto.status(at: mondayDuringWork, calendar: utc, usage: spent).isActive)
+        #expect(!RulePolicy.canPause(rule.dto, usage: spent, at: mondayDuringWork, calendar: utc))
+    }
+
+    @Test("A spent time-limit rule is pausable")
+    func timeLimitPausable() {
+        let rule = BlockingRule(
+            name: "Time Keeper",
+            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 45)),
+            days: Weekday.everyDay)
+        let spent = RuleUsageDTO(minutesUsed: 45)
+        #expect(RulePolicy.canPause(rule.dto, usage: spent, at: mondayDuringWork, calendar: utc))
+        #expect(RulePolicy.pause(rule, usage: spent, at: mondayDuringWork, calendar: utc))
+        #expect(rule.pausedUntil == date(2025, 1, 6, 10, 15))
+    }
+
+    @Test("Resume clears the pause")
+    func resumeClearsPause() {
+        let rule = rule(hardMode: false)
+        RulePolicy.pause(rule, at: mondayDuringWork, calendar: utc)
+        #expect(rule.pausedUntil != nil)
+        RulePolicy.resume(rule)
         #expect(rule.pausedUntil == nil)
     }
 }

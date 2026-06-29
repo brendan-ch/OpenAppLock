@@ -16,6 +16,7 @@ enum MonitoringPlan {
     private static let scheduleWindowLatePrefix = "sched2-"
     private static let warnActivityPrefix = "tlwarn-"
     private static let warnEventPrefix = "warn-"
+    private static let pausePrefix = "pause-"
 
     /// How early the "time limit almost up" notification fires, in minutes of
     /// remaining allowance.
@@ -25,6 +26,12 @@ enum MonitoringPlan {
     /// minimum schedule interval, so an "open" lasts at most this long before
     /// the shield returns.
     static let openSessionMinutes = 15
+
+    /// Wall-clock length of a temporary pause. 15 minutes is DeviceActivity's
+    /// minimum schedule interval, so the one-shot re-arm that re-engages the
+    /// shield can fire right at the pause's end (with one extra minute of
+    /// interval padding, as for granted opens).
+    static let temporaryPauseMinutes = 15
 
     /// The always-on, midnight-to-midnight activity tracking a rule's day.
     static func dailyActivityName(for ruleID: UUID) -> String {
@@ -44,6 +51,17 @@ enum MonitoringPlan {
     static func ruleID(fromSessionActivityName name: String) -> UUID? {
         guard name.hasPrefix(sessionPrefix) else { return nil }
         return UUID(uuidString: String(name.dropFirst(sessionPrefix.count)))
+    }
+
+    /// The one-shot activity that re-engages a rule's shield when its temporary
+    /// pause ends. A distinct prefix means no other parser misclassifies it.
+    static func pauseActivityName(for ruleID: UUID) -> String {
+        pausePrefix + ruleID.uuidString
+    }
+
+    static func ruleID(fromPauseActivityName name: String) -> UUID? {
+        guard name.hasPrefix(pausePrefix) else { return nil }
+        return UUID(uuidString: String(name.dropFirst(pausePrefix.count)))
     }
 
     /// The primary window activity for a schedule rule. A second

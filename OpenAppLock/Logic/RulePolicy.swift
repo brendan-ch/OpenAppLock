@@ -12,8 +12,8 @@ import Foundation
 /// The read-only gates are predicates over a `RuleSnapshotDTO` and derive their
 /// "actively blocking" judgement from the shared `RuleActivation` primitive, so
 /// the foreground gates and the background (extension) enforcement can never
-/// disagree. The one mutation, `unblock`, still takes the `BlockingRule` it
-/// pauses.
+/// disagree. The mutations — `pause` (a 15-minute temporary lift) and `resume`
+/// — take the `BlockingRule` whose `pausedUntil` they set or clear.
 ///
 /// Limit rules block on spent usage rather than the clock, so their gates
 /// take the day's `RuleUsageDTO`; passing nil treats them as not blocking.
@@ -47,13 +47,20 @@ enum RulePolicy {
         !isHardLocked(snapshot, usage: usage, at: now, calendar: calendar)
     }
 
-    /// Whether the user may lift the current block early ("Unblock").
-    /// Requires an active block and Hard Mode off.
-    static func canUnblock(
+    /// Whether the user may temporarily pause the current block. Requires an
+    /// active block, Hard Mode off, a pausable kind (schedule or time limit —
+    /// open limits are never pausable), and more than `temporaryPauseMinutes`
+    /// left on the block (a near-finished block isn't worth pausing, and this
+    /// keeps the background re-arm above DeviceActivity's 15-minute floor).
+    static func canPause(
         _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
-        snapshot.activation(usage: usage, at: now, calendar: calendar).isBlocking && !snapshot.hardMode
+        guard !snapshot.hardMode,
+            snapshot.kind == .schedule || snapshot.kind == .timeLimit,
+            case let .active(until) = snapshot.activation(usage: usage, at: now, calendar: calendar)
+        else { return false }
+        return until.timeIntervalSince(now) > Double(MonitoringPlan.temporaryPauseMinutes * 60)
     }
 
     /// Hard Mode can always be turned on, but never off while the rule is
@@ -109,24 +116,24 @@ enum RulePolicy {
         enabled && isAnyHardLocked(snapshots: snapshots, usageFor: usageFor, at: now, calendar: calendar)
     }
 
-    /// Pauses the rule's current block. Returns false (and changes nothing)
-    /// when unblocking is not allowed. Schedule rules re-arm at their next
-    /// window; limit rules re-arm at midnight with the next day's budget.
+    /// Temporarily pauses the rule's current block for `temporaryPauseMinutes`.
+    /// Returns false (and changes nothing) when pausing is not allowed. The
+    /// block re-arms on its own once the pause elapses (the derived status flips
+    /// back to active; the foreground and the background re-arm re-apply the
+    /// shield).
     @discardableResult
-    static func unblock(
+    static func pause(
         _ rule: BlockingRule, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
-        guard canUnblock(rule.dto, usage: usage, at: now, calendar: calendar) else { return false }
-        switch rule.kind {
-        case .schedule:
-            guard let window = rule.schedule.activeWindow(containing: now, calendar: calendar)
-            else { return false }
-            rule.pausedUntil = window.end
-        case .timeLimit, .openLimit:
-            guard let midnight = calendar.nextMidnight(after: now) else { return false }
-            rule.pausedUntil = midnight
-        }
+        guard canPause(rule.dto, usage: usage, at: now, calendar: calendar) else { return false }
+        rule.pausedUntil = calendar.date(
+            byAdding: .minute, value: MonitoringPlan.temporaryPauseMinutes, to: now)
         return true
+    }
+
+    /// Ends a temporary pause immediately so the block re-engages now.
+    static func resume(_ rule: BlockingRule) {
+        rule.pausedUntil = nil
     }
 }

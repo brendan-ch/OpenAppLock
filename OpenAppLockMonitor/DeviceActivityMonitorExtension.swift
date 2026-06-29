@@ -36,6 +36,19 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         )
     }
 
+    /// A temporary pause activity reached an interval edge: recompute the rule's
+    /// shield from its snapshot. At the start edge the rule is still paused, so
+    /// this clears; at the end edge the pause has lapsed, so it re-shields a
+    /// still-blocking rule. Open limits are never pausable.
+    private func reEnforceAfterPause(ruleID: UUID) {
+        guard let snapshot = RuleSnapshotUserDefaultsStore().snapshot(for: ruleID) else { return }
+        switch snapshot.kind {
+        case .schedule: scheduleEnforcement.reconcile(ruleID: ruleID)
+        case .timeLimit: enforcement.handlePauseEnded(ruleID: ruleID)
+        case .openLimit: break
+        }
+    }
+
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
         Diag.log(.monitor, .event, "intervalDidStart \(activity.rawValue)")
@@ -45,6 +58,9 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             // A schedule window opened: shield it (the recompute honours days,
             // pause and the midnight-crossing rule).
             scheduleEnforcement.reconcile(ruleID: ruleID)
+        } else if let ruleID = MonitoringPlan.ruleID(fromPauseActivityName: activity.rawValue) {
+            // A temporary pause began: recompute (clears while still paused).
+            reEnforceAfterPause(ruleID: ruleID)
         }
         uninstallProtection.reconcile()
     }
@@ -60,6 +76,11 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             // recompute so a still-active window stays shielded and a finished
             // one clears.
             scheduleEnforcement.reconcile(ruleID: ruleID)
+        } else if let ruleID = MonitoringPlan.ruleID(fromPauseActivityName: activity.rawValue) {
+            // A temporary pause elapsed: recompute (re-shields a still-blocking
+            // rule) and stop the one-shot.
+            reEnforceAfterPause(ruleID: ruleID)
+            DeviceActivityCenter().stopMonitoring([activity])
         }
         uninstallProtection.reconcile()
     }

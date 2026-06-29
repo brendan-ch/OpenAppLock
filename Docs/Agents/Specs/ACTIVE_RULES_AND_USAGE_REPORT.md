@@ -204,8 +204,12 @@ Real Screen Time data exists only on device, never in the Simulator/harness.
   deleted.
 - Cleanup scope: **full** — remove all authoritative machinery; `limitReached`
   uses `minutesUsed`.
-- v1 report content: **total usage today**, per-rule filter.
+- v1 report content: **total usage today**, per-rule filter. *(Superseded by
+  [`USAGE_RENDERING_BY_APP.md`](USAGE_RENDERING_BY_APP.md): time-limit rules now
+  also render a per-app breakdown beneath the total.)*
 - Active Rules membership: all kinds, not currently blocking; **schedules only if
   next start ≤ 24h**.
 - Spent-limit label: **"Blocked until tomorrow"**.
-- Report shown for **all rule kinds**.
+- Report shown for **all rule kinds**. *(Superseded: now **time-limit-only** —
+  schedule and open-limit detail sheets no longer show the panel. See
+  [`USAGE_RENDERING_BY_APP.md`](USAGE_RENDERING_BY_APP.md).)*

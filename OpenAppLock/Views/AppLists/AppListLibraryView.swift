@@ -62,7 +62,7 @@ struct AppListLibraryView: View {
                     Button("New List") {
                         creatingList = true
                     }
-                    .accessibilityIdentifier("newAppListButton")
+                    .accessibilityIdentifier("emptyStateNewAppListButton")
                 }
             } else {
                 List {
@@ -82,15 +82,17 @@ struct AppListLibraryView: View {
                             .accessibilityIdentifier("appListsLockedNotice")
                         }
                     }
-                    Section {
-                        Button {
-                            creatingList = true
-                        } label: {
-                            Label("New List", systemImage: "plus")
-                        }
-                        .accessibilityIdentifier("newAppListButton")
-                    }
                 }
+            }
+        }
+        // Creating a new list stays allowed even while lists are locked — a new,
+        // unused list cannot weaken an active block — so the "+" is never gated.
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("New List", systemImage: "plus") {
+                    creatingList = true
+                }
+                .accessibilityIdentifier("newAppListButton")
             }
         }
         // The editor pops out as its own sheet overlay (with Close + confirm and
@@ -153,18 +155,15 @@ struct AppListLibraryView: View {
             .buttonStyle(.borderless)
             .swipeActions { deleteAction(list) }
         } else {
-            // Management mode: the whole row taps in (a full-width target) with
-            // a disclosure chevron. Unlocked, it opens the editor; locked, it
-            // opens the read-only detail so the apps stay viewable.
+            // Management mode: the whole row taps in (a full-width target).
+            // Unlocked, it opens the editor; locked, it opens the read-only
+            // detail so the apps stay viewable.
             Button {
                 if listsLocked { viewingList = list } else { editingList = list }
             } label: {
                 HStack {
                     rowText(list)
                     Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color(.tertiaryLabel))
                 }
                 .contentShape(Rectangle())
             }

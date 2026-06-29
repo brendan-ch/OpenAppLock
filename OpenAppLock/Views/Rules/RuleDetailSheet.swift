@@ -159,17 +159,13 @@ struct RuleDetailSheet: View {
     ) -> some View {
         Menu {
             if dto.isPaused(at: now) {
-                Button {
+                Button("Resume Blocking") {
                     enforcer.resume(rule, rules: rules)
-                } label: {
-                    Label("Resume Blocking", systemImage: "play.fill")
                 }
                 .accessibilityIdentifier("resumeRuleButton")
             } else if RulePolicy.canPause(dto, usage: usage, at: now) {
-                Button {
+                Button("Pause for 15 minutes") {
                     pendingPause = true
-                } label: {
-                    Label("Pause for 15 minutes", systemImage: "pause.circle")
                 }
                 .accessibilityIdentifier("pauseRuleButton")
             }

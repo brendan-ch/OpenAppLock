@@ -52,6 +52,18 @@ struct AppListEditorView: View {
                     Text("Name").textCase(nil)
                 }
 
+                // "Edit Apps" stays a list action (not a nav-bar item) but sits
+                // in its own section above the apps it edits, so the picker entry
+                // point reads before the current selection rather than after it.
+                Section {
+                    Button {
+                        pickingApps = true
+                    } label: {
+                        Label("Edit Apps", systemImage: "checklist")
+                    }
+                    .accessibilityIdentifier("editAppsButton")
+                }
+
                 Section {
                     if AppSelectionCodec.count(of: selection) == 0 {
                         Text("No apps yet. Edit Apps to choose what this list includes.")
@@ -60,12 +72,6 @@ struct AppListEditorView: View {
                     } else {
                         AppSelectionRows(selection: selection)
                     }
-                    Button {
-                        pickingApps = true
-                    } label: {
-                        Label("Edit Apps", systemImage: "checklist")
-                    }
-                    .accessibilityIdentifier("editAppsButton")
                 } header: {
                     HStack {
                         Text("Apps").textCase(nil)

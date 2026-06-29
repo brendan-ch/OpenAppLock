@@ -39,10 +39,10 @@ struct RuleEditorView: View {
             if case .edit(let isEnabled) = mode {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
-                        Button(isEnabled ? "Disable Rule" : "Enable Rule") {
+                        Button(isEnabled ? "Disable" : "Enable") {
                             onToggleEnabled?()
                         }
-                        Button("Delete Rule", role: .destructive) {
+                        Button("Delete", role: .destructive) {
                             onDelete?()
                         }
                     } label: {

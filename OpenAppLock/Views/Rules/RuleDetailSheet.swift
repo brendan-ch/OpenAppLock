@@ -8,12 +8,12 @@ import FamilyControls
 import SwiftData
 import SwiftUI
 
-/// Rule summary presented as a plain sheet: inline title with a live status
-/// caption, the rule's facts as labeled rows, and — above "Edit Rule" — a
-/// Pause/Resume control. A blocking, pausable soft rule offers "Pause for 15
-/// minutes" (a confirmed temporary lift); a paused rule offers "Resume
-/// Blocking". "Edit Rule" pushes the editor; a hard-locked rule shows a lock
-/// notice instead.
+/// Rule summary presented as a plain sheet: an inline title with a live status
+/// caption, the rule's facts as labeled rows, an "Edit" button, and an options
+/// menu (ellipsis) mirroring the editor's. The menu offers a temporary Pause (a
+/// confirmed 15-minute lift) or Resume on a pausable/paused block, plus Disable/
+/// Enable and Delete. A hard-locked rule hides both the menu and Edit and shows
+/// a lock notice instead.
 struct RuleDetailSheet: View {
     let rule: BlockingRule
 
@@ -87,15 +87,7 @@ struct RuleDetailSheet: View {
                 }
             }
             Section {
-                pauseOrResumeButton(dto: dto, usage: usage, now: now)
-                if RulePolicy.canEdit(dto, usage: usage, at: now) {
-                    Button {
-                        isEditing = true
-                    } label: {
-                        Label("Edit Rule", systemImage: "pencil")
-                    }
-                    .accessibilityIdentifier("editRuleButton")
-                } else {
+                if !RulePolicy.canEdit(dto, usage: usage, at: now) {
                     Label(
                         "Hard Mode is on — this rule is locked until the block ends.",
                         systemImage: "lock.fill"
@@ -113,7 +105,21 @@ struct RuleDetailSheet: View {
                     dismiss()
                 }
                 .accessibilityIdentifier("closeDetailButton")
+                
             }
+            
+            if RulePolicy.canEdit(dto, usage: usage, at: now) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ruleActionsMenu(dto: dto, usage: usage, now: now)
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Edit", systemImage: "pencil") {
+                        isEditing = true
+                    }
+                    .accessibilityIdentifier("editRuleButton")
+                }
+            }
+            
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 1) {
                     Text(rule.name)
@@ -126,43 +132,58 @@ struct RuleDetailSheet: View {
                 }
             }
         }
+        // Pause confirmation, triggered by the options menu's "Pause" item.
+        // Attached here (outside the Menu) so the menu dismisses first and the
+        // dialog then presents reliably.
+        .confirmationDialog(
+            "Pause \(rule.name)?",
+            isPresented: $pendingPause,
+            titleVisibility: .visible
+        ) {
+            Button("Pause for 15 minutes") {
+                enforcer.pause(rule, rules: rules)
+                pendingPause = false
+            }
+        } message: {
+            Text("Apps unblock for 15 minutes, then blocking resumes automatically.")
+        }
     }
 
-    /// Resume when paused; otherwise a confirmed "Pause for 15 minutes" when the
-    /// block is pausable (schedule/time-limit, not Hard Mode, >15 min left). A
-    /// plain (non-destructive) button, so its icon and title share one tint.
-    /// Nothing for an open-limit, hard-locked, or nearly-finished block.
+    /// The viewing-view options menu, mirroring the editor's. A temporary Pause
+    /// (when the block is pausable) or Resume (when paused) leads, then Disable/
+    /// Enable and Delete. Surfaced only when the rule is not hard-locked, so a
+    /// hard block exposes no weakening action — the lock notice shows instead.
     @ViewBuilder
-    private func pauseOrResumeButton(
+    private func ruleActionsMenu(
         dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date
     ) -> some View {
-        if dto.isPaused(at: now) {
-            Button {
-                enforcer.resume(rule, rules: rules)
-            } label: {
-                Label("Resume Blocking", systemImage: "play.fill")
-            }
-            .accessibilityIdentifier("resumeRuleButton")
-        } else if RulePolicy.canPause(dto, usage: usage, at: now) {
-            Button {
-                pendingPause = true
-            } label: {
-                Label("Pause for 15 minutes", systemImage: "pause.circle")
-            }
-            .accessibilityIdentifier("pauseRuleButton")
-            .confirmationDialog(
-                "Pause \(rule.name)?",
-                isPresented: $pendingPause,
-                titleVisibility: .visible
-            ) {
-                Button("Pause for 15 minutes") {
-                    enforcer.pause(rule, rules: rules)
-                    pendingPause = false
+        Menu {
+            if dto.isPaused(at: now) {
+                Button("Resume Blocking") {
+                    enforcer.resume(rule, rules: rules)
                 }
-            } message: {
-                Text("Apps unblock for 15 minutes, then blocking resumes automatically.")
+                .accessibilityIdentifier("resumeRuleButton")
+            } else if RulePolicy.canPause(dto, usage: usage, at: now) {
+                Button("Pause for 15 minutes") {
+                    pendingPause = true
+                }
+                .accessibilityIdentifier("pauseRuleButton")
             }
+            Button(rule.isEnabled ? "Disable" : "Enable") {
+                rule.isEnabled.toggle()
+                rule.pausedUntil = nil
+            }
+            .accessibilityIdentifier("disableRuleButton")
+            Button("Delete", role: .destructive) {
+                pendingDeletion = true
+                dismiss()
+            }
+            .accessibilityIdentifier("deleteRuleButton")
+        } label: {
+            Image(systemName: "ellipsis")
         }
+        .accessibilityLabel("Rule Actions")
+        .accessibilityIdentifier("ruleActionsMenu")
     }
 
     /// Whether this rule selects any app/category/web domain to scope the report
@@ -248,26 +269,79 @@ private struct RuleUsageReportPage: View {
     }
 }
 
-// All-day (start == end) schedule rules so the previews are actively blocking
-// whenever they render — the pausable one offers "Pause for 15 minutes" above
-// "Edit Rule"; the hard-mode one shows the lock notice and no Pause control.
-#Preview("Active — pausable") {
-    RuleDetailSheet(
-        rule: BlockingRule(
-            name: "Work Time",
-            configuration: .schedule(ScheduleConfig(startMinutes: 0, endMinutes: 0)),
-            days: Weekday.everyDay))
+#if DEBUG
+/// Renders the detail sheet for one scenario against an in-memory rule, so the
+/// previews exercise realistic layouts (app list attached, days, hard mode)
+/// without touching the on-disk store. The view keeps the container alive via
+/// `.modelContainer`, which is also what supplies its `modelContext`.
+@MainActor
+private func ruleDetailPreview(
+    name: String,
+    configuration: RuleConfiguration,
+    hardMode: Bool,
+    days: Set<Weekday> = Weekday.weekdays,
+    appList: (name: String, appCount: Int)? = ("Focus Apps", 4)
+) -> some View {
+    let container = try! ModelContainer(
+        for: BlockingRule.self, AppList.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let rule = BlockingRule(
+        name: name, configuration: configuration, hardMode: hardMode, days: days)
+    // Relationship assignment is only safe once both models are inserted.
+    container.mainContext.insert(rule)
+    if let appList {
+        let list = AppList(name: appList.name, selectionCount: appList.appCount)
+        container.mainContext.insert(list)
+        rule.appList = list
+    }
+    return RuleDetailSheet(rule: rule)
+        .modelContainer(container)
         .environment(RuleEnforcer(shields: MockShieldController()))
-        .modelContainer(for: [BlockingRule.self, AppList.self], inMemory: true)
 }
 
-#Preview("Hard locked") {
-    RuleDetailSheet(
-        rule: BlockingRule(
-            name: "Locked In",
-            configuration: .schedule(ScheduleConfig(startMinutes: 0, endMinutes: 0)),
-            hardMode: true,
-            days: Weekday.everyDay))
-        .environment(RuleEnforcer(shields: MockShieldController()))
-        .modelContainer(for: [BlockingRule.self, AppList.self], inMemory: true)
+#Preview("Schedule") {
+    ruleDetailPreview(
+        name: "Work Time",
+        configuration: .schedule(
+            ScheduleConfig(
+                startMinutes: 9 * 60, endMinutes: 17 * 60,
+                selectionMode: .block)),
+        hardMode: false)
 }
+
+#Preview("Active · pausable") {
+    // A full-day (start == end) non-Hard-Mode schedule reads as actively blocking
+    // whenever the preview runs, so the Pause control is offered.
+    ruleDetailPreview(
+        name: "Work Time",
+        configuration: .schedule(ScheduleConfig(startMinutes: 0, endMinutes: 0)),
+        hardMode: false,
+        days: Weekday.everyDay)
+}
+
+#Preview("Schedule · Hard Mode") {
+    // A full-day window (start == end) on every day reads as actively blocking
+    // whenever the preview runs, surfacing the Hard Mode lock notice and hiding
+    // Edit — the state that is otherwise hard to catch in a static preview.
+    ruleDetailPreview(
+        name: "Locked In",
+        configuration: .schedule(ScheduleConfig(startMinutes: 0, endMinutes: 0)),
+        hardMode: true,
+        days: Weekday.everyDay)
+}
+
+#Preview("Time Limit") {
+    ruleDetailPreview(
+        name: "Time Keeper",
+        configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 45)),
+        hardMode: false)
+}
+
+#Preview("Open Limit") {
+    ruleDetailPreview(
+        name: "Gate Keeper",
+        configuration: .openLimit(OpenLimitConfig(maxOpens: 5)),
+        hardMode: false,
+        days: Weekday.everyDay)
+}
+#endif

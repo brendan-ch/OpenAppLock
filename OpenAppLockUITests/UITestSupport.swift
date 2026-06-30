@@ -145,4 +145,25 @@ extension XCUIElement {
             file: file, line: line)
         return self
     }
+
+    /// Polls until the element's `label` contains `substring`, then returns it.
+    /// The `contains` counterpart to `waitForLabel(_:)`, for labels that embed
+    /// dynamic text around the part under test (e.g. a combined detail row,
+    /// "Status, Resumes in 15m", whose countdown varies) and update
+    /// asynchronously after an action — a bare `.label.contains` read races the
+    /// SwiftUI re-render on a slow runner.
+    @discardableResult
+    func waitForLabel(
+        containing substring: String, timeout: TimeInterval = 10,
+        file: StaticString = #filePath, line: UInt = #line
+    ) -> XCUIElement {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "label CONTAINS %@", substring), object: self)
+        let result = XCTWaiter().wait(for: [expectation], timeout: timeout)
+        XCTAssertEqual(
+            result, .completed,
+            "Expected label to contain \"\(substring)\" within \(timeout)s, got \"\(label)\"",
+            file: file, line: line)
+        return self
+    }
 }

@@ -7,10 +7,12 @@ import SwiftData
 import SwiftUI
 
 /// The Rules tab: every rule, grouped into Schedule / Time Limit / Open Limit
-/// sections. "+" creates a new rule; tapping a row opens its detail sheet.
+/// sections, alphabetical by name within each section (see
+/// `BlockingRule.displayOrder`). "+" creates a new rule; tapping a row opens its
+/// detail sheet.
 struct RulesListView: View {
     @Environment(RuleEnforcer.self) private var enforcer
-    @Query(sort: \BlockingRule.createdAt) private var rules: [BlockingRule]
+    @Query(sort: BlockingRule.displayOrder) private var rules: [BlockingRule]
 
     @State private var detailRule: BlockingRule?
     @State private var showingNewRule = false
@@ -107,3 +109,36 @@ struct RulesListView: View {
         .accessibilityIdentifier("ruleCard-\(rule.name)")
     }
 }
+
+#if DEBUG
+/// Seeds several rules per kind, inserted **out of** alphabetical order, so the
+/// preview demonstrates each section sorting alphabetically by name regardless
+/// of creation order (see `BlockingRule.displayOrder`).
+@MainActor
+private func rulesListOrderingPreview() -> some View {
+    let container = try! ModelContainer(
+        for: BlockingRule.self, AppList.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    // Within each kind the insertion order is deliberately not alphabetical.
+    let seeds: [(String, RuleConfiguration)] = [
+        ("Wind Down", .schedule(ScheduleConfig(startMinutes: 22 * 60, endMinutes: 6 * 60))),
+        ("Bedtime", .schedule(ScheduleConfig(startMinutes: 23 * 60, endMinutes: 7 * 60))),
+        ("Morning Focus", .schedule(ScheduleConfig(startMinutes: 8 * 60, endMinutes: 9 * 60))),
+        ("Time Keeper", .timeLimit(TimeLimitConfig(dailyLimitMinutes: 45))),
+        ("Doom Scroll", .timeLimit(TimeLimitConfig(dailyLimitMinutes: 30))),
+        ("Social Cap", .openLimit(OpenLimitConfig(maxOpens: 5))),
+        ("Games", .openLimit(OpenLimitConfig(maxOpens: 3))),
+    ]
+    for (name, configuration) in seeds {
+        container.mainContext.insert(
+            BlockingRule(name: name, configuration: configuration, days: Weekday.everyDay))
+    }
+    return RulesListView()
+        .modelContainer(container)
+        .environment(RuleEnforcer(shields: MockShieldController()))
+}
+
+#Preview("Alphabetical within each kind") {
+    rulesListOrderingPreview()
+}
+#endif

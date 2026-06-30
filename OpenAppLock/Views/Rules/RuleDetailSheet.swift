@@ -62,6 +62,10 @@ struct RuleDetailSheet: View {
         let usage = enforcer.usage(for: dto, at: now)
         let status = dto.status(at: now, usage: usage)
         return List {
+            Section("General") {
+                generalRows(now: now)
+            }
+            
             Section("Details") {
                 detailRows
             }
@@ -125,10 +129,10 @@ struct RuleDetailSheet: View {
                     Text(rule.name)
                         .font(.headline)
                         .accessibilityIdentifier("detailRuleName")
-                    Text("\(dto.kind.displayName), \(dto.rowContext(for: status, usage: usage ?? RuleUsageDTO(), relativeTo: now))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .accessibilityIdentifier("detailStatusLabel")
+//                    Text("\(dto.kind.displayName), \(dto.rowContext(for: status, usage: usage ?? RuleUsageDTO(), relativeTo: now))")
+//                        .font(.caption)
+//                        .foregroundStyle(.secondary)
+//                        .accessibilityIdentifier("detailStatusLabel")
                 }
             }
         }
@@ -216,6 +220,16 @@ struct RuleDetailSheet: View {
             applications: selection.applicationTokens,
             categories: selection.categoryTokens,
             webDomains: selection.webDomainTokens)
+    }
+    
+    @ViewBuilder
+    private func generalRows(now: Date) -> some View {
+        let dto = rule.dto
+        let usage = enforcer.usage(for: dto, at: now)
+        let status = dto.status(at: now, usage: usage)
+        
+        row("Kind", dto.kind.displayName)
+        row("Status", rule.dto.rowContext(for: status, usage: usage ?? RuleUsageDTO(), relativeTo: now))
     }
 
     @ViewBuilder

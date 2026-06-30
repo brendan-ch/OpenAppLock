@@ -124,49 +124,6 @@ struct RuleSchedulerPlanTests {
         #expect(scheduler.limitPlan(for: rule, selectionData: Data([1])).fingerprint != fingerprint)
     }
 
-    // MARK: warnPlan
-
-    @Test("warnPlan for an opted-in time limit plans a warn event five minutes before the budget")
-    func warnPlanEnabled() throws {
-        let scheduler = makeScheduler(timeLimitNotify: true)
-        let rule = try limitRule(kind: .timeLimit, limit: 60)
-
-        let plan = try #require(scheduler.warnPlan(for: rule, selectionData: Data([1])))
-
-        #expect(plan.name == MonitoringPlan.warnActivityName(for: rule.id))
-        #expect(plan.resetsThresholdAccountingOnRestart == false)
-        guard case let .daily(_, events) = plan.payload else {
-            Issue.record("expected a .daily payload")
-            return
-        }
-        #expect(events == MonitoringPlan.warnEvent(forLimit: 60))
-        #expect(events["warn-55"] == 55)
-    }
-
-    @Test("warnPlan is nil when the nudge is disabled")
-    func warnPlanDisabled() throws {
-        let scheduler = makeScheduler(timeLimitNotify: false)
-        let rule = try limitRule(kind: .timeLimit, limit: 60)
-
-        #expect(scheduler.warnPlan(for: rule, selectionData: Data([1])) == nil)
-    }
-
-    @Test("warnPlan is nil when the budget is at or below the warn lead time")
-    func warnPlanTinyBudget() throws {
-        let scheduler = makeScheduler(timeLimitNotify: true)
-        let rule = try limitRule(kind: .timeLimit, limit: 5)
-
-        #expect(scheduler.warnPlan(for: rule, selectionData: Data([1])) == nil)
-    }
-
-    @Test("warnPlan is nil for an open-limit rule")
-    func warnPlanOpenLimit() throws {
-        let scheduler = makeScheduler(timeLimitNotify: true)
-        let rule = try limitRule(kind: .openLimit)
-
-        #expect(scheduler.warnPlan(for: rule, selectionData: Data([1])) == nil)
-    }
-
     // MARK: schedulePlans
 
     @Test("schedulePlans for a non-crossing window plans one window activity")

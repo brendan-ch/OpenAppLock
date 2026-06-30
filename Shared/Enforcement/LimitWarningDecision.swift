@@ -21,9 +21,17 @@ enum LimitWarningDecision {
         for snapshot: RuleSnapshotDTO?,
         usage: RuleUsageDTO,
         preferences: NotificationPreferences,
+        activityDayKey: String? = nil,
         now: Date = .now,
         calendar: Calendar = .current
     ) -> (title: String, body: String)? {
+        // A warn event tagged with a prior day key is a cross-midnight stale
+        // flush from yesterday's per-day warn activity; drop it so it can't post
+        // a spurious "5 minutes left" notification on a fresh day. Nil (a legacy
+        // un-keyed activity) skips the check.
+        if let activityDayKey, activityDayKey != UsageLedger.dayKey(for: now, calendar: calendar) {
+            return nil
+        }
         guard preferences.timeLimitEndingEnabled,
               let snapshot,
               snapshot.isEnabled,

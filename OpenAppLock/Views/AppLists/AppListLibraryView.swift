@@ -33,7 +33,8 @@ struct AppListLibraryView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(RuleEnforcer.self) private var enforcer
-    @Query(sort: \AppList.createdAt) private var lists: [AppList]
+    // Alphabetical by name (see `AppList.displayOrder`).
+    @Query(sort: AppList.displayOrder) private var lists: [AppList]
     @Query private var rules: [BlockingRule]
 
     @State private var editingList: AppList?
@@ -207,3 +208,28 @@ struct AppListLibraryView: View {
         modelContext.delete(list)
     }
 }
+
+#if DEBUG
+/// Seeds several app lists, inserted **out of** alphabetical order, so the
+/// preview demonstrates the library sorting alphabetically by name regardless
+/// of creation order (see `AppList.displayOrder`). Mixed case shows the
+/// case-insensitive ordering ("games" sorts with the G's, not after "Social").
+@MainActor
+private func appListLibraryOrderingPreview() -> some View {
+    let container = try! ModelContainer(
+        for: BlockingRule.self, AppList.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    for name in ["Social", "Distractions", "Productivity", "games"] {
+        container.mainContext.insert(AppList(name: name, selectionCount: 3))
+    }
+    return NavigationStack {
+        AppListLibraryView()
+    }
+    .modelContainer(container)
+    .environment(RuleEnforcer(shields: MockShieldController()))
+}
+
+#Preview("Alphabetical order") {
+    appListLibraryOrderingPreview()
+}
+#endif

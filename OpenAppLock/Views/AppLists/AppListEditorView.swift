@@ -13,9 +13,19 @@ import SwiftUI
 /// pattern) — and a checkmark that persists the list. "Edit Apps" pushes Apple's
 /// Screen Time picker, whose selections apply live; there is no separate Save
 /// inside the picker, so the only commit point is this editor's checkmark.
+///
+/// Editing an existing list also gets an options menu (ellipsis) mirroring the
+/// rule editor's, whose only item is a destructive Delete. Deleting confirms
+/// first; a list still used by any rule can't be deleted and shows the same
+/// "This list is in use" alert as the library's swipe action. The deletion
+/// itself is delegated to the library via `onDelete`, so list removal and the
+/// picker-selection cleanup stay in one place (see `AppListLibraryView`).
 struct AppListEditorView: View {
     /// Nil creates a new list; otherwise edits (and saves into) the given one.
     let list: AppList?
+    /// Performs the actual deletion (and any selection cleanup) for the Delete
+    /// menu item. Nil for the New List flow, which has nothing to delete.
+    var onDelete: (() -> Void)?
     var onComplete: (AppList) -> Void
 
     @Environment(\.modelContext) private var modelContext
@@ -25,13 +35,20 @@ struct AppListEditorView: View {
     @State private var selection: FamilyActivitySelection
     @State private var pickingApps = false
     @State private var confirmingDiscard = false
+    @State private var confirmingDelete = false
+    @State private var deletionBlocked = false
 
     /// What the editor opened with, for detecting outstanding edits on close.
     private let originalName: String
     private let originalSelection: FamilyActivitySelection
 
-    init(list: AppList?, onComplete: @escaping (AppList) -> Void) {
+    init(
+        list: AppList?,
+        onDelete: (() -> Void)? = nil,
+        onComplete: @escaping (AppList) -> Void
+    ) {
         self.list = list
+        self.onDelete = onDelete
         self.onComplete = onComplete
         let initialName = list?.name ?? ""
         let initialSelection = AppSelectionCodec.decode(list?.selectionData)
@@ -101,6 +118,39 @@ struct AppListEditorView: View {
                         Text("Your edits to this list haven't been saved.")
                     }
                 }
+                // Editing an existing list gets the rule-editor-style options
+                // menu; its only action is a confirmed Delete.
+                if list != nil {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Menu {
+                            Button("Delete", role: .destructive) {
+                                attemptDelete()
+                            }
+                            .accessibilityIdentifier("deleteAppListButton")
+                        } label: {
+                            Image(systemName: "ellipsis")
+                        }
+                        .accessibilityLabel("List Actions")
+                        .accessibilityIdentifier("appListActionsMenu")
+                        .confirmationDialog(
+                            "Delete this list?",
+                            isPresented: $confirmingDelete,
+                            titleVisibility: .visible
+                        ) {
+                            Button("Delete", role: .destructive) {
+                                onDelete?()
+                                dismiss()
+                            }
+                        } message: {
+                            Text("This app list will be permanently removed.")
+                        }
+                        .alert("This list is in use", isPresented: $deletionBlocked) {
+                            Button("OK", role: .cancel) {}
+                        } message: {
+                            Text("Remove it from the rules that use it before deleting.")
+                        }
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm) {
                         save()
@@ -140,6 +190,18 @@ struct AppListEditorView: View {
             confirmingDiscard = true
         } else {
             dismiss()
+        }
+    }
+
+    /// A list still used by a rule can't be deleted (the same guard the
+    /// library's swipe action enforces), so surface the blocking alert instead
+    /// of confirming. An unused list raises the delete confirmation.
+    private func attemptDelete() {
+        guard let list else { return }
+        if AppList.isInUse(list, context: modelContext) {
+            deletionBlocked = true
+        } else {
+            confirmingDelete = true
         }
     }
 

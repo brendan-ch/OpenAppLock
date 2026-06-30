@@ -40,6 +40,10 @@ struct AppListLibraryView: View {
     @State private var viewingList: AppList?
     @State private var creatingList = false
     @State private var deletionBlocked = false
+    @State private var pendingDeletionList: AppList?
+    /// Set by the editor's Delete menu item; the removal runs after the editor
+    /// sheet dismisses (see the `.sheet(item:onDismiss:)` below).
+    @State private var editorDeletionList: AppList?
 
     private var isPicking: Bool { selection != nil }
 
@@ -102,8 +106,17 @@ struct AppListLibraryView: View {
                 selection?.wrappedValue = created
             }
         }
-        .sheet(item: $editingList) { list in
-            AppListEditorView(list: list) { _ in }
+        // The editor's Delete menu item marks the list and dismisses; the removal
+        // runs in `onDismiss`, once the sheet is gone, so the editor never renders
+        // a deleted model (mirrors the rule detail's deferred delete). Both delete
+        // paths still funnel through `performDelete`.
+        .sheet(item: $editingList, onDismiss: {
+            if let list = editorDeletionList {
+                performDelete(list)
+                editorDeletionList = nil
+            }
+        }) { list in
+            AppListEditorView(list: list, onDelete: { editorDeletionList = list }) { _ in }
         }
         .navigationDestination(item: $viewingList) { list in
             AppListDetailView(list: list)
@@ -112,6 +125,24 @@ struct AppListLibraryView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Remove it from the rules that use it before deleting.")
+        }
+        // Swipe-to-delete confirms before removing the list (in-use lists hit the
+        // alert above and never reach this).
+        .confirmationDialog(
+            "Delete this list?",
+            isPresented: Binding(
+                get: { pendingDeletionList != nil },
+                set: { if !$0 { pendingDeletionList = nil } }
+            ),
+            titleVisibility: .visible,
+            presenting: pendingDeletionList
+        ) { list in
+            Button("Delete", role: .destructive) {
+                performDelete(list)
+                pendingDeletionList = nil
+            }
+        } message: { _ in
+            Text("This app list will be permanently removed.")
         }
     }
 
@@ -187,7 +218,7 @@ struct AppListLibraryView: View {
     private func deleteAction(_ list: AppList) -> some View {
         if !listsLocked {
             Button("Delete", role: .destructive) {
-                delete(list)
+                attemptDelete(list)
             }
         }
     }
@@ -196,11 +227,17 @@ struct AppListLibraryView: View {
         selection?.wrappedValue?.id == list.id
     }
 
-    private func delete(_ list: AppList) {
+    /// A list still used by a rule can't be deleted — show the blocking alert.
+    /// An unused list raises the delete confirmation; `performDelete` removes it.
+    private func attemptDelete(_ list: AppList) {
         guard !AppList.isInUse(list, context: modelContext) else {
             deletionBlocked = true
             return
         }
+        pendingDeletionList = list
+    }
+
+    private func performDelete(_ list: AppList) {
         if isSelected(list) {
             selection?.wrappedValue = nil
         }

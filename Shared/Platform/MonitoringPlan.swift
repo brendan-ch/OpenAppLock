@@ -33,9 +33,19 @@ enum MonitoringPlan {
     /// interval padding, as for granted opens).
     static let temporaryPauseMinutes = 15
 
-    /// The always-on, midnight-to-midnight activity tracking a rule's day.
+    /// The always-on, midnight-to-midnight activity tracking an open-limit
+    /// rule's day. Open limits carry no usage events and have no cross-midnight
+    /// stale-flush class, so they keep this single repeating activity.
     static func dailyActivityName(for ruleID: UUID) -> String {
         dailyPrefix + ruleID.uuidString
+    }
+
+    /// The per-day enforcement activity for a time-limit rule on `dayKey`
+    /// (`UsageLedger.dayKey`, "YYYY-MM-DD"). The day key makes a cross-midnight
+    /// stale flush self-identify: a callback tagged with a prior day's key is
+    /// dropped on sight (see `LimitEnforcement.handleUsageMinutes`).
+    static func dailyActivityName(for ruleID: UUID, dayKey: String) -> String {
+        dailyPrefix + ruleID.uuidString + "-" + dayKey
     }
 
     /// The one-shot activity timing a granted open.
@@ -44,8 +54,7 @@ enum MonitoringPlan {
     }
 
     static func ruleID(fromDailyActivityName name: String) -> UUID? {
-        guard name.hasPrefix(dailyPrefix) else { return nil }
-        return UUID(uuidString: String(name.dropFirst(dailyPrefix.count)))
+        ruleID(in: name, afterPrefix: dailyPrefix)
     }
 
     static func ruleID(fromSessionActivityName name: String) -> UUID? {
@@ -104,19 +113,20 @@ enum MonitoringPlan {
         return [minuteEventName(for: minutes): minutes]
     }
 
-    /// The dedicated, opt-in "time limit almost up" activity for a rule, kept
-    /// separate from the rule's enforcement (`dailyActivityName`) activity so
-    /// toggling the notification never restarts — and so never resets the usage
-    /// threshold accounting of — the activity that actually blocks. A distinct
+    /// The dedicated, opt-in "time limit almost up" per-day activity for a rule
+    /// on `dayKey`, kept separate from the rule's enforcement
+    /// (`dailyActivityName`) activity so toggling the notification never
+    /// restarts — and so never resets the usage threshold accounting of — the
+    /// activity that actually blocks. Day-keyed like the block activity so a
+    /// cross-midnight warn flush self-identifies and is dropped. A distinct
     /// prefix means `ruleID(fromDailyActivityName:)` never mistakes it for the
     /// enforcement activity.
-    static func warnActivityName(for ruleID: UUID) -> String {
-        warnActivityPrefix + ruleID.uuidString
+    static func warnActivityName(for ruleID: UUID, dayKey: String) -> String {
+        warnActivityPrefix + ruleID.uuidString + "-" + dayKey
     }
 
     static func ruleID(fromWarnActivityName name: String) -> UUID? {
-        guard name.hasPrefix(warnActivityPrefix) else { return nil }
-        return UUID(uuidString: String(name.dropFirst(warnActivityPrefix.count)))
+        ruleID(in: name, afterPrefix: warnActivityPrefix)
     }
 
     /// The single threshold event for the warn activity: one checkpoint
@@ -127,4 +137,29 @@ enum MonitoringPlan {
         guard threshold >= 1 else { return nil }
         return [warnEventPrefix + String(threshold): threshold]
     }
+
+    /// The trailing `YYYY-MM-DD` of a day-keyed block or warn activity name, or
+    /// nil for the legacy un-keyed form (open-limit / pre-upgrade).
+    static func dayKey(fromActivityName name: String) -> String? {
+        for prefix in [dailyPrefix, warnActivityPrefix] where name.hasPrefix(prefix) {
+            let body = name.dropFirst(prefix.count)
+            guard body.count > uuidStringLength else { return nil }
+            let suffix = body.dropFirst(uuidStringLength)
+            guard suffix.hasPrefix("-") else { return nil }
+            let key = String(suffix.dropFirst())
+            return key.isEmpty ? nil : key
+        }
+        return nil
+    }
+
+    /// Recovers the rule UUID from `<prefix><uuid>` or `<prefix><uuid>-<dayKey>`.
+    /// The UUID string is a fixed 36 characters, so any day-key suffix is ignored.
+    private static func ruleID(in name: String, afterPrefix prefix: String) -> UUID? {
+        guard name.hasPrefix(prefix) else { return nil }
+        let body = name.dropFirst(prefix.count)
+        guard body.count >= uuidStringLength else { return nil }
+        return UUID(uuidString: String(body.prefix(uuidStringLength)))
+    }
+
+    private static let uuidStringLength = 36
 }

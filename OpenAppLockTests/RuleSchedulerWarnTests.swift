@@ -42,16 +42,18 @@ struct RuleSchedulerWarnTests {
         return rule
     }
 
-    @Test("Opted-in time limit registers a separate warn activity 5 min before the budget")
+    @Test("Opted-in time limit registers a per-day warn activity 5 min before the budget")
     func registersWarnActivityWhenEnabled() throws {
         let defaults = freshDefaults(timeLimitNotify: true)
         let (scheduler, monitor) = makeScheduler(defaults: defaults)
         let rule = try timeLimitRule(limit: 60)
+        let now = date(2025, 1, 6, 10, 0)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
 
-        let blockName = MonitoringPlan.dailyActivityName(for: rule.id)
-        let warnName = MonitoringPlan.warnActivityName(for: rule.id)
+        let dayKey = UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc)
+        let blockName = MonitoringPlan.dailyActivityName(for: rule.id, dayKey: dayKey)
+        let warnName = MonitoringPlan.warnActivityName(for: rule.id, dayKey: dayKey)
         #expect(monitor.monitoredNames.contains(blockName))
         #expect(monitor.monitoredNames.contains(warnName))
         // Warn fires at budget − 5.
@@ -65,11 +67,13 @@ struct RuleSchedulerWarnTests {
         let defaults = freshDefaults(timeLimitNotify: false)
         let (scheduler, monitor) = makeScheduler(defaults: defaults)
         let rule = try timeLimitRule(limit: 60)
+        let now = date(2025, 1, 6, 10, 0)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
 
-        #expect(monitor.monitoredNames.contains(MonitoringPlan.dailyActivityName(for: rule.id)))
-        #expect(!monitor.monitoredNames.contains(MonitoringPlan.warnActivityName(for: rule.id)))
+        let dayKey = UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc)
+        #expect(monitor.monitoredNames.contains(MonitoringPlan.dailyActivityName(for: rule.id, dayKey: dayKey)))
+        #expect(!monitor.monitoredNames.contains(MonitoringPlan.warnActivityName(for: rule.id, dayKey: dayKey)))
     }
 
     @Test("No warn activity when the budget is at or below the lead time")
@@ -77,10 +81,12 @@ struct RuleSchedulerWarnTests {
         let defaults = freshDefaults(timeLimitNotify: true)
         let (scheduler, monitor) = makeScheduler(defaults: defaults)
         let rule = try timeLimitRule(limit: 5)
+        let now = date(2025, 1, 6, 10, 0)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
 
-        #expect(!monitor.monitoredNames.contains(MonitoringPlan.warnActivityName(for: rule.id)))
+        let dayKey = UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc)
+        #expect(!monitor.monitoredNames.contains(MonitoringPlan.warnActivityName(for: rule.id, dayKey: dayKey)))
     }
 
     @Test("Toggling the nudge on adds/removes the warn activity without restarting the block")
@@ -88,28 +94,30 @@ struct RuleSchedulerWarnTests {
         let defaults = freshDefaults(timeLimitNotify: false)
         let (scheduler, monitor) = makeScheduler(defaults: defaults)
         let rule = try timeLimitRule(limit: 60)
-        let blockName = MonitoringPlan.dailyActivityName(for: rule.id)
-        let warnName = MonitoringPlan.warnActivityName(for: rule.id)
+        let now = date(2025, 1, 6, 10, 0)
+        let dayKey = UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc)
+        let blockName = MonitoringPlan.dailyActivityName(for: rule.id, dayKey: dayKey)
+        let warnName = MonitoringPlan.warnActivityName(for: rule.id, dayKey: dayKey)
 
-        // Nudge off: only the block activity starts (one start call).
-        scheduler.sync(rules: [rule])
-        #expect(monitor.startCallCount == 1)
+        // Nudge off: only the two block activities (today + tomorrow) start.
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        #expect(monitor.startCallCount == 2)
         #expect(!monitor.monitoredNames.contains(warnName))
 
-        // Turn the nudge on and re-sync: warn activity is added (one more start),
-        // block activity is NOT restarted (would be a third start).
+        // Turn the nudge on and re-sync: two warn activities are added (two more
+        // starts); the block activities are NOT restarted.
         defaults.set(true, forKey: AppGroup.notificationsAuthorizedKey)
         defaults.set(true, forKey: AppGroup.notifyTimeLimitEndingKey)
-        scheduler.sync(rules: [rule])
-        #expect(monitor.startCallCount == 2)
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        #expect(monitor.startCallCount == 4)
         #expect(monitor.monitoredNames.contains(blockName))
         #expect(monitor.monitoredNames.contains(warnName))
 
-        // Turn it back off: warn activity is stopped, block still present and
+        // Turn it back off: warn activities are stopped, block still present and
         // never restarted (start count unchanged).
         defaults.set(false, forKey: AppGroup.notifyTimeLimitEndingKey)
-        scheduler.sync(rules: [rule])
-        #expect(monitor.startCallCount == 2)
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        #expect(monitor.startCallCount == 4)
         #expect(monitor.monitoredNames.contains(blockName))
         #expect(!monitor.monitoredNames.contains(warnName))
     }

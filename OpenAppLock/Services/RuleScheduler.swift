@@ -27,6 +27,13 @@ protocol ActivityMonitoring: AnyObject {
     /// wall-clock, carrying no events — used to re-engage a shield when a
     /// temporary pause ends (its `intervalDidEnd` wakes the monitor).
     func startOneShotMonitoring(name: String, from start: Date, to end: Date) throws
+    /// Starts (or replaces) a one-shot day window spanning `start`…`end`
+    /// wall-clock, carrying usage-threshold `eventMinutes` over the selection —
+    /// used for a time-limit rule's self-dating per-day enforcement activity.
+    func startDayMonitoring(
+        name: String, from start: Date, to end: Date,
+        selectionData: Data?, eventMinutes: [String: Int]
+    ) throws
     func stopMonitoring(names: [String])
     var monitoredNames: [String] { get }
 }
@@ -38,6 +45,12 @@ protocol ActivityMonitoring: AnyObject {
 /// the purpose of the fingerprint given to each propagated rule.
 final class RuleScheduler {
     private static let fingerprintsKey = "monitoringFingerprints"
+
+    /// How many upcoming scheduled days a time-limit rule arms ahead (today/next
+    /// scheduled day + the one after), so the next day is registered before its
+    /// midnight even without a monitor self-arm. See the day-keyed enforcement
+    /// spec §5.
+    static let dayActivityHorizon = 2
 
     private let monitor: ActivityMonitoring
     private let snapshotsUserDefaultsStore: RuleSnapshotUserDefaultsStore
@@ -59,6 +72,7 @@ final class RuleScheduler {
         enum Payload {
             case daily(selectionData: Data?, eventMinutes: [String: Int])
             case window(start: Int, end: Int)
+            case day(from: Date, to: Date, selectionData: Data?, eventMinutes: [String: Int])
         }
         let name: String
         let fingerprint: String
@@ -69,7 +83,7 @@ final class RuleScheduler {
         let resetsThresholdAccountingOnRestart: Bool
     }
 
-    func sync(rules: [BlockingRule], at now: Date = .now) {
+    func sync(rules: [BlockingRule], at now: Date = .now, calendar: Calendar = .current) {
         snapshotsUserDefaultsStore.save(rules.map(\.dto))
         Diag.log(.scheduler, "sync: \(rules.count) rules; mirrored snapshots")
 
@@ -81,11 +95,16 @@ final class RuleScheduler {
             else { continue }
 
             switch rule.kind {
-            case .timeLimit, .openLimit:
+            case .timeLimit:
+                // Self-dating per-day activities (block + opt-in warn): a stale
+                // cross-midnight flush carries a prior day key and is dropped.
+                plans.append(
+                    contentsOf: dayPlans(
+                        for: rule, selectionData: selectionData, at: now, calendar: calendar))
+            case .openLimit:
+                // Open limits carry no usage events and have no stale-flush class;
+                // they keep the single always-on repeating activity.
                 plans.append(limitPlan(for: rule, selectionData: selectionData))
-                if let warn = warnPlan(for: rule, selectionData: selectionData) {
-                    plans.append(warn)
-                }
             case .schedule:
                 plans.append(contentsOf: schedulePlans(for: rule))
             }
@@ -155,23 +174,45 @@ final class RuleScheduler {
             resetsThresholdAccountingOnRestart: true)
     }
 
-    /// The opt-in "time limit almost up" warn activity, registered in its OWN
-    /// activity so toggling the nudge never restarts — and so never resets the
-    /// usage threshold accounting of — the activity that actually blocks. Nil
-    /// unless the rule is a time limit, the nudge is enabled, and the budget
-    /// exceeds the warn lead time.
-    func warnPlan(for rule: BlockingRule, selectionData: Data) -> PlannedActivity? {
-        guard rule.kind == .timeLimit,
-            NotificationPreferences(defaults: defaults).timeLimitEndingEnabled,
-            let warnEvents = MonitoringPlan.warnEvent(forLimit: rule.dailyLimitMinutes)
-        else { return nil }
-        let fingerprint = "tlwarn|\(rule.dailyLimitMinutes)|"
-            + Self.selectionFingerprint(selectionData)
-        return PlannedActivity(
-            name: MonitoringPlan.warnActivityName(for: rule.id),
-            fingerprint: fingerprint,
-            payload: .daily(selectionData: selectionData, eventMinutes: warnEvents),
-            resetsThresholdAccountingOnRestart: false)
+    /// The per-day block (and, when opted in, warn) activities for a time-limit
+    /// rule across the next `dayActivityHorizon` scheduled days. Each is a
+    /// non-repeating `.day` window spanning that day; the day key in the activity
+    /// name makes a cross-midnight stale flush self-identify so the monitor drops
+    /// it. The next day is armed before its midnight, preserving full-day capture
+    /// without a monitor self-arm.
+    func dayPlans(
+        for rule: BlockingRule, selectionData: Data,
+        at now: Date, calendar: Calendar = .current
+    ) -> [PlannedActivity] {
+        let selectionFP = Self.selectionFingerprint(selectionData)
+        let nudgeOn = NotificationPreferences(defaults: defaults).timeLimitEndingEnabled
+        let warnEvents = MonitoringPlan.warnEvent(forLimit: rule.dailyLimitMinutes)
+        var plans: [PlannedActivity] = []
+        for dayStart in ScheduledDayPlanner.upcomingScheduledDayStarts(
+            days: rule.days, from: now, count: Self.dayActivityHorizon, calendar: calendar)
+        {
+            let dayKey = UsageLedger.dayKey(for: dayStart, calendar: calendar)
+            let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
+            plans.append(
+                PlannedActivity(
+                    name: MonitoringPlan.dailyActivityName(for: rule.id, dayKey: dayKey),
+                    fingerprint: "\(rule.kindRaw)|\(rule.dailyLimitMinutes)|\(selectionFP)",
+                    payload: .day(
+                        from: dayStart, to: dayEnd, selectionData: selectionData,
+                        eventMinutes: MonitoringPlan.blockEvent(forLimit: rule.dailyLimitMinutes)),
+                    resetsThresholdAccountingOnRestart: true))
+            if nudgeOn, let warnEvents {
+                plans.append(
+                    PlannedActivity(
+                        name: MonitoringPlan.warnActivityName(for: rule.id, dayKey: dayKey),
+                        fingerprint: "tlwarn|\(rule.dailyLimitMinutes)|\(selectionFP)",
+                        payload: .day(
+                            from: dayStart, to: dayEnd, selectionData: selectionData,
+                            eventMinutes: warnEvents),
+                        resetsThresholdAccountingOnRestart: false))
+            }
+        }
+        return plans
     }
 
     /// The window activities for a schedule rule (one, or two for a midnight
@@ -195,13 +236,30 @@ final class RuleScheduler {
     private func reconcile(_ plans: [PlannedActivity]) {
         var fingerprints = storedFingerprints
 
-        for plan in plans where needsRestart(plan.name, plan.fingerprint, in: fingerprints) {
-            if plan.resetsThresholdAccountingOnRestart,
-                case let .daily(_, events) = plan.payload
-            {
+        for plan in plans {
+            // Adopt an activity that is already running but has no recorded
+            // fingerprint — e.g. one the background monitor self-armed at midnight
+            // (it never writes `monitoringFingerprints`). Recording its
+            // fingerprint *without* a restart stops the next foreground sync from
+            // tearing it down and re-zeroing Screen Time's usage count. A rule
+            // can't be edited while the app is closed, so a self-armed activity's
+            // config always matches the current plan.
+            if monitor.monitoredNames.contains(plan.name), fingerprints[plan.name] == nil {
+                fingerprints[plan.name] = plan.fingerprint
+                continue
+            }
+            guard needsRestart(plan.name, plan.fingerprint, in: fingerprints) else { continue }
+            if plan.resetsThresholdAccountingOnRestart {
                 // EC7: a restart resets threshold accounting to "from now".
                 // Log the fingerprint change so a mid-day count reset can be
-                // correlated to its cause (config change vs not-monitored).
+                // correlated to its cause (config change vs not-monitored). A new
+                // day legitimately starts a fresh per-day activity name.
+                let events: [String: Int]
+                switch plan.payload {
+                case let .daily(_, e): events = e
+                case let .day(_, _, _, e): events = e
+                case .window: events = [:]
+                }
                 Diag.log(
                     .scheduler, .event,
                     "dailyActivity restart \(plan.name): events=\(events) fp \(Self.shortFingerprint(fingerprints[plan.name]))->\(Self.shortFingerprint(plan.fingerprint)) (resets threshold accounting)")
@@ -237,6 +295,10 @@ final class RuleScheduler {
         case let .window(start, end):
             try monitor.startWindowMonitoring(
                 name: name, intervalStartMinutes: start, intervalEndMinutes: end)
+        case let .day(from, to, selectionData, eventMinutes):
+            try monitor.startDayMonitoring(
+                name: name, from: from, to: to,
+                selectionData: selectionData, eventMinutes: eventMinutes)
         }
     }
 
@@ -364,6 +426,34 @@ final class DeviceActivityCenterMonitor: ActivityMonitoring {
         try center.startMonitoring(DeviceActivityName(name), during: schedule)
     }
 
+    func startDayMonitoring(
+        name: String, from start: Date, to end: Date,
+        selectionData: Data?, eventMinutes: [String: Int]
+    ) throws {
+        let calendar = Calendar.current
+        let components: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
+        let schedule = DeviceActivitySchedule(
+            intervalStart: calendar.dateComponents(components, from: start),
+            intervalEnd: calendar.dateComponents(components, from: end),
+            repeats: false
+        )
+        let selection = AppSelectionCodec.decode(selectionData)
+        let events = Dictionary(
+            uniqueKeysWithValues: eventMinutes.map { eventName, minutes in
+                (
+                    DeviceActivityEvent.Name(eventName),
+                    DeviceActivityEvent(
+                        applications: selection.applicationTokens,
+                        categories: selection.categoryTokens,
+                        webDomains: selection.webDomainTokens,
+                        threshold: DateComponents(minute: minutes)
+                    )
+                )
+            }
+        )
+        try center.startMonitoring(DeviceActivityName(name), during: schedule, events: events)
+    }
+
     func stopMonitoring(names: [String]) {
         center.stopMonitoring(names.map { DeviceActivityName($0) })
     }
@@ -374,6 +464,7 @@ final class MockActivityMonitor: ActivityMonitoring {
     private(set) var startedEvents: [String: [String: Int]] = [:]
     private(set) var startedWindows: [String: (start: Int, end: Int)] = [:]
     private(set) var startedOneShots: [String: (start: Date, end: Date)] = [:]
+    private(set) var startedDayWindows: [String: (from: Date, to: Date)] = [:]
     private(set) var startCallCount = 0
     private(set) var monitoredNames: [String] = []
 
@@ -405,11 +496,24 @@ final class MockActivityMonitor: ActivityMonitoring {
         }
     }
 
+    func startDayMonitoring(
+        name: String, from start: Date, to end: Date,
+        selectionData: Data?, eventMinutes: [String: Int]
+    ) throws {
+        startCallCount += 1
+        startedEvents[name] = eventMinutes
+        startedDayWindows[name] = (start, end)
+        if !monitoredNames.contains(name) {
+            monitoredNames.append(name)
+        }
+    }
+
     func stopMonitoring(names: [String]) {
         monitoredNames.removeAll(where: names.contains)
         for name in names {
             startedEvents[name] = nil
             startedWindows[name] = nil
+            startedDayWindows[name] = nil
         }
     }
 }

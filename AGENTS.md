@@ -149,7 +149,7 @@ Where each topic is documented:
 | Foreground reconciliation; **overlapping rules → strictest wins** | `OpenAppLock/Services/RuleEnforcer.swift`, `Shared/Enforcement/ShieldController.swift` |
 | Time/open-limit behavior, granted opens, proactive gate | `Shared/Enforcement/LimitEnforcement.swift`, `Shared/Stores/UsageLedger.swift` (+ `Shared/DTOs/RuleUsageDTO.swift`), `Shared/Stores/OpenSessionStore.swift` |
 | Shield text + "Open" button / press handling | `Shared/Enforcement/ShieldPresentation.swift`, `OpenAppLockShieldConfig/ShieldConfigurationExtension.swift`, `OpenAppLockShieldAction/ShieldActionExtension.swift` |
-| DeviceActivity scheduling, naming; background monitor | `OpenAppLock/Services/RuleScheduler.swift`, `Shared/Platform/MonitoringPlan.swift`, `OpenAppLockMonitor/DeviceActivityMonitorExtension.swift` |
+| DeviceActivity scheduling, naming; background monitor (time limits run **per-day day-keyed** activities) | `OpenAppLock/Services/RuleScheduler.swift`, `Shared/Platform/MonitoringPlan.swift`, `Shared/Models/ScheduledDayPlanner.swift`, `OpenAppLockMonitor/DeviceActivityMonitorExtension.swift`; design spec `Docs/Agents/Specs/TIME_LIMIT_DAY_KEYED_ENFORCEMENT.md` |
 | Authoritative time-limit usage report; confirmed day-start gate | `OpenAppLockReport/RuleUsageReport.swift`, `Shared/Stores/DayStartStore.swift`, `OpenAppLock/Views/MainView.swift` |
 | Uninstall Protection | `OpenAppLock/Views/Settings/SettingsView.swift`, `Shared/Enforcement/UninstallProtectionPolicy.swift`, `Shared/Enforcement/UninstallProtectionEnforcer.swift`, `OpenAppLock/Services/AppSettings.swift` |
 | Notifications (permission + schedule-start & time-limit nudges) | `OpenAppLock/Views/Settings/NotificationSettingsView.swift`, `OpenAppLock/Services/NotificationAuthorization.swift`, `OpenAppLock/Services/NotificationScheduler.swift` (+ `ScheduleStartNotificationPlan.swift`), `Shared/Stores/NotificationPreferences.swift`, `Shared/Enforcement/LimitWarningDecision.swift`, `OpenAppLockMonitor/LimitWarningNotifier.swift`, `Shared/Platform/MonitoringPlan.swift` (`tlwarn-`/`warn-`); design spec `Docs/Agents/Specs/NOTIFICATIONS.md` |
@@ -308,6 +308,19 @@ Gotchas learned the hard way:
   foreground refresh); report attribution covers category/web-domain
   selections (currently only application tokens are summed); and tune
   `RuleUsageDTO.authoritativeFreshness` (120s) so the foreground stays fresh.
+- **Time-limit day-keyed enforcement** (see
+  `Docs/Agents/Specs/TIME_LIMIT_DAY_KEYED_ENFORCEMENT.md`) makes each time-limit
+  fire self-dating: the block and warn run on **per-day, non-repeating**
+  activities (`rule-<uuid>-<dayKey>` / `tlwarn-<uuid>-<dayKey>`), armed for the
+  next two scheduled days (`RuleScheduler.dayPlans` + `ScheduledDayPlanner`), and
+  the monitor **drops any fire whose day key isn't today** — closing
+  `TIME_LIMIT_COUNTING_HARDENING.md` §4d's Scenario B false block at the source
+  rather than relying on the (still-unwired) Part B foreground reconciliation.
+  Open limits keep their single repeating activity. Implemented + unit-tested;
+  device-verification pending: the monitor can `startMonitoring` to self-arm the
+  next day at `intervalDidEnd`; full-day capture from a midnight-armed activity;
+  a real cross-midnight flush is dropped; and the per-day activity count stays
+  under DeviceActivity's ~20 ceiling.
 - **Schedule-rule background transitions** are now backed by DeviceActivity:
   `RuleScheduler` registers a repeating window activity per schedule rule
   (`sched-<uuid>`, plus `sched2-<uuid>` for midnight-crossing windows) and the

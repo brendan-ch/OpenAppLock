@@ -177,7 +177,7 @@ struct AppListLibraryView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(list.name)
                 .foregroundStyle(Color.primary)
-            Text(list.appCountLabel)
+            Text(list.appAndRuleCountLabel)
                 .font(.caption)
                 .foregroundStyle(Color.secondary)
         }

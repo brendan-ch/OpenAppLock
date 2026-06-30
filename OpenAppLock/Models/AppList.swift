@@ -49,4 +49,12 @@ final class AppList {
     var appCountLabel: String {
         selectionCount == 1 ? "1 App" : "\(selectionCount) Apps"
     }
+    
+    var ruleCountLabel: String {
+        rules.count == 1 ? "1 Rule" : "\(rules.count) Rules"
+    }
+    
+    var appAndRuleCountLabel: String {
+        "\(appCountLabel) · \(ruleCountLabel)"
+    }
 }

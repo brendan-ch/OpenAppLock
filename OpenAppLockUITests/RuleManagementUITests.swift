@@ -20,7 +20,11 @@ final class RuleManagementUITests: XCTestCase {
         app.buttons["ruleCard-Work Time"].waitToAppear().tap()
 
         XCTAssertEqual(app.staticTexts["detailRuleName"].waitToAppear().label, "Work Time")
-        XCTAssertTrue(app.staticTexts["detailStatusLabel"].label.contains("left"))
+        // Kind and the live status moved off the navigation title into General rows.
+        let kind = app.element("detailRow-Kind").waitToAppear()
+        XCTAssertTrue(kind.label.contains("Schedule"), "Got: \(kind.label)")
+        let status = app.element("detailRow-Status")
+        XCTAssertTrue(status.label.contains("left"), "Got: \(status.label)")
         app.element("detailRow-During this time").waitToAppear()
         XCTAssertTrue(app.element("detailRow-On these days").exists)
         XCTAssertTrue(app.element("detailRow-Pausing allowed").exists)
@@ -76,9 +80,9 @@ final class RuleManagementUITests: XCTestCase {
         actionsMenu.tap()
         app.buttons["Disable"].waitToAppear().tap()
 
-        // The detail caption now reports the rule as disabled.
-        let status = app.staticTexts["detailStatusLabel"].waitToAppear()
-        XCTAssertTrue(status.label.contains("Disabled"), "Got: \(status.label)")
+        // The detail's Status row now reports the rule as disabled (polled — the
+        // row's label re-renders asynchronously after the menu action).
+        app.element("detailRow-Status").waitForLabel(containing: "Disabled")
 
         app.buttons["closeDetailButton"].tap()
         let cardStatus = app.staticTexts["ruleStatus-Sleep"].waitToAppear()
@@ -124,9 +128,9 @@ final class RuleManagementUITests: XCTestCase {
         app.buttons["pauseRuleButton"].waitToAppear().tap()
         app.sheets.buttons["Pause for 15 minutes"].waitToAppear().tap()
 
-        // Paused → the status reads a resume countdown and the menu offers Resume.
-        XCTAssertTrue(
-            app.staticTexts["detailStatusLabel"].waitToAppear().label.contains("Resumes in"))
+        // Paused → the Status row reads a resume countdown and the menu offers Resume
+        // (polled — the row's label re-renders asynchronously after the dialog).
+        app.element("detailRow-Status").waitForLabel(containing: "Resumes in")
         app.navigationBars.buttons["ruleActionsMenu"].tap()
         app.buttons["resumeRuleButton"].waitToAppear().tap()
 

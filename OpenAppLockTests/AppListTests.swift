@@ -247,3 +247,75 @@ struct AppListEnforcementTests {
         #expect(shields.appliedSelectionData[rule.id] == Data([1, 2, 3]))
     }
 }
+
+@MainActor
+@Suite("App-list count labels")
+struct AppListCountLabelTests {
+    /// Inserts a list plus `ruleCount` rules pointing at it. The relationship is
+    /// wired only after every model is in the context — SwiftData forbids
+    /// relationship writes on unmanaged instances (see BlockingRule.appList).
+    private func makeList(
+        selectionCount: Int = 0,
+        ruleCount: Int,
+        in context: ModelContext
+    ) throws -> AppList {
+        let list = AppList(name: "Distractions", selectionCount: selectionCount)
+        context.insert(list)
+        for index in 0..<ruleCount {
+            let rule = BlockingRule(name: "Rule \(index + 1)")
+            context.insert(rule)
+            rule.appList = list
+        }
+        try context.save()
+        return list
+    }
+
+    @Test("ruleCountLabel pluralizes a list with no associated rules")
+    func ruleCountLabelForNoRules() throws {
+        let context = try makeInMemoryContext()
+        let list = try makeList(ruleCount: 0, in: context)
+        #expect(list.ruleCountLabel == "0 Rules")
+    }
+
+    @Test("ruleCountLabel is singular for exactly one associated rule")
+    func ruleCountLabelForOneRule() throws {
+        let context = try makeInMemoryContext()
+        let list = try makeList(ruleCount: 1, in: context)
+        #expect(list.ruleCountLabel == "1 Rule")
+    }
+
+    @Test("ruleCountLabel pluralizes multiple associated rules")
+    func ruleCountLabelForManyRules() throws {
+        let context = try makeInMemoryContext()
+        let list = try makeList(ruleCount: 3, in: context)
+        #expect(list.ruleCountLabel == "3 Rules")
+    }
+
+    @Test("appAndRuleCountLabel joins plural app and rule counts")
+    func appAndRuleCountLabelPlural() throws {
+        let context = try makeInMemoryContext()
+        let list = try makeList(selectionCount: 4, ruleCount: 2, in: context)
+        #expect(list.appAndRuleCountLabel == "4 Apps · 2 Rules")
+    }
+
+    @Test("appAndRuleCountLabel uses singular app and rule forms")
+    func appAndRuleCountLabelSingular() throws {
+        let context = try makeInMemoryContext()
+        let list = try makeList(selectionCount: 1, ruleCount: 1, in: context)
+        #expect(list.appAndRuleCountLabel == "1 App · 1 Rule")
+    }
+
+    @Test("appAndRuleCountLabel pluralizes each half independently")
+    func appAndRuleCountLabelMixedPlurality() throws {
+        let context = try makeInMemoryContext()
+        let list = try makeList(selectionCount: 1, ruleCount: 3, in: context)
+        #expect(list.appAndRuleCountLabel == "1 App · 3 Rules")
+    }
+
+    @Test("appAndRuleCountLabel reports an empty list as zero apps and zero rules")
+    func appAndRuleCountLabelEmpty() throws {
+        let context = try makeInMemoryContext()
+        let list = try makeList(selectionCount: 0, ruleCount: 0, in: context)
+        #expect(list.appAndRuleCountLabel == "0 Apps · 0 Rules")
+    }
+}

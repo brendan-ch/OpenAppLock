@@ -18,13 +18,18 @@ struct LimitWarningNotifier {
     var preferences = NotificationPreferences()
     var center: UNUserNotificationCenter = .current()
 
-    func notifyIfEligible(ruleID: UUID, now: Date = .now, calendar: Calendar = .current) {
+    func notifyIfEligible(
+        ruleID: UUID, activityDayKey: String? = nil,
+        now: Date = .now, calendar: Calendar = .current
+    ) {
         let snapshot = snapshots.snapshot(for: ruleID)
         let usage = ledger.usage(for: ruleID, onDayContaining: now, calendar: calendar)
+        // The day-key drop (a cross-midnight stale warn flush) lives in the pure,
+        // shared, unit-tested `LimitWarningDecision`.
         guard
             let content = LimitWarningDecision.content(
                 for: snapshot, usage: usage, preferences: preferences,
-                now: now, calendar: calendar)
+                activityDayKey: activityDayKey, now: now, calendar: calendar)
         else { return }
 
         let notification = UNMutableNotificationContent()

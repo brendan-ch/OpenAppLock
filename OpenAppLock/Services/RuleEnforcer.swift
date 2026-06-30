@@ -93,7 +93,7 @@ final class RuleEnforcer {
         shields.clearShields(except: shielded)
         commitBlockingSet(blocking, prior: priorBlocking, shieldedCount: shielded.count)
         applyUninstallProtection(rules: rules, at: now, calendar: calendar)
-        scheduler?.sync(rules: rules, at: now)
+        scheduler?.sync(rules: rules, at: now, calendar: calendar)
         syncStartingSoonNotifications(rules: rules)
     }
 

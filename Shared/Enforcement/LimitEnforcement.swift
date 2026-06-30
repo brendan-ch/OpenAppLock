@@ -80,10 +80,25 @@ struct LimitEnforcement {
         }
     }
 
-    /// A cumulative usage checkpoint fired for a time-limit rule.
+    /// A cumulative usage checkpoint fired for a time-limit rule. `activityDayKey`
+    /// is the day key parsed from the firing activity's name (nil for a legacy
+    /// un-keyed activity); a checkpoint tagged with any day other than today is a
+    /// cross-midnight stale flush from a prior day's per-day activity and is
+    /// dropped at the source — the primary guard. The magnitude and
+    /// confirmed-start guards below remain as defense-in-depth (legacy/un-keyed
+    /// activities and the safety-net mid-day arming case).
     func handleUsageMinutes(
-        _ minutes: Int, ruleID: UUID, now: Date = .now, calendar: Calendar = .current
+        _ minutes: Int, ruleID: UUID, activityDayKey: String? = nil,
+        now: Date = .now, calendar: Calendar = .current
     ) {
+        let rid = ruleID.uuidString.prefix(8)
+        let today = UsageLedger.dayKey(for: now, calendar: calendar)
+        if let activityDayKey, activityDayKey != today {
+            Diag.log(
+                .usage,
+                "drop rule-\(rid): stale day-keyed flush (activity=\(activityDayKey) today=\(today))")
+            return
+        }
         // A `minutes-k` checkpoint reports k minutes of *today's* usage, which
         // cannot have accrued before k minutes have elapsed since local
         // midnight. A larger value means the callback is stale — typically
@@ -91,7 +106,6 @@ struct LimitEnforcement {
         // Time batches threshold events and fires them when it next wakes the
         // monitor (e.g. as another rule's window opens). Recording it would
         // re-block apps the user never opened today, so drop it.
-        let rid = ruleID.uuidString.prefix(8)
         let minutesSinceMidnight = Int(
             now.timeIntervalSince(calendar.startOfDay(for: now)) / 60)
         Diag.log(

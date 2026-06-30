@@ -74,6 +74,22 @@ struct LimitWarningDecisionTests {
                 now: mondayNoon, calendar: utc) == nil)
     }
 
+    @Test("No content for a warn tagged with a prior day key (cross-midnight flush)")
+    func droppedForStaleDayKey() {
+        let prefs = enabledPreferences()
+        let usage = RuleUsageDTO(minutesUsed: 55)
+        // mondayNoon is 2025-01-06; a warn tagged with the prior day is stale.
+        #expect(
+            LimitWarningDecision.content(
+                for: timeLimitSnapshot(), usage: usage, preferences: prefs,
+                activityDayKey: "2025-01-05", now: mondayNoon, calendar: utc) == nil)
+        // Today's day key still produces content.
+        #expect(
+            LimitWarningDecision.content(
+                for: timeLimitSnapshot(), usage: usage, preferences: prefs,
+                activityDayKey: "2025-01-06", now: mondayNoon, calendar: utc) != nil)
+    }
+
     @Test("No content for ineligible rule states")
     func ineligibleStates() {
         let prefs = enabledPreferences()

@@ -83,19 +83,26 @@ struct RuleSnapshotTests {
 @MainActor
 @Suite("Monitoring plan")
 struct MonitoringPlanTests {
-    @Test("Activity names round-trip rule IDs")
+    @Test("Activity names round-trip rule IDs, with and without a day key")
     func nameRoundTrip() {
         let id = UUID()
-        #expect(
-            MonitoringPlan.ruleID(
-                fromDailyActivityName: MonitoringPlan.dailyActivityName(for: id)) == id)
+        let dayKey = "2026-06-29"
+        let dayKeyed = MonitoringPlan.dailyActivityName(for: id, dayKey: dayKey)
+        #expect(dayKeyed == "rule-\(id.uuidString)-2026-06-29")
+        #expect(MonitoringPlan.ruleID(fromDailyActivityName: dayKeyed) == id)
+        #expect(MonitoringPlan.dayKey(fromActivityName: dayKeyed) == dayKey)
+        // The legacy, un-keyed form (open-limit / pre-upgrade) still parses…
+        #expect(MonitoringPlan.ruleID(fromDailyActivityName: "rule-\(id.uuidString)") == id)
+        // …and reports no day key.
+        #expect(MonitoringPlan.dayKey(fromActivityName: "rule-\(id.uuidString)") == nil)
+        // Session names and garbage are not daily activities.
         #expect(
             MonitoringPlan.ruleID(
                 fromSessionActivityName: MonitoringPlan.sessionActivityName(for: id)) == id)
         #expect(MonitoringPlan.ruleID(fromDailyActivityName: "garbage") == nil)
         #expect(
             MonitoringPlan.ruleID(
-                fromSessionActivityName: MonitoringPlan.dailyActivityName(for: id)) == nil)
+                fromSessionActivityName: MonitoringPlan.dailyActivityName(for: id, dayKey: dayKey)) == nil)
     }
 
     @Test("Schedule-window activity names round-trip rule IDs")
@@ -163,20 +170,83 @@ struct RuleSchedulerTests {
         return rule
     }
 
-    @Test("Enabled limit rules with apps start daily monitoring")
-    func startsMonitoring() throws {
+    @Test("startDayMonitoring records a dated, event-carrying window on the mock")
+    func mockRecordsDayMonitoring() throws {
+        let monitor = MockActivityMonitor()
+        let from = date(2025, 1, 6)
+        let to = date(2025, 1, 7)
+        try monitor.startDayMonitoring(
+            name: "rule-x-2025-01-06", from: from, to: to,
+            selectionData: Data([1]), eventMinutes: ["minutes-45": 45])
+
+        #expect(monitor.monitoredNames.contains("rule-x-2025-01-06"))
+        #expect(monitor.startedEvents["rule-x-2025-01-06"]?["minutes-45"] == 45)
+        #expect(monitor.startedDayWindows["rule-x-2025-01-06"]?.from == from)
+        #expect(monitor.startedDayWindows["rule-x-2025-01-06"]?.to == to)
+    }
+
+    @Test("A time limit arms a per-day block activity for today and tomorrow")
+    func timeLimitArmsTwoDayKeyedActivities() throws {
         let (scheduler, monitor, store) = makeScheduler()
         let rule = try limitRule(kind: .timeLimit, name: "Time Keeper")
+        let now = date(2025, 1, 6, 10, 0)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
 
-        let name = MonitoringPlan.dailyActivityName(for: rule.id)
-        #expect(monitor.monitoredNames == [name])
-        #expect(monitor.startedEvents[name]?.count == 1)
+        let today = MonitoringPlan.dailyActivityName(
+            for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc))
+        let tomorrow = MonitoringPlan.dailyActivityName(
+            for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 7), calendar: utc))
+        #expect(monitor.monitoredNames.contains(today))
+        #expect(monitor.monitoredNames.contains(tomorrow))
         #expect(
-            monitor.startedEvents[name]?[MonitoringPlan.minuteEventName(for: rule.dailyLimitMinutes)]
+            monitor.startedEvents[today]?[MonitoringPlan.minuteEventName(for: rule.dailyLimitMinutes)]
                 == rule.dailyLimitMinutes)
+        // No legacy un-keyed daily activity is armed for a time limit.
+        #expect(!monitor.monitoredNames.contains("rule-\(rule.id.uuidString)"))
         #expect(store.snapshot(for: rule.id) != nil)
+    }
+
+    @Test("Rolling the day forward arms the new day and reaps the day that fell out of the horizon")
+    func dayRolloverReapsPastActivity() throws {
+        let (scheduler, monitor, _) = makeScheduler()
+        let rule = try limitRule(kind: .timeLimit, name: "Time Keeper")
+
+        scheduler.sync(rules: [rule], at: date(2025, 1, 6, 10, 0), calendar: utc)  // arms 01-06, 01-07
+        scheduler.sync(rules: [rule], at: date(2025, 1, 7, 10, 0), calendar: utc)  // arms 01-07, 01-08
+
+        let jan6 = MonitoringPlan.dailyActivityName(
+            for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc))
+        let jan8 = MonitoringPlan.dailyActivityName(
+            for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 8), calendar: utc))
+        #expect(!monitor.monitoredNames.contains(jan6))   // reaped
+        #expect(monitor.monitoredNames.contains(jan8))    // newly armed
+    }
+
+    @Test("A background self-armed activity is adopted, not restarted, by the next sync")
+    func adoptsSelfArmedActivity() throws {
+        let (scheduler, monitor, _) = makeScheduler()
+        let rule = try limitRule(kind: .timeLimit, name: "Time Keeper")
+        let now = date(2025, 1, 6, 10, 0)
+        let todayName = MonitoringPlan.dailyActivityName(
+            for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc))
+
+        // Simulate the monitor having self-armed today's activity in the
+        // background: it is monitored, but the scheduler recorded no fingerprint.
+        try monitor.startDayMonitoring(
+            name: todayName, from: date(2025, 1, 6), to: date(2025, 1, 7),
+            selectionData: Data([1]),
+            eventMinutes: MonitoringPlan.blockEvent(forLimit: rule.dailyLimitMinutes))
+        let startsAfterSelfArm = monitor.startCallCount  // 1
+
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        // Today's activity is adopted (not restarted → its live count is kept);
+        // only tomorrow's is newly armed.
+        #expect(monitor.startCallCount == startsAfterSelfArm + 1)
+
+        // A second sync also leaves today's alone (its fingerprint was recorded).
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        #expect(monitor.startCallCount == startsAfterSelfArm + 1)
     }
 
     @Test("Open-limit rules monitor the day without usage checkpoints")
@@ -356,14 +426,15 @@ struct RuleSchedulerTests {
     func avoidsRestartChurn() throws {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try limitRule(kind: .timeLimit, name: "Time Keeper")
+        let now = date(2025, 1, 6, 10, 0)
 
-        scheduler.sync(rules: [rule])
-        scheduler.sync(rules: [rule])
-        #expect(monitor.startCallCount == 1)
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        #expect(monitor.startCallCount == 2)  // today + tomorrow, each started once
 
         rule.dailyLimitMinutes = 60
-        scheduler.sync(rules: [rule])
-        #expect(monitor.startCallCount == 2)
+        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        #expect(monitor.startCallCount == 4)  // both day activities restart on budget change
     }
 
     @Test("Selection fingerprint is a deterministic SHA-256, stable across launches")
@@ -562,6 +633,36 @@ struct LimitEnforcementTests {
 
         #expect(
             ledger.usage(for: snap.id, onDayContaining: quarterToOne, calendar: utc).minutesUsed == 45)
+        #expect(shields.shieldedRuleIDs == [snap.id])
+    }
+
+    @Test("A usage checkpoint tagged with a prior day key is dropped (cross-midnight flush)")
+    func staleDayKeyedCheckpointDropped() {
+        let (enforcement, shields, ledger, store) = makeEnforcement()
+        let snap = snapshot(kind: .timeLimit, limit: 30)
+        store.save([snap])
+        // It is 2025-01-07 01:33; today's interval has started…
+        let today = date(2025, 1, 7, 1, 33)
+        enforcement.handleDayStart(ruleID: snap.id, now: today, calendar: utc)
+        // …but the budget event is tagged with YESTERDAY (2025-01-06): a flush.
+        enforcement.handleUsageMinutes(
+            30, ruleID: snap.id, activityDayKey: "2025-01-06", now: today, calendar: utc)
+
+        #expect(ledger.usage(for: snap.id, onDayContaining: today, calendar: utc).minutesUsed == 0)
+        #expect(shields.shieldedRuleIDs.isEmpty)
+    }
+
+    @Test("A usage checkpoint tagged with today's day key still records and shields")
+    func todayDayKeyedCheckpointHonoured() {
+        let (enforcement, shields, ledger, store) = makeEnforcement()
+        let snap = snapshot(kind: .timeLimit, limit: 30)
+        store.save([snap])
+        let today = date(2025, 1, 6, 10, 0)
+        enforcement.handleDayStart(ruleID: snap.id, now: today, calendar: utc)
+        enforcement.handleUsageMinutes(
+            30, ruleID: snap.id, activityDayKey: "2025-01-06", now: today, calendar: utc)
+
+        #expect(ledger.usage(for: snap.id, onDayContaining: today, calendar: utc).minutesUsed == 30)
         #expect(shields.shieldedRuleIDs == [snap.id])
     }
 

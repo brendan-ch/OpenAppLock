@@ -231,6 +231,72 @@ final class AppListUITests: XCTestCase {
         )
     }
 
+    func testAppListEditorMenuDeletesUnusedList() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToSettingsTab()
+        app.buttons["manageAppListsButton"].waitToAppear().tap()
+
+        // Create a fresh, unused list — "Distractions" is in use and can't go.
+        app.buttons["newAppListButton"].waitToAppear().tap()
+        let nameField = app.textFields["appListNameField"].waitToAppear()
+        nameField.tap()
+        nameField.typeText("Scratch List\n")
+        app.buttons["saveAppListButton"].waitToAppear().tap()
+
+        // Reopen it and delete via the new options menu (no swipe needed).
+        app.element("appListRow-Scratch List").waitToAppear().tap()
+        app.buttons["appListActionsMenu"].waitToAppear().tap()
+        app.buttons["deleteAppListButton"].waitToAppear().tap()
+
+        // Deleting an unused list confirms first, then removes it.
+        app.sheets.buttons["Delete"].waitToAppear().tap()
+        XCTAssertFalse(
+            app.element("appListRow-Scratch List").waitForExistence(timeout: 2),
+            "Confirming the menu delete should remove the unused list"
+        )
+    }
+
+    func testAppListEditorMenuBlocksDeletingListInUse() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToSettingsTab()
+        app.buttons["manageAppListsButton"].waitToAppear().tap()
+
+        // "Distractions" is used by Work Time + Sleep, so the menu delete is barred.
+        app.element("appListRow-Distractions").waitToAppear().tap()
+        app.buttons["appListActionsMenu"].waitToAppear().tap()
+        app.buttons["deleteAppListButton"].waitToAppear().tap()
+
+        // The blocking alert appears in place of a delete confirmation.
+        app.alerts["This list is in use"].waitToAppear()
+        app.alerts.buttons["OK"].tap()
+
+        // The editor is still open; the list survives.
+        app.element("appListNameField").waitToAppear()
+    }
+
+    func testSwipeDeletingUnusedListConfirmsFirst() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToSettingsTab()
+        app.buttons["manageAppListsButton"].waitToAppear().tap()
+
+        app.buttons["newAppListButton"].waitToAppear().tap()
+        let nameField = app.textFields["appListNameField"].waitToAppear()
+        nameField.tap()
+        nameField.typeText("Scratch List\n")
+        app.buttons["saveAppListButton"].waitToAppear().tap()
+
+        // Swipe-to-delete now confirms before removing the list.
+        let row = app.element("appListRow-Scratch List").waitToAppear()
+        row.swipeLeft()
+        app.buttons["Delete"].waitToAppear().tap()
+        app.sheets.buttons["Delete"].waitToAppear().tap()
+
+        XCTAssertFalse(
+            app.element("appListRow-Scratch List").waitForExistence(timeout: 2),
+            "Confirming the swipe delete should remove the list"
+        )
+    }
+
     /// Asserts the read-only `AppListDetailView` is showing: its lock notice is
     /// present and neither edit affordance (the apps picker, the Save button)
     /// exists — the "no editing" rule holds while a list is merely viewable.

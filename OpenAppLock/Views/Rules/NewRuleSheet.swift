@@ -51,7 +51,6 @@ struct NewRuleSheet: View {
             }
             .navigationDestination(item: $pendingDraft) { draft in
                 RuleEditorView(
-                    mode: .create,
                     draft: draft,
                     onCommit: { committed in
                         committed.insertRule(into: modelContext)

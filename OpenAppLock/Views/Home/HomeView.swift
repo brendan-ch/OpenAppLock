@@ -7,10 +7,12 @@ import SwiftData
 import SwiftUI
 
 /// The Home tab: what's blocking right now, plus the rules armed for today
-/// ("Active Rules"). The rule list and rule creation live on the Rules tab.
+/// ("Active Rules"). Rows in each section are alphabetical by name (see
+/// `BlockingRule.displayOrder`). The rule list and rule creation live on the
+/// Rules tab.
 struct HomeView: View {
     @Environment(RuleEnforcer.self) private var enforcer
-    @Query(sort: \BlockingRule.createdAt) private var rules: [BlockingRule]
+    @Query(sort: BlockingRule.displayOrder) private var rules: [BlockingRule]
 
     @State private var detailRule: BlockingRule?
 

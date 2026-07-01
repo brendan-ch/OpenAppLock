@@ -350,15 +350,8 @@ struct RuleDetailSheet: View {
     @ViewBuilder
     private func generalRows(dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date) -> some View {
         let status = dto.status(at: now, usage: usage)
-        
-        switch rule.configuration {
-        case .timeLimit(_):
-            row(CopyKey.ruleDetailKindRowLabel.string, dto.kind.displayName)
-        default:
-            row(CopyKey.ruleDetailKindRowLabel.string, dto.kind.displayName)
-            row(CopyKey.ruleDetailStatusRowLabel.string, dto.rowContext(for: status, usage: usage ?? RuleUsageDTO(), relativeTo: now))
-        }
-        
+        row(CopyKey.ruleDetailKindRowLabel.string, dto.kind.displayName)
+        row(CopyKey.ruleDetailStatusRowLabel.string, dto.rowContext(for: status, usage: usage ?? RuleUsageDTO(), relativeTo: now))
     }
 
     @ViewBuilder

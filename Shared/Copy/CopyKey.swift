@@ -10,12 +10,9 @@ nonisolated enum CopyKey: String, CaseIterable {
     case ruleEditorCantPauseWhileActive = "ruleEditor.cantPauseWhileActive"
 
     // MARK: - RuleEditorView (Task 2)
-    case ruleEditorDisableAction = "ruleEditor.disableAction"
-    case ruleEditorEnableAction = "ruleEditor.enableAction"
-    case ruleEditorDeleteAction = "ruleEditor.deleteAction"
-    case ruleEditorRuleActionsLabel = "ruleEditor.ruleActionsLabel"
+    // (rule-actions-menu keys removed post-#38 merge: rule actions moved to
+    // RuleDetailSheet, which uses the parallel ruleDetail.* keys.)
     case ruleEditorAddRuleLabel = "ruleEditor.addRuleLabel"
-    case ruleEditorDoneLabel = "ruleEditor.doneLabel"
     case ruleEditorAppListTitle = "ruleEditor.appListTitle"
     case ruleEditorRuleNamePlaceholder = "ruleEditor.ruleNamePlaceholder"
     case ruleEditorNameSectionHeader = "ruleEditor.nameSectionHeader"

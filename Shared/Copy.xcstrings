@@ -43,40 +43,10 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "This block can’t be paused while it’s active." } }
       }
     },
-    "ruleEditor.disableAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Disable" } }
-      }
-    },
-    "ruleEditor.enableAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable" } }
-      }
-    },
-    "ruleEditor.deleteAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } }
-      }
-    },
-    "ruleEditor.ruleActionsLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rule Actions" } }
-      }
-    },
     "ruleEditor.addRuleLabel" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Rule" } }
-      }
-    },
-    "ruleEditor.doneLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } }
       }
     },
     "ruleEditor.appListTitle" : {

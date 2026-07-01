@@ -165,7 +165,9 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
                         applications: selection.applicationTokens,
                         categories: selection.categoryTokens,
                         webDomains: selection.webDomainTokens,
-                        threshold: DateComponents(minute: minutes))
+                        threshold: DateComponents(minute: minutes),
+                        includesPastActivity: true
+                    )
                 )
             })
         do {

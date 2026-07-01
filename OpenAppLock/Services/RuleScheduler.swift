@@ -394,7 +394,8 @@ final class DeviceActivityCenterMonitor: ActivityMonitoring {
                         applications: selection.applicationTokens,
                         categories: selection.categoryTokens,
                         webDomains: selection.webDomainTokens,
-                        threshold: DateComponents(minute: minutes)
+                        threshold: DateComponents(minute: minutes),
+                        includesPastActivity: true
                     )
                 )
             }
@@ -446,7 +447,8 @@ final class DeviceActivityCenterMonitor: ActivityMonitoring {
                         applications: selection.applicationTokens,
                         categories: selection.categoryTokens,
                         webDomains: selection.webDomainTokens,
-                        threshold: DateComponents(minute: minutes)
+                        threshold: DateComponents(minute: minutes),
+                        includesPastActivity: true
                     )
                 )
             }

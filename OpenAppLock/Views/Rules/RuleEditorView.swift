@@ -39,16 +39,16 @@ struct RuleEditorView: View {
             if case .edit(let isEnabled) = mode {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
-                        Button(isEnabled ? "Disable" : "Enable") {
+                        Button(isEnabled ? CopyKey.ruleEditorDisableAction.resource : CopyKey.ruleEditorEnableAction.resource) {
                             onToggleEnabled?()
                         }
-                        Button("Delete", role: .destructive) {
+                        Button(CopyKey.ruleEditorDeleteAction.resource, role: .destructive) {
                             onDelete?()
                         }
                     } label: {
                         Image(systemName: "ellipsis")
                     }
-                    .accessibilityLabel("Rule Actions")
+                    .accessibilityLabel(CopyKey.ruleEditorRuleActionsLabel.resource)
                     .accessibilityIdentifier("ruleActionsMenu")
                 }
             }
@@ -60,7 +60,7 @@ struct RuleEditorView: View {
                     } label: {
                         Image(systemName: "checkmark")
                     }
-                    .accessibilityLabel("Add Rule")
+                    .accessibilityLabel(CopyKey.ruleEditorAddRuleLabel.resource)
                     .accessibilityIdentifier("commitRuleButton")
                 case .edit:
                     Button(role: .confirm) {
@@ -68,7 +68,7 @@ struct RuleEditorView: View {
                     } label: {
                         Image(systemName: "checkmark")
                     }
-                    .accessibilityLabel("Done")
+                    .accessibilityLabel(CopyKey.ruleEditorDoneLabel.resource)
                     .accessibilityIdentifier("doneButton")
                 }
             }
@@ -77,7 +77,7 @@ struct RuleEditorView: View {
         // button returns here); the library presents its editor as a sheet.
         .navigationDestination(isPresented: $showingAppPicker) {
             AppListLibraryView(selection: $draft.appList, onPick: { showingAppPicker = false })
-                .navigationTitle("App List")
+                .navigationTitle(CopyKey.ruleEditorAppListTitle.resource)
                 .navigationBarTitleDisplayMode(.inline)
         }
     }
@@ -86,11 +86,11 @@ struct RuleEditorView: View {
 
     private var nameSection: some View {
         Section {
-            TextField("Rule Name", text: $draft.name)
+            TextField(CopyKey.ruleEditorRuleNamePlaceholder.resource, text: $draft.name)
                 .submitLabel(.done)
                 .accessibilityIdentifier("ruleNameField")
         } header: {
-            Text("Name").textCase(nil)
+            Text(.ruleEditorNameSectionHeader).textCase(nil)
         }
     }
 
@@ -100,23 +100,23 @@ struct RuleEditorView: View {
         case .schedule:
             Section {
                 DatePicker(
-                    "From",
+                    CopyKey.ruleEditorFromLabel.resource,
                     selection: timeBinding($draft.scheduleConfig.startMinutes),
                     displayedComponents: .hourAndMinute
                 )
                 .accessibilityIdentifier("fromTimePicker")
                 DatePicker(
-                    "To",
+                    CopyKey.ruleEditorToLabel.resource,
                     selection: timeBinding($draft.scheduleConfig.endMinutes),
                     displayedComponents: .hourAndMinute
                 )
                 .accessibilityIdentifier("toTimePicker")
             } header: {
-                Text("During this time").textCase(nil)
+                Text(.ruleEditorDuringThisTimeHeader).textCase(nil)
             }
             daysSection
             Section {
-                Picker("Mode", selection: $draft.scheduleConfig.selectionMode) {
+                Picker(CopyKey.ruleEditorModeLabel.resource, selection: $draft.scheduleConfig.selectionMode) {
                     ForEach(SelectionMode.allCases, id: \.self) { mode in
                         Text(mode.displayName).tag(mode)
                     }
@@ -126,7 +126,7 @@ struct RuleEditorView: View {
                 appListRow
             } header: {
                 Text(draft.scheduleConfig.selectionMode == .block
-                    ? "Apps are blocked" : "Only these apps are allowed")
+                    ? CopyKey.ruleEditorAppsAreBlockedHeader : CopyKey.ruleEditorOnlyTheseAppsAllowedHeader)
                     .textCase(nil)
             }
             hardModeSection
@@ -134,13 +134,13 @@ struct RuleEditorView: View {
             Section {
                 appListRow
             } header: {
-                Text("When I use").textCase(nil)
+                Text(.ruleEditorWhenIUseHeader).textCase(nil)
             }
             Section {
                 budgetRow(
-                    value: "\(draft.timeLimitConfig.dailyLimitMinutes)m",
-                    accessibilityLabel: "Daily time limit",
-                    accessibilityValue: "\(draft.timeLimitConfig.dailyLimitMinutes) minutes",
+                    value: CopyKey.ruleEditorDailyMinutesAbbreviatedFormat.string(draft.timeLimitConfig.dailyLimitMinutes),
+                    accessibilityLabel: CopyKey.ruleEditorDailyTimeLimitAccessibilityLabel.string,
+                    accessibilityValue: CopyKey.ruleEditorDailyMinutesAccessibilityFormat.string(draft.timeLimitConfig.dailyLimitMinutes),
                     stepperID: "dailyLimitStepper",
                     onIncrement: {
                         draft.timeLimitConfig.dailyLimitMinutes =
@@ -152,7 +152,7 @@ struct RuleEditorView: View {
                     }
                 )
             } header: {
-                Text("For this long").textCase(nil)
+                Text(.ruleEditorForThisLongHeader).textCase(nil)
             }
             daysSection
             blockUntilSection
@@ -161,13 +161,13 @@ struct RuleEditorView: View {
             Section {
                 appListRow
             } header: {
-                Text("When I open").textCase(nil)
+                Text(.ruleEditorWhenIOpenHeader).textCase(nil)
             }
             Section {
                 budgetRow(
-                    value: "\(draft.openLimitConfig.maxOpens) opens",
-                    accessibilityLabel: "Daily open limit",
-                    accessibilityValue: "\(draft.openLimitConfig.maxOpens) opens",
+                    value: CopyKey.ruleEditorOpensCountFormat.string(draft.openLimitConfig.maxOpens),
+                    accessibilityLabel: CopyKey.ruleEditorDailyOpenLimitAccessibilityLabel.string,
+                    accessibilityValue: CopyKey.ruleEditorOpensCountFormat.string(draft.openLimitConfig.maxOpens),
                     stepperID: "maxOpensStepper",
                     onIncrement: {
                         draft.openLimitConfig.maxOpens = min(50, draft.openLimitConfig.maxOpens + 1)
@@ -177,7 +177,7 @@ struct RuleEditorView: View {
                     }
                 )
             } header: {
-                Text("More than").textCase(nil)
+                Text(.ruleEditorMoreThanHeader).textCase(nil)
             }
             daysSection
             blockUntilSection
@@ -190,7 +190,7 @@ struct RuleEditorView: View {
             DayOfWeekPicker(days: $draft.days)
         } header: {
             HStack {
-                Text("On these days").textCase(nil)
+                Text(.ruleEditorOnTheseDaysHeader).textCase(nil)
                 Spacer()
                 Text(draft.days.summary).textCase(nil)
             }
@@ -199,9 +199,9 @@ struct RuleEditorView: View {
 
     private var blockUntilSection: some View {
         Section {
-            LabeledContent("Until", value: "Tomorrow")
+            LabeledContent(CopyKey.ruleEditorUntilLabel.resource, value: CopyKey.ruleEditorTomorrowValue.string)
         } header: {
-            Text("Then block app").textCase(nil)
+            Text(.ruleEditorThenBlockAppHeader).textCase(nil)
         }
     }
 
@@ -209,7 +209,7 @@ struct RuleEditorView: View {
     /// the tap target and gives VoiceOver a "Hard Mode" switch in one element.
     private var hardModeSection: some View {
         Section {
-            Toggle("Hard Mode", isOn: $draft.hardMode)
+            Toggle(CopyKey.ruleEditorHardModeToggle.resource, isOn: $draft.hardMode)
                 .accessibilityIdentifier("hardModeToggle")
         } footer: {
             Text(.ruleEditorCantPauseWhileActive)
@@ -221,7 +221,7 @@ struct RuleEditorView: View {
             showingAppPicker = true
         } label: {
             HStack {
-                Text("App List")
+                Text(.ruleEditorAppListTitle)
                     .foregroundStyle(Color.primary)
                 Spacer()
                 Text(appListLabel)
@@ -235,8 +235,8 @@ struct RuleEditorView: View {
     }
 
     private var appListLabel: String {
-        guard let list = draft.appList else { return "Choose" }
-        return "\(list.name) · \(list.appCountLabel)"
+        guard let list = draft.appList else { return CopyKey.ruleEditorChooseAppListPlaceholder.string }
+        return CopyKey.ruleEditorAppListSummaryFormat.string(list.name, list.appCountLabel)
     }
 
     private func budgetRow(
@@ -248,7 +248,7 @@ struct RuleEditorView: View {
         onDecrement: @escaping () -> Void
     ) -> some View {
         HStack {
-            Text("Daily")
+            Text(.ruleEditorDailyLabel)
             Spacer()
             Text(value)
                 .foregroundStyle(.secondary)

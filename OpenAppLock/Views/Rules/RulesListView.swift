@@ -22,10 +22,10 @@ struct RulesListView: View {
             TimelineView(.periodic(from: .now, by: 30)) { timeline in
                 rulesList(now: timeline.date)
             }
-            .navigationTitle("Rules")
+            .navigationTitle(CopyKey.rulesListNavigationTitle.resource)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("New Rule", systemImage: "plus") {
+                    Button(CopyKey.rulesListNewRuleButton.resource, systemImage: "plus") {
                         showingNewRule = true
                     }
                     .accessibilityIdentifier("newRuleButton")
@@ -44,15 +44,15 @@ struct RulesListView: View {
     private func rulesList(now: Date) -> some View {
         if rules.isEmpty {
             ContentUnavailableView {
-                Label("No Rules Yet", systemImage: "shield.lefthalf.filled")
+                Label(CopyKey.rulesListNoRulesYetTitle.resource, systemImage: "shield.lefthalf.filled")
             } description: {
                 // The identifier lives on the description (not the container),
                 // so it surfaces as its own element rather than collapsing onto
                 // the action button.
-                Text("Create a rule to block distracting apps on a schedule.")
+                Text(.rulesListEmptyStateDescription)
                     .accessibilityIdentifier("emptyRulesCard")
             } actions: {
-                Button("New Rule") {
+                Button(CopyKey.rulesListNewRuleButton.resource) {
                     showingNewRule = true
                 }
                 .accessibilityIdentifier("emptyStateNewRuleButton")

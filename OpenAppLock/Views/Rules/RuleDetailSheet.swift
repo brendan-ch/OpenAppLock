@@ -62,11 +62,11 @@ struct RuleDetailSheet: View {
         let usage = enforcer.usage(for: dto, at: now)
         let status = dto.status(at: now, usage: usage)
         return List {
-            Section("General") {
+            Section(CopyKey.ruleDetailGeneralSectionHeader.resource) {
                 generalRows(now: now)
             }
-            
-            Section("Details") {
+
+            Section(CopyKey.ruleDetailDetailsSectionHeader.resource) {
                 detailRows
             }
             // Live Screen Time usage for this rule's apps, rendered inside the
@@ -85,7 +85,7 @@ struct RuleDetailSheet: View {
                     NavigationLink {
                         RuleUsageReportPage(filter: usageFilter)
                     } label: {
-                        Label("Today's Usage", systemImage: "chart.bar")
+                        Label(CopyKey.ruleDetailTodaysUsageLabel.resource, systemImage: "chart.bar")
                     }
                     .accessibilityIdentifier("usageReportLink")
                 }
@@ -93,7 +93,7 @@ struct RuleDetailSheet: View {
             Section {
                 if !RulePolicy.canEdit(dto, usage: usage, at: now) {
                     Label(
-                        "Hard Mode is on — this rule is locked until the block ends.",
+                        CopyKey.ruleDetailHardModeLockedNotice.resource,
                         systemImage: "lock.fill"
                     )
                     .foregroundStyle(.secondary)
@@ -105,19 +105,19 @@ struct RuleDetailSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
+                Button(CopyKey.ruleDetailCloseButton.resource, systemImage: "xmark") {
                     dismiss()
                 }
                 .accessibilityIdentifier("closeDetailButton")
-                
+
             }
-            
+
             if RulePolicy.canEdit(dto, usage: usage, at: now) {
                 ToolbarItem(placement: .topBarTrailing) {
                     ruleActionsMenu(dto: dto, usage: usage, now: now)
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Edit", systemImage: "pencil") {
+                    Button(CopyKey.ruleDetailEditButton.resource, systemImage: "pencil") {
                         isEditing = true
                     }
                     .accessibilityIdentifier("editRuleButton")
@@ -140,16 +140,16 @@ struct RuleDetailSheet: View {
         // Attached here (outside the Menu) so the menu dismisses first and the
         // dialog then presents reliably.
         .confirmationDialog(
-            "Pause \(rule.name)?",
+            Text(CopyKey.ruleDetailPauseConfirmationTitleFormat.string(rule.name)),
             isPresented: $pendingPause,
             titleVisibility: .visible
         ) {
-            Button("Pause for 15 minutes") {
+            Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
                 enforcer.pause(rule, rules: rules)
                 pendingPause = false
             }
         } message: {
-            Text("Apps unblock for 15 minutes, then blocking resumes automatically.")
+            Text(.ruleDetailPauseConfirmationMessage)
         }
     }
 
@@ -163,22 +163,22 @@ struct RuleDetailSheet: View {
     ) -> some View {
         Menu {
             if dto.isPaused(at: now) {
-                Button("Resume Blocking") {
+                Button(CopyKey.ruleDetailResumeBlockingAction.resource) {
                     enforcer.resume(rule, rules: rules)
                 }
                 .accessibilityIdentifier("resumeRuleButton")
             } else if RulePolicy.canPause(dto, usage: usage, at: now) {
-                Button("Pause for 15 minutes") {
+                Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
                     pendingPause = true
                 }
                 .accessibilityIdentifier("pauseRuleButton")
             }
-            Button(rule.isEnabled ? "Disable" : "Enable") {
+            Button(rule.isEnabled ? CopyKey.ruleDetailDisableAction.resource : CopyKey.ruleDetailEnableAction.resource) {
                 rule.isEnabled.toggle()
                 rule.pausedUntil = nil
             }
             .accessibilityIdentifier("disableRuleButton")
-            Button("Delete", role: .destructive) {
+            Button(CopyKey.ruleDetailDeleteAction.resource, role: .destructive) {
                 pendingDeletion = true
                 dismiss()
             }
@@ -186,7 +186,7 @@ struct RuleDetailSheet: View {
         } label: {
             Image(systemName: "ellipsis")
         }
-        .accessibilityLabel("Rule Actions")
+        .accessibilityLabel(CopyKey.ruleDetailRuleActionsLabel.resource)
         .accessibilityIdentifier("ruleActionsMenu")
     }
 
@@ -228,36 +228,36 @@ struct RuleDetailSheet: View {
         let usage = enforcer.usage(for: dto, at: now)
         let status = dto.status(at: now, usage: usage)
         
-        row("Kind", dto.kind.displayName)
-        row("Status", rule.dto.rowContext(for: status, usage: usage ?? RuleUsageDTO(), relativeTo: now))
+        row(CopyKey.ruleDetailKindRowLabel.string, dto.kind.displayName)
+        row(CopyKey.ruleDetailStatusRowLabel.string, rule.dto.rowContext(for: status, usage: usage ?? RuleUsageDTO(), relativeTo: now))
     }
 
     @ViewBuilder
     private var detailRows: some View {
         switch rule.configuration {
         case .schedule(let config):
-            row("During this time", rule.schedule.timeRangeLabel)
-            row("On these days", rule.days.summary)
+            row(CopyKey.ruleDetailDuringThisTimeRowLabel.string, rule.schedule.timeRangeLabel)
+            row(CopyKey.ruleDetailOnTheseDaysRowLabel.string, rule.days.summary)
             row(config.selectionMode.displayName, appCountLabel)
-            row("Pausing allowed", rule.hardMode ? "No" : "Yes")
+            row(CopyKey.ruleDetailPausingAllowedRowLabel.string, rule.hardMode ? CopyKey.ruleDetailNoValue.string : CopyKey.ruleDetailYesValue.string)
         case .timeLimit(let config):
-            row("When I use", appCountLabel)
-            row("For this long", "\(config.dailyLimitMinutes)m daily")
-            row("On these days", rule.days.summary)
-            row("Then block until", "Tomorrow")
-            row("Pausing allowed", rule.hardMode ? "No" : "Yes")
+            row(CopyKey.ruleDetailWhenIUseRowLabel.string, appCountLabel)
+            row(CopyKey.ruleDetailForThisLongRowLabel.string, CopyKey.ruleDetailDailyMinutesSummaryFormat.string(config.dailyLimitMinutes))
+            row(CopyKey.ruleDetailOnTheseDaysRowLabel.string, rule.days.summary)
+            row(CopyKey.ruleDetailThenBlockUntilRowLabel.string, CopyKey.ruleDetailTomorrowValue.string)
+            row(CopyKey.ruleDetailPausingAllowedRowLabel.string, rule.hardMode ? CopyKey.ruleDetailNoValue.string : CopyKey.ruleDetailYesValue.string)
         case .openLimit(let config):
-            row("When I open", appCountLabel)
-            row("More than", "\(config.maxOpens) opens daily")
-            row("On these days", rule.days.summary)
-            row("Then block until", "Tomorrow")
-            row("Pausing allowed", "No")
+            row(CopyKey.ruleDetailWhenIOpenRowLabel.string, appCountLabel)
+            row(CopyKey.ruleDetailMoreThanRowLabel.string, CopyKey.ruleDetailOpensCountSummaryFormat.string(config.maxOpens))
+            row(CopyKey.ruleDetailOnTheseDaysRowLabel.string, rule.days.summary)
+            row(CopyKey.ruleDetailThenBlockUntilRowLabel.string, CopyKey.ruleDetailTomorrowValue.string)
+            row(CopyKey.ruleDetailPausingAllowedRowLabel.string, CopyKey.ruleDetailNoValue.string)
         }
     }
 
     private var appCountLabel: String {
-        guard let list = rule.appList else { return "No apps" }
-        return "\(list.name) · \(list.appCountLabel)"
+        guard let list = rule.appList else { return CopyKey.ruleDetailNoAppsPlaceholder.string }
+        return CopyKey.ruleDetailAppListSummaryFormat.string(list.name, list.appCountLabel)
     }
 
     private func row(_ label: String, _ value: String) -> some View {
@@ -277,7 +277,7 @@ private struct RuleUsageReportPage: View {
     var body: some View {
         DeviceActivityReport(.ruleUsage, filter: filter)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("Usage")
+            .navigationTitle(CopyKey.ruleDetailUsageReportNavigationTitle.resource)
             .navigationBarTitleDisplayMode(.inline)
             .accessibilityIdentifier("ruleUsageReport")
     }

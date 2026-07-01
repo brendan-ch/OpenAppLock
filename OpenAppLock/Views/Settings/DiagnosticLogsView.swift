@@ -19,7 +19,7 @@ struct DiagnosticLogsView: View {
         List {
             if days.isEmpty {
                 Section {
-                    Text("No logs yet. Logs are recorded automatically as rules enforce.")
+                    Text(.diagnosticsNoLogsMessage)
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("noLogsLabel")
                 }
@@ -31,6 +31,16 @@ struct DiagnosticLogsView: View {
                         } label: {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(day.key)
+                                // Out of scope for the catalog migration: SwiftUI's
+                                // `^[...](inflect: true)` automatic grammar agreement
+                                // requires compile-time string interpolation and has
+                                // no equivalent in `CopyKey.string(_:)`'s
+                                // `String(format:)` resolution; moving it would
+                                // either lose correct singular/plural inflection or
+                                // require plural-variation catalog support, which the
+                                // migration's design spec explicitly rules out
+                                // (`Docs/Agents/Specs/COPY_STRING_CATALOG_MIGRATION.md`,
+                                // "Out of scope: Pluralization overhaul").
                                 Text("^[\(day.lineCount) line](inflect: true)")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
@@ -39,33 +49,34 @@ struct DiagnosticLogsView: View {
                         .accessibilityIdentifier("logDayRow-\(day.key)")
                     }
                 } header: {
-                    Text("Days").textCase(nil)
+                    Text(.diagnosticsDaysSectionHeader).textCase(nil)
                 } footer: {
-                    Text("Logs stay on-device and do not include information about which apps are blocked.")
+                    Text(.diagnosticsDaysSectionFooter)
                 }
                 Section {
                     Button(role: .destructive) {
                         showClearConfirmation = true
                     } label: {
-                        Text("Clear All Logs")
+                        Text(.diagnosticsClearAllLogsButton)
                     }
                     .accessibilityIdentifier("clearLogsButton")
                     .confirmationDialog(
-                        "Clear all logs?", isPresented: $showClearConfirmation,
+                        CopyKey.diagnosticsClearLogsConfirmationTitle.resource,
+                        isPresented: $showClearConfirmation,
                         titleVisibility: .visible
                     ) {
-                        Button("Clear All Logs", role: .destructive) {
+                        Button(CopyKey.diagnosticsClearAllLogsButton.resource, role: .destructive) {
                             logStore.clearAll()
                             days = logStore.availableDays()
                         }
-                        Button("Cancel", role: .cancel) {}
+                        Button(CopyKey.diagnosticsCancelButton.resource, role: .cancel) {}
                     } message: {
-                        Text("This permanently deletes all recorded diagnostic logs on this device.")
+                        Text(.diagnosticsClearLogsConfirmationMessage)
                     }
                 }
             }
         }
-        .navigationTitle("Logs")
+        .navigationTitle(CopyKey.diagnosticsNavigationTitle.resource)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { days = logStore.availableDays() }
     }
@@ -80,7 +91,7 @@ struct LogDayDetailView: View {
 
     var body: some View {
         ScrollView {
-            Text(text.isEmpty ? "No entries." : text)
+            Text(text.isEmpty ? CopyKey.diagnosticsNoEntriesPlaceholder.string : text)
                 .font(.system(.footnote, design: .monospaced))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .textSelection(.enabled)

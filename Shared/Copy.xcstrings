@@ -444,6 +444,192 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ · %@" } }
       }
+    },
+    "settings.uninstallProtectionToggleLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Uninstall Protection" } }
+      }
+    },
+    "settings.protectionSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Protection" } }
+      }
+    },
+    "settings.uninstallProtectionLockedFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Locked while a Hard Mode rule is actively blocking." } }
+      }
+    },
+    "settings.uninstallProtectionUnlockedFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "While on, apps can’t be deleted from this device whenever a Hard Mode rule is actively blocking." } }
+      }
+    },
+    "settings.appListsRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Lists" } }
+      }
+    },
+    "settings.notificationsRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } }
+      }
+    },
+    "settings.logsRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Logs" } }
+      }
+    },
+    "settings.moreSettingsSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "More Settings" } }
+      }
+    },
+    "settings.navigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } }
+      }
+    },
+    "settings.githubLinkLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "GitHub" } }
+      }
+    },
+    "settings.websiteLinkLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Website" } }
+      }
+    },
+    "settings.aboutSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } }
+      }
+    },
+    "notifications.navigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } }
+      }
+    },
+    "notifications.allowedStatusLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications allowed" } }
+      }
+    },
+    "notifications.allowButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow Notifications" } }
+      }
+    },
+    "notifications.openSettingsButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Settings" } }
+      }
+    },
+    "notifications.permissionSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Permission" } }
+      }
+    },
+    "notifications.deniedFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications are turned off for OpenAppLock. Turn them on in Settings to get these reminders." } }
+      }
+    },
+    "notifications.scheduleStartToggleLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Schedule starting soon" } }
+      }
+    },
+    "notifications.timeLimitToggleLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time limit almost up" } }
+      }
+    },
+    "notifications.notifyMeSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notify Me" } }
+      }
+    },
+    "notifications.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "“Schedule starting soon” warns 5 minutes before a schedule rule blocks. “Time limit almost up” warns when a time limit has 5 minutes left." } }
+      }
+    },
+    "diagnostics.noLogsMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No logs yet. Logs are recorded automatically as rules enforce." } }
+      }
+    },
+    "diagnostics.daysSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Days" } }
+      }
+    },
+    "diagnostics.daysSectionFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Logs stay on-device and do not include information about which apps are blocked." } }
+      }
+    },
+    "diagnostics.clearAllLogsButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear All Logs" } }
+      }
+    },
+    "diagnostics.clearLogsConfirmationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear all logs?" } }
+      }
+    },
+    "diagnostics.cancelButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } }
+      }
+    },
+    "diagnostics.clearLogsConfirmationMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This permanently deletes all recorded diagnostic logs on this device." } }
+      }
+    },
+    "diagnostics.navigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Logs" } }
+      }
+    },
+    "diagnostics.noEntriesPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No entries." } }
+      }
     }
   },
   "version" : "1.0"

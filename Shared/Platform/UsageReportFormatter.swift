@@ -15,25 +15,27 @@ nonisolated enum UsageReportFormatter {
     static func duration(minutes: Int) -> String {
         let hours = minutes / 60
         let remainder = minutes % 60
-        if hours > 0 && remainder > 0 { return "\(hours)h \(remainder)m" }
-        if hours > 0 { return "\(hours)h" }
-        return "\(remainder)m"
+        if hours > 0 && remainder > 0 {
+            return CopyKey.usageReportDurationHoursMinutesFormat.string(hours, remainder)
+        }
+        if hours > 0 { return CopyKey.usageReportDurationHoursFormat.string(hours) }
+        return CopyKey.usageReportDurationMinutesFormat.string(remainder)
     }
 
     /// A single usage figure from raw seconds: "<1m" for any non-zero usage under
     /// a minute, otherwise the whole-minute `duration`; "0m" for none. Shared by
     /// the per-app rows and `todayTotal` so both read the same way.
     static func durationLabel(seconds: Double) -> String {
-        guard seconds > 0 else { return "0m" }
-        if seconds < 60 { return "<1m" }
+        guard seconds > 0 else { return CopyKey.usageReportDurationMinutesFormat.string(0) }
+        if seconds < 60 { return CopyKey.usageReportUnderAMinute.string }
         return duration(minutes: Int(seconds / 60))
     }
 
     /// The total line: "1h 12m today" / "<1m today"; "No usage today" only when
     /// there is no usage at all.
     static func todayTotal(seconds: Double) -> String {
-        guard seconds > 0 else { return "No usage today" }
-        return "\(durationLabel(seconds: seconds)) today"
+        guard seconds > 0 else { return CopyKey.usageReportNoUsageToday.string }
+        return CopyKey.usageReportTodayTotalFormat.string(durationLabel(seconds: seconds))
     }
 
     /// Builds the report payload from raw per-app `(name, seconds)` pairs. Entries

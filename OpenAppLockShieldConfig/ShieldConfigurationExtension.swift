@@ -57,7 +57,7 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
             backgroundBlurStyle: .systemMaterial,
             title: .init(text: presentation.title, color: .label),
             subtitle: .init(text: presentation.subtitle, color: .secondaryLabel),
-            primaryButtonLabel: .init(text: "OK", color: .white),
+            primaryButtonLabel: .init(text: CopyKey.shieldPrimaryButtonLabel.string, color: .white),
             primaryButtonBackgroundColor: .systemBlue,
             secondaryButtonLabel: presentation.secondaryButton.map {
                 .init(text: $0, color: .systemBlue)

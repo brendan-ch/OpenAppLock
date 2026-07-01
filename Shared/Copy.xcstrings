@@ -1188,6 +1188,102 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Make room for what matters." } }
       }
+    },
+    "shield.blockedTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Blocked" } }
+      }
+    },
+    "shield.blockedSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This app is blocked by OpenAppLock." } }
+      }
+    },
+    "shield.noOpensLeft" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No opens left today — the block lifts tomorrow." } }
+      }
+    },
+    "shield.openLimit.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Opened %lld of %lld times today. Each open lasts %lld minutes." } }
+      }
+    },
+    "shield.openButtonOne" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open (1 left)" } }
+      }
+    },
+    "shield.openButtonMany" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open (%lld left)" } }
+      }
+    },
+    "shield.primaryButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } }
+      }
+    },
+    "notification.timeLimitWarningTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time limit almost up" } }
+      }
+    },
+    "notification.timeLimitWarningBodyFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@: %lld minutes of your time limit left." } }
+      }
+    },
+    "usageReport.noUsageToday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No usage today" } }
+      }
+    },
+    "usageReport.todayTotalFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ today" } }
+      }
+    },
+    "usageReport.durationHoursMinutesFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldh %lldm" } }
+      }
+    },
+    "usageReport.durationHoursFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldh" } }
+      }
+    },
+    "usageReport.durationMinutesFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm" } }
+      }
+    },
+    "usageReport.underAMinute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "<1m" } }
+      }
+    },
+    "usageReport.unknownAppName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unknown" } }
+      }
     }
   },
   "version" : "1.0"

@@ -42,9 +42,9 @@ enum LimitWarningDecision {
         else { return nil }
 
         return (
-            title: "Time limit almost up",
-            body: "\(snapshot.name): \(MonitoringPlan.limitWarningLeadMinutes) minutes of your "
-                + "time limit left."
+            title: CopyKey.notificationTimeLimitWarningTitle.string,
+            body: CopyKey.notificationTimeLimitWarningBodyFormat.string(
+                snapshot.name, MonitoringPlan.limitWarningLeadMinutes)
         )
     }
 }

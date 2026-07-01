@@ -249,6 +249,28 @@ nonisolated enum CopyKey: String, CaseIterable {
     case presetBalanceSectionTitle = "preset.balanceSectionTitle"
     case presetBalanceSectionSubtitle = "preset.balanceSectionSubtitle"
 
+    // MARK: - ShieldPresentation (Task 7)
+    case shieldBlockedTitle = "shield.blockedTitle"
+    case shieldBlockedSubtitle = "shield.blockedSubtitle"
+    case shieldNoOpensLeft = "shield.noOpensLeft"
+    case shieldOpenLimitSubtitle = "shield.openLimit.subtitle"
+    case shieldOpenButtonOne = "shield.openButtonOne"
+    case shieldOpenButtonMany = "shield.openButtonMany"
+    case shieldPrimaryButtonLabel = "shield.primaryButtonLabel"
+
+    // MARK: - LimitWarningDecision (Task 7)
+    case notificationTimeLimitWarningTitle = "notification.timeLimitWarningTitle"
+    case notificationTimeLimitWarningBodyFormat = "notification.timeLimitWarningBodyFormat"
+
+    // MARK: - UsageReportFormatter + RuleUsageReport (Task 7)
+    case usageReportNoUsageToday = "usageReport.noUsageToday"
+    case usageReportTodayTotalFormat = "usageReport.todayTotalFormat"
+    case usageReportDurationHoursMinutesFormat = "usageReport.durationHoursMinutesFormat"
+    case usageReportDurationHoursFormat = "usageReport.durationHoursFormat"
+    case usageReportDurationMinutesFormat = "usageReport.durationMinutesFormat"
+    case usageReportUnderAMinute = "usageReport.underAMinute"
+    case usageReportUnknownAppName = "usageReport.unknownAppName"
+
     /// Localized resource — the dedicated `Copy` table (`Shared/Copy.xcstrings`),
     /// `.main` bundle. A non-default table keeps our hand-authored symbolic keys
     /// isolated from Xcode's build-time string extraction, which only ever writes

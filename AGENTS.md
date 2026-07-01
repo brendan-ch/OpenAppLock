@@ -141,7 +141,7 @@ Where each topic is documented:
 | Persisted rule + common attributes; editor draft; cross-process mirror | `OpenAppLock/Models/BlockingRule.swift`, `OpenAppLock/Models/RuleDraft.swift`, `Shared/DTOs/RuleSnapshotDTO.swift` |
 | Derived status & countdown labels | `OpenAppLock/Logic/RuleStatus.swift` |
 | Day-of-week picker & summary | `OpenAppLock/Views/Components/DayOfWeekPicker.swift`, `Shared/Models/Weekday.swift` |
-| Presets; editors (all kinds); detail | `OpenAppLock/Models/RulePreset.swift`, `OpenAppLock/Views/Rules/RuleEditorView.swift`, `OpenAppLock/Views/Rules/RuleDetailSheet.swift` |
+| Presets; editor form; New Rule + in-place detail editing; discard prompt | `OpenAppLock/Models/RulePreset.swift`, `OpenAppLock/Views/Rules/RuleEditorForm.swift` (shared form body), `OpenAppLock/Views/Rules/RuleEditorView.swift` (New Rule wrapper), `OpenAppLock/Views/Rules/RuleDetailSheet.swift` (detail ⇄ editor cross-fade), `OpenAppLock/Logic/RuleEditState.swift` (outstanding-edits check) |
 | App lists (model, picker, library, edit) + legacy migration | `OpenAppLock/Models/AppList.swift`, `OpenAppLock/Views/AppLists/*`, `OpenAppLock/Services/AppListMigration.swift` |
 | Home: Currently Blocking + Usage, row strings | `OpenAppLock/Views/Home/HomeView.swift`, `OpenAppLock/Logic/UsageDisplay.swift` |
 | Schedule activation / time-window math (incl. midnight crossing) | `Shared/Models/RuleSchedule.swift`, `Shared/Enforcement/ScheduleEnforcement.swift` |

@@ -278,6 +278,18 @@ nonisolated enum CopyKey: String, CaseIterable {
     case selectionModeBlock = "selectionMode.block"
     case selectionModeAllowOnly = "selectionMode.allowOnly"
 
+    // MARK: - Merge (origin/main #38)
+    case ruleDetailDoneLabel = "ruleDetail.doneLabel"
+    case ruleDetailDiscardChangesTitle = "ruleDetail.discardChangesTitle"
+    case ruleDetailDiscardChangesAction = "ruleDetail.discardChangesAction"
+    case ruleDetailKeepEditingAction = "ruleDetail.keepEditingAction"
+    case ruleDetailUnsavedEditsMessage = "ruleDetail.unsavedEditsMessage"
+    case ruleDetailDeleteConfirmationTitle = "ruleDetail.deleteConfirmationTitle"
+    case ruleDetailDeleteConfirmationMessage = "ruleDetail.deleteConfirmationMessage"
+    case appListsListActionsLabel = "appLists.listActionsLabel"
+    case appListsDeleteConfirmationTitle = "appLists.deleteConfirmationTitle"
+    case appListsDeleteConfirmationMessage = "appLists.deleteConfirmationMessage"
+
     /// Localized resource — the dedicated `Copy` table (`Shared/Copy.xcstrings`),
     /// `.main` bundle. A non-default table keeps our hand-authored symbolic keys
     /// isolated from Xcode's build-time string extraction, which only ever writes

@@ -8,12 +8,18 @@ import FamilyControls
 import SwiftData
 import SwiftUI
 
-/// Rule summary presented as a plain sheet: an inline title with a live status
-/// caption, the rule's facts as labeled rows, an "Edit" button, and an options
-/// menu (ellipsis) mirroring the editor's. The menu offers a temporary Pause (a
-/// confirmed 15-minute lift) or Resume on a pausable/paused block, plus Disable/
-/// Enable and Delete. A hard-locked rule hides both the menu and Edit and shows
-/// a lock notice instead.
+/// Rule summary presented as a plain sheet that doubles as the rule editor: the
+/// rule's facts as labeled rows, an options menu (ellipsis), and an "Edit" button
+/// that **cross-fades the sheet in place** into `RuleEditorForm` rather than
+/// pushing a new screen. Editing keeps the same surface — Edit fades the detail
+/// out and the form in (fade-through, no overlap); Save commits and fades back;
+/// Close fades back too, confirming first when there are unsaved edits (the
+/// discard prompt). While editing with unsaved edits the sheet's swipe-to-dismiss
+/// is blocked, so the only way out is the Close button.
+///
+/// The options menu offers a temporary Pause (a confirmed 15-minute lift) or
+/// Resume on a pausable/paused block, plus Disable/Enable and a confirmed Delete.
+/// A hard-locked rule hides both the menu and Edit and shows a lock notice instead.
 struct RuleDetailSheet: View {
     let rule: BlockingRule
 
@@ -21,35 +27,41 @@ struct RuleDetailSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(RuleEnforcer.self) private var enforcer
     @Query(sort: \BlockingRule.createdAt) private var rules: [BlockingRule]
+
     @State private var isEditing = false
+    /// Working copy edited in place; re-captured from the rule on every mode
+    /// switch, so each edit starts fresh and discarding simply drops it.
+    @State private var draft: RuleDraft
+    /// What the current edit opened with, for the discard prompt's dirty check.
+    @State private var originalDraft: RuleDraft
+    /// Drives the fade-through: faded to 0, the mode swaps, then back to 1.
+    @State private var contentOpacity: Double = 1
     @State private var pendingDeletion = false
     @State private var pendingPause = false
+    @State private var confirmingDiscard = false
+    @State private var confirmingDelete = false
+
+    init(rule: BlockingRule) {
+        self.rule = rule
+        let draft = RuleDraft(rule: rule)
+        _draft = State(initialValue: draft)
+        _originalDraft = State(initialValue: draft)
+    }
+
+    private var hasOutstandingEdits: Bool {
+        RuleEditState.hasOutstandingEdits(original: originalDraft, current: draft)
+    }
 
     var body: some View {
         NavigationStack {
             TimelineView(.periodic(from: .now, by: 30)) { timeline in
-                detailList(now: timeline.date)
-            }
-            .navigationDestination(isPresented: $isEditing) {
-                RuleEditorView(
-                    mode: .edit(isEnabled: rule.isEnabled),
-                    draft: RuleDraft(rule: rule),
-                    onCommit: { draft in
-                        draft.apply(to: rule)
-                        isEditing = false
-                    },
-                    onToggleEnabled: {
-                        rule.isEnabled.toggle()
-                        rule.pausedUntil = nil
-                        isEditing = false
-                    },
-                    onDelete: {
-                        pendingDeletion = true
-                        dismiss()
-                    }
-                )
+                modeContent(now: timeline.date)
             }
         }
+        // While editing with unsaved changes, block the sheet's swipe-to-dismiss
+        // so the only way out is Close, which routes through the discard prompt
+        // (mirrors AppListEditorView).
+        .interactiveDismissDisabled(isEditing && hasOutstandingEdits)
         .onDisappear {
             if pendingDeletion {
                 modelContext.delete(rule)
@@ -57,13 +69,43 @@ struct RuleDetailSheet: View {
         }
     }
 
-    private func detailList(now: Date) -> some View {
+    /// The cross-faded body: the read-only detail or the editor form, with the
+    /// navigation bar morphing between them. Only the content fades (via
+    /// `contentOpacity`); the toolbar swaps during the invisible moment.
+    private func modeContent(now: Date) -> some View {
         let dto = rule.dto
         let usage = enforcer.usage(for: dto, at: now)
-        let status = dto.status(at: now, usage: usage)
-        return List {
+        return Group {
+            if isEditing {
+                RuleEditorForm(draft: $draft)
+            } else {
+                detailList(dto: dto, usage: usage, now: now)
+            }
+        }
+        .opacity(contentOpacity)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { toolbar(dto: dto, usage: usage, now: now) }
+        // Pause confirmation, triggered by the options menu's "Pause" item.
+        // Attached here (outside the Menu) so the menu dismisses first and the
+        // dialog then presents reliably.
+        .confirmationDialog(
+            Text(CopyKey.ruleDetailPauseConfirmationTitleFormat.string(rule.name)),
+            isPresented: $pendingPause,
+            titleVisibility: .visible
+        ) {
+            Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
+                enforcer.pause(rule, rules: rules)
+                pendingPause = false
+            }
+        } message: {
+            Text(.ruleDetailPauseConfirmationMessage)
+        }
+    }
+
+    private func detailList(dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date) -> some View {
+        List {
             Section(CopyKey.ruleDetailGeneralSectionHeader.resource) {
-                generalRows(now: now)
+                generalRows(dto: dto, usage: usage, now: now)
             }
 
             Section(CopyKey.ruleDetailDetailsSectionHeader.resource) {
@@ -102,85 +144,107 @@ struct RuleDetailSheet: View {
                 }
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button(CopyKey.ruleDetailCloseButton.resource, systemImage: "xmark") {
-                    dismiss()
-                }
-                .accessibilityIdentifier("closeDetailButton")
+    }
 
+    /// The navigation bar, shared across both modes so it morphs rather than
+    /// pops: a constant Close button (and options menu), a trailing primary that
+    /// flips Edit ⇄ Save, and a principal title that stays the rule's name.
+    @ToolbarContentBuilder
+    private func toolbar(dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date) -> some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button(CopyKey.ruleDetailCloseButton.resource, systemImage: "xmark") {
+                attemptClose()
             }
-
-            if RulePolicy.canEdit(dto, usage: usage, at: now) {
-                ToolbarItem(placement: .topBarTrailing) {
-                    ruleActionsMenu(dto: dto, usage: usage, now: now)
+            .accessibilityIdentifier("closeDetailButton")
+            // Discard prompt for closing the editor with unsaved edits; attached
+            // to the Close button so it anchors there (mirrors AppListEditorView).
+            .confirmationDialog(
+                CopyKey.ruleDetailDiscardChangesTitle.string,
+                isPresented: $confirmingDiscard,
+                titleVisibility: .visible
+            ) {
+                Button(CopyKey.ruleDetailDiscardChangesAction.resource, role: .destructive) {
+                    setEditing(false)
                 }
-                ToolbarItem(placement: .primaryAction) {
+                Button(CopyKey.ruleDetailKeepEditingAction.resource, role: .cancel) {}
+            } message: {
+                Text(.ruleDetailUnsavedEditsMessage)
+            }
+        }
+
+        // The options menu and the Edit/Save button sit behind the live
+        // `canEdit` gate, re-checked every render. If a hard block engages while
+        // the form is open, Save (and the weakening menu actions) disappear, so
+        // in-progress edits can only be discarded via Close — never committed.
+        // That is the Hard Mode invariant (an active hard block can't be
+        // weakened), not an oversight: it closes the commit window the old
+        // pushed editor left open.
+        if RulePolicy.canEdit(dto, usage: usage, at: now) {
+            ToolbarItem(placement: .topBarTrailing) {
+                ruleActionsMenu(dto: dto, usage: usage, now: now)
+            }
+            ToolbarItem(placement: .primaryAction) {
+                if isEditing {
+                    Button(role: .confirm) {
+                        commitEdit()
+                    } label: {
+                        Image(systemName: "checkmark")
+                    }
+                    .accessibilityLabel(CopyKey.ruleDetailDoneLabel.resource)
+                    .accessibilityIdentifier("doneButton")
+                } else {
                     Button(CopyKey.ruleDetailEditButton.resource, systemImage: "pencil") {
-                        isEditing = true
+                        setEditing(true)
                     }
                     .accessibilityIdentifier("editRuleButton")
                 }
             }
-            
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: 1) {
-                    Text(rule.name)
-                        .font(.headline)
-                        .accessibilityIdentifier("detailRuleName")
-//                    Text("\(dto.kind.displayName), \(dto.rowContext(for: status, usage: usage ?? RuleUsageDTO(), relativeTo: now))")
-//                        .font(.caption)
-//                        .foregroundStyle(.secondary)
-//                        .accessibilityIdentifier("detailStatusLabel")
-                }
-            }
         }
-        // Pause confirmation, triggered by the options menu's "Pause" item.
-        // Attached here (outside the Menu) so the menu dismisses first and the
-        // dialog then presents reliably.
-        .confirmationDialog(
-            Text(CopyKey.ruleDetailPauseConfirmationTitleFormat.string(rule.name)),
-            isPresented: $pendingPause,
-            titleVisibility: .visible
-        ) {
-            Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
-                enforcer.pause(rule, rules: rules)
-                pendingPause = false
+
+        ToolbarItem(placement: .principal) {
+            if isEditing {
+                Text(draft.sanitized().name)
+                    .font(.headline)
+                    .lineLimit(1)
+                    .accessibilityIdentifier("ruleEditorTitle")
+            } else {
+                Text(rule.name)
+                    .font(.headline)
+                    .accessibilityIdentifier("detailRuleName")
             }
-        } message: {
-            Text(.ruleDetailPauseConfirmationMessage)
         }
     }
 
-    /// The viewing-view options menu, mirroring the editor's. A temporary Pause
-    /// (when the block is pausable) or Resume (when paused) leads, then Disable/
-    /// Enable and Delete. Surfaced only when the rule is not hard-locked, so a
-    /// hard block exposes no weakening action — the lock notice shows instead.
+    /// The options menu, present in both modes so the bar doesn't pop. Pause /
+    /// Resume and Disable / Enable act on the live rule, so they appear only in
+    /// view mode — invoking them mid-edit would silently drop the draft; a
+    /// confirmed Delete is offered in both. Surfaced only when the rule is not
+    /// hard-locked, so a hard block exposes no weakening action.
     @ViewBuilder
     private func ruleActionsMenu(
         dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date
     ) -> some View {
         Menu {
-            if dto.isPaused(at: now) {
-                Button(CopyKey.ruleDetailResumeBlockingAction.resource) {
-                    enforcer.resume(rule, rules: rules)
+            if !isEditing {
+                if dto.isPaused(at: now) {
+                    Button(CopyKey.ruleDetailResumeBlockingAction.resource) {
+                        enforcer.resume(rule, rules: rules)
+                    }
+                    .accessibilityIdentifier("resumeRuleButton")
+                } else if RulePolicy.canPause(dto, usage: usage, at: now) {
+                    Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
+                        pendingPause = true
+                    }
+                    .accessibilityIdentifier("pauseRuleButton")
                 }
-                .accessibilityIdentifier("resumeRuleButton")
-            } else if RulePolicy.canPause(dto, usage: usage, at: now) {
-                Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
-                    pendingPause = true
+                Button(rule.isEnabled ? CopyKey.ruleDetailDisableAction.resource : CopyKey.ruleDetailEnableAction.resource) {
+                    rule.isEnabled.toggle()
+                    rule.pausedUntil = nil
                 }
-                .accessibilityIdentifier("pauseRuleButton")
+                .accessibilityIdentifier("disableRuleButton")
             }
-            Button(rule.isEnabled ? CopyKey.ruleDetailDisableAction.resource : CopyKey.ruleDetailEnableAction.resource) {
-                rule.isEnabled.toggle()
-                rule.pausedUntil = nil
-            }
-            .accessibilityIdentifier("disableRuleButton")
             Button(CopyKey.ruleDetailDeleteAction.resource, role: .destructive) {
-                pendingDeletion = true
-                dismiss()
+                confirmingDelete = true
             }
             .accessibilityIdentifier("deleteRuleButton")
         } label: {
@@ -188,7 +252,68 @@ struct RuleDetailSheet: View {
         }
         .accessibilityLabel(CopyKey.ruleDetailRuleActionsLabel.resource)
         .accessibilityIdentifier("ruleActionsMenu")
+        // Delete confirmation; attached to the menu so it anchors under the
+        // ellipsis. The menu dismisses first, then the dialog presents.
+        .confirmationDialog(
+            CopyKey.ruleDetailDeleteConfirmationTitle.string,
+            isPresented: $confirmingDelete,
+            titleVisibility: .visible
+        ) {
+            Button(CopyKey.ruleDetailDeleteAction.resource, role: .destructive) {
+                pendingDeletion = true
+                dismiss()
+            }
+        } message: {
+            Text(.ruleDetailDeleteConfirmationMessage)
+        }
     }
+
+    // MARK: - Mode transitions
+
+    /// Cross-fades to the given mode: fade the content out, swap modes while it is
+    /// invisible (re-capturing a fresh draft so each edit starts clean and a
+    /// discard simply drops the working copy), then fade back in.
+    private func setEditing(_ editing: Bool) {
+        // Ignore re-entrant calls while a fade is in flight. A transition only
+        // ever starts from a settled state (opacity 1); without this guard a
+        // second call mid-fade would re-animate `contentOpacity` toward a value
+        // it is already heading to, and a no-op animation's completion may never
+        // fire — which would strand the content invisible at opacity 0.
+        guard contentOpacity == 1 else { return }
+        withAnimation(.easeIn(duration: 0.18)) {
+            contentOpacity = 0
+        } completion: {
+            isEditing = editing
+            let fresh = RuleDraft(rule: rule)
+            draft = fresh
+            originalDraft = fresh
+            withAnimation(.easeOut(duration: 0.18)) {
+                contentOpacity = 1
+            }
+        }
+    }
+
+    /// Close means dismiss the sheet in view mode, and leave edit mode in edit
+    /// mode — confirming first when there are unsaved edits.
+    private func attemptClose() {
+        guard isEditing else {
+            dismiss()
+            return
+        }
+        if hasOutstandingEdits {
+            confirmingDiscard = true
+        } else {
+            setEditing(false)
+        }
+    }
+
+    /// Applies the (sanitized) edits to the rule and fades back to the detail.
+    private func commitEdit() {
+        draft.sanitized().apply(to: rule)
+        setEditing(false)
+    }
+
+    // MARK: - Detail rows
 
     /// Whether this rule selects any app/category/web domain to scope the report
     /// to. An empty selection makes `usageFilter`'s token sets empty, which
@@ -221,15 +346,12 @@ struct RuleDetailSheet: View {
             categories: selection.categoryTokens,
             webDomains: selection.webDomainTokens)
     }
-    
+
     @ViewBuilder
-    private func generalRows(now: Date) -> some View {
-        let dto = rule.dto
-        let usage = enforcer.usage(for: dto, at: now)
+    private func generalRows(dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date) -> some View {
         let status = dto.status(at: now, usage: usage)
-        
         row(CopyKey.ruleDetailKindRowLabel.string, dto.kind.displayName)
-        row(CopyKey.ruleDetailStatusRowLabel.string, rule.dto.rowContext(for: status, usage: usage ?? RuleUsageDTO(), relativeTo: now))
+        row(CopyKey.ruleDetailStatusRowLabel.string, dto.rowContext(for: status, usage: usage ?? RuleUsageDTO(), relativeTo: now))
     }
 
     @ViewBuilder

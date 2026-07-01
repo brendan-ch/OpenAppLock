@@ -1314,6 +1314,66 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Unknown" } }
       }
+    },
+    "ruleDetail.doneLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } }
+      }
+    },
+    "ruleDetail.discardChangesTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discard Changes?" } }
+      }
+    },
+    "ruleDetail.discardChangesAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discard Changes" } }
+      }
+    },
+    "ruleDetail.keepEditingAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keep Editing" } }
+      }
+    },
+    "ruleDetail.unsavedEditsMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your edits to this rule haven’t been saved." } }
+      }
+    },
+    "ruleDetail.deleteConfirmationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete this rule?" } }
+      }
+    },
+    "ruleDetail.deleteConfirmationMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This rule will be permanently removed." } }
+      }
+    },
+    "appLists.listActionsLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "List Actions" } }
+      }
+    },
+    "appLists.deleteConfirmationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete this list?" } }
+      }
+    },
+    "appLists.deleteConfirmationMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This app list will be permanently removed." } }
+      }
     }
   },
   "version" : "1.0"

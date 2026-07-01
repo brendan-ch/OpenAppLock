@@ -68,6 +68,46 @@ final class RuleManagementUITests: XCTestCase {
         XCTAssertTrue(row.label.contains("No"), "Expected 'Pausing allowed: No', got: \(row.label)")
     }
 
+    func testEditingRuleAndClosingWithChangesPromptsToDiscard() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToRulesTab()
+        app.buttons["ruleCard-Sleep"].waitToAppear().tap()
+        app.buttons["editRuleButton"].waitToAppear().tap()
+
+        // Make an outstanding edit by renaming the rule (submit to drop the
+        // keyboard, which otherwise interferes with resolving the dialog).
+        let nameField = app.textFields["ruleNameField"].waitToAppear()
+        nameField.tap()
+        nameField.typeText(" Edited\n")
+
+        // Closing the editor with unsaved edits confirms before discarding.
+        app.buttons["closeDetailButton"].waitToAppear().tap()
+        app.buttons["Discard Changes"].waitToAppear().tap()
+
+        // Discarding fades back to the detail with the original name intact —
+        // the editor cross-fades in place, it never pushed a separate screen.
+        XCTAssertEqual(app.staticTexts["detailRuleName"].waitToAppear().label, "Sleep")
+        app.buttons["editRuleButton"].waitToAppear()
+    }
+
+    func testEditingRuleAndClosingWithoutChangesSkipsPrompt() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToRulesTab()
+        app.buttons["ruleCard-Sleep"].waitToAppear().tap()
+        app.buttons["editRuleButton"].waitToAppear().tap()
+
+        // Enter and leave the editor without touching anything.
+        app.textFields["ruleNameField"].waitToAppear()
+        app.buttons["closeDetailButton"].waitToAppear().tap()
+
+        // No outstanding edits, so it fades straight back — no discard prompt.
+        XCTAssertFalse(
+            app.buttons["Discard Changes"].waitForExistence(timeout: 1.5),
+            "Closing an unedited rule editor must not prompt to discard"
+        )
+        app.buttons["editRuleButton"].waitToAppear()
+    }
+
     func testDisableRule() throws {
         let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
         app.goToRulesTab()
@@ -95,9 +135,11 @@ final class RuleManagementUITests: XCTestCase {
 
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
 
-        // Delete lives in the detail overlay's ellipsis options menu.
+        // Delete lives in the detail overlay's ellipsis options menu and now
+        // confirms before removing the rule.
         app.navigationBars.buttons["ruleActionsMenu"].waitToAppear().tap()
-        app.buttons["Delete"].waitToAppear().tap()
+        app.buttons["deleteRuleButton"].waitToAppear().tap()
+        app.sheets.buttons["Delete"].waitToAppear().tap()
 
         app.buttons["newRuleButton"].waitToAppear()
         XCTAssertFalse(

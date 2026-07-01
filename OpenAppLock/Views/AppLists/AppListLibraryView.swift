@@ -53,14 +53,14 @@ struct AppListLibraryView: View {
         Group {
             if lists.isEmpty {
                 ContentUnavailableView {
-                    Label("No App Lists", systemImage: "square.stack.3d.up")
+                    Label(CopyKey.appListsLibraryEmptyStateTitle.resource, systemImage: "square.stack.3d.up")
                 } description: {
                     // Identifier on the description so it stays a distinct
                     // element instead of collapsing onto the action button.
-                    Text("Create one to choose which apps a rule affects.")
+                    Text(.appListsLibraryEmptyStateDescription)
                         .accessibilityIdentifier("emptyAppListsLabel")
                 } actions: {
-                    Button("New List") {
+                    Button(CopyKey.appListsNewListLabel.resource) {
                         creatingList = true
                     }
                     .accessibilityIdentifier("emptyStateNewAppListButton")
@@ -72,11 +72,11 @@ struct AppListLibraryView: View {
                             listRow(list)
                         }
                     } header: {
-                        Text("Your App Lists").textCase(nil)
+                        Text(.appListsLibraryYourAppListsSectionHeader).textCase(nil)
                     } footer: {
                         if listsLocked {
                             Label(
-                                "Hard Mode is on — app lists are locked until the block ends.",
+                                CopyKey.appListsLibraryLockedFooter.resource,
                                 systemImage: "lock.fill"
                             )
                             .accessibilityElement(children: .combine)
@@ -90,7 +90,7 @@ struct AppListLibraryView: View {
         // unused list cannot weaken an active block — so the "+" is never gated.
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("New List", systemImage: "plus") {
+                Button(CopyKey.appListsNewListLabel.resource, systemImage: "plus") {
                     creatingList = true
                 }
                 .accessibilityIdentifier("newAppListButton")
@@ -109,10 +109,10 @@ struct AppListLibraryView: View {
         .navigationDestination(item: $viewingList) { list in
             AppListDetailView(list: list)
         }
-        .alert("This list is in use", isPresented: $deletionBlocked) {
-            Button("OK", role: .cancel) {}
+        .alert(Text(.appListsLibraryDeletionBlockedAlertTitle), isPresented: $deletionBlocked) {
+            Button(CopyKey.appListsOkButtonLabel.resource, role: .cancel) {}
         } message: {
-            Text("Remove it from the rules that use it before deleting.")
+            Text(.appListsLibraryDeletionBlockedAlertMessage)
         }
     }
 
@@ -140,13 +140,13 @@ struct AppListLibraryView: View {
                 // Locked lists stay read-only (no "Edit"), but can still be
                 // opened to view their apps; unlocked lists open the editor.
                 if listsLocked {
-                    Button("View") {
+                    Button(CopyKey.appListsLibraryViewButtonLabel.resource) {
                         viewingList = list
                     }
                     .font(.subheadline)
                     .accessibilityIdentifier("viewAppListButton-\(list.name)")
                 } else {
-                    Button("Edit") {
+                    Button(CopyKey.appListsLibraryEditButtonLabel.resource) {
                         editingList = list
                     }
                     .font(.subheadline)
@@ -187,7 +187,7 @@ struct AppListLibraryView: View {
     @ViewBuilder
     private func deleteAction(_ list: AppList) -> some View {
         if !listsLocked {
-            Button("Delete", role: .destructive) {
+            Button(CopyKey.appListsLibraryDeleteButtonLabel.resource, role: .destructive) {
                 delete(list)
             }
         }

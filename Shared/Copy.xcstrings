@@ -630,6 +630,180 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "No entries." } }
       }
+    },
+    "appLists.editAppsLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Apps" } }
+      }
+    },
+    "appLists.appsSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apps" } }
+      }
+    },
+    "appLists.newListLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "New List" } }
+      }
+    },
+    "appLists.editorNameFieldPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "List Name" } }
+      }
+    },
+    "appLists.editorNameSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Name" } }
+      }
+    },
+    "appLists.editorNoAppsYetMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No apps yet. Edit Apps to choose what this list includes." } }
+      }
+    },
+    "appLists.oneAppCountLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "1 App" } }
+      }
+    },
+    "appLists.appsCountFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld Apps" } }
+      }
+    },
+    "appLists.editListLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit List" } }
+      }
+    },
+    "appLists.closeButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } }
+      }
+    },
+    "appLists.discardChangesConfirmationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discard Changes?" } }
+      }
+    },
+    "appLists.discardChangesAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discard Changes" } }
+      }
+    },
+    "appLists.keepEditingAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keep Editing" } }
+      }
+    },
+    "appLists.unsavedEditsMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your edits to this list haven’t been saved." } }
+      }
+    },
+    "appLists.saveListAccessibilityLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save List" } }
+      }
+    },
+    "appLists.untitledListDefaultName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Untitled List" } }
+      }
+    },
+    "appLists.libraryEmptyStateTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No App Lists" } }
+      }
+    },
+    "appLists.libraryEmptyStateDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create one to choose which apps a rule affects." } }
+      }
+    },
+    "appLists.libraryYourAppListsSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your App Lists" } }
+      }
+    },
+    "appLists.libraryLockedFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hard Mode is on — app lists are locked until the block ends." } }
+      }
+    },
+    "appLists.libraryDeletionBlockedAlertTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This list is in use" } }
+      }
+    },
+    "appLists.okButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } }
+      }
+    },
+    "appLists.libraryDeletionBlockedAlertMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove it from the rules that use it before deleting." } }
+      }
+    },
+    "appLists.libraryViewButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "View" } }
+      }
+    },
+    "appLists.libraryEditButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } }
+      }
+    },
+    "appLists.libraryDeleteButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } }
+      }
+    },
+    "appLists.detailEmptyMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This list has no apps." } }
+      }
+    },
+    "appLists.detailReadOnlyFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hard Mode is on — this list is read-only until the block ends." } }
+      }
+    },
+    "appLists.manageNavigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Lists" } }
+      }
     }
   },
   "version" : "1.0"

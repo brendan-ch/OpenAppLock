@@ -21,7 +21,7 @@ struct AppListDetailView: View {
         List {
             Section {
                 if AppSelectionCodec.count(of: selection) == 0 {
-                    Text("This list has no apps.")
+                    Text(.appListsDetailEmptyMessage)
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("appListDetailEmptyLabel")
                 } else {
@@ -29,13 +29,13 @@ struct AppListDetailView: View {
                 }
             } header: {
                 HStack {
-                    Text("Apps").textCase(nil)
+                    Text(.appListsAppsSectionHeader).textCase(nil)
                     Spacer()
                     Text(list.appCountLabel).textCase(nil)
                 }
             } footer: {
                 Label(
-                    "Hard Mode is on — this list is read-only until the block ends.",
+                    CopyKey.appListsDetailReadOnlyFooter.resource,
                     systemImage: "lock.fill"
                 )
                 .accessibilityElement(children: .combine)

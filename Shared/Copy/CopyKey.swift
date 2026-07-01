@@ -126,6 +126,47 @@ nonisolated enum CopyKey: String, CaseIterable {
     case diagnosticsNavigationTitle = "diagnostics.navigationTitle"
     case diagnosticsNoEntriesPlaceholder = "diagnostics.noEntriesPlaceholder"
 
+    // MARK: - App Lists (Task 4) — shared across AppListEditorView,
+    // AppListLibraryView, AppListDetailView, ManageAppListsView (one feature
+    // domain, per the design spec's `appLists.` prefix).
+    case appListsEditAppsLabel = "appLists.editAppsLabel"
+    case appListsAppsSectionHeader = "appLists.appsSectionHeader"
+    case appListsNewListLabel = "appLists.newListLabel"
+
+    // MARK: - AppListEditorView (Task 4)
+    case appListsEditorNameFieldPlaceholder = "appLists.editorNameFieldPlaceholder"
+    case appListsEditorNameSectionHeader = "appLists.editorNameSectionHeader"
+    case appListsEditorNoAppsYetMessage = "appLists.editorNoAppsYetMessage"
+    case appListsOneAppCountLabel = "appLists.oneAppCountLabel"
+    case appListsAppsCountFormat = "appLists.appsCountFormat"
+    case appListsEditListLabel = "appLists.editListLabel"
+    case appListsCloseButtonLabel = "appLists.closeButtonLabel"
+    case appListsDiscardChangesConfirmationTitle = "appLists.discardChangesConfirmationTitle"
+    case appListsDiscardChangesAction = "appLists.discardChangesAction"
+    case appListsKeepEditingAction = "appLists.keepEditingAction"
+    case appListsUnsavedEditsMessage = "appLists.unsavedEditsMessage"
+    case appListsSaveListAccessibilityLabel = "appLists.saveListAccessibilityLabel"
+    case appListsUntitledListDefaultName = "appLists.untitledListDefaultName"
+
+    // MARK: - AppListLibraryView (Task 4)
+    case appListsLibraryEmptyStateTitle = "appLists.libraryEmptyStateTitle"
+    case appListsLibraryEmptyStateDescription = "appLists.libraryEmptyStateDescription"
+    case appListsLibraryYourAppListsSectionHeader = "appLists.libraryYourAppListsSectionHeader"
+    case appListsLibraryLockedFooter = "appLists.libraryLockedFooter"
+    case appListsLibraryDeletionBlockedAlertTitle = "appLists.libraryDeletionBlockedAlertTitle"
+    case appListsOkButtonLabel = "appLists.okButtonLabel"
+    case appListsLibraryDeletionBlockedAlertMessage = "appLists.libraryDeletionBlockedAlertMessage"
+    case appListsLibraryViewButtonLabel = "appLists.libraryViewButtonLabel"
+    case appListsLibraryEditButtonLabel = "appLists.libraryEditButtonLabel"
+    case appListsLibraryDeleteButtonLabel = "appLists.libraryDeleteButtonLabel"
+
+    // MARK: - AppListDetailView (Task 4)
+    case appListsDetailEmptyMessage = "appLists.detailEmptyMessage"
+    case appListsDetailReadOnlyFooter = "appLists.detailReadOnlyFooter"
+
+    // MARK: - ManageAppListsView (Task 4)
+    case appListsManageNavigationTitle = "appLists.manageNavigationTitle"
+
     /// Localized resource — the dedicated `Copy` table (`Shared/Copy.xcstrings`),
     /// `.main` bundle. A non-default table keeps our hand-authored symbolic keys
     /// isolated from Xcode's build-time string extraction, which only ever writes

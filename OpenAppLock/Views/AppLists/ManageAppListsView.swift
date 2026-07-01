@@ -11,7 +11,7 @@ import SwiftUI
 struct ManageAppListsView: View {
     var body: some View {
         AppListLibraryView()
-            .navigationTitle("App Lists")
+            .navigationTitle(CopyKey.appListsManageNavigationTitle.resource)
             .navigationBarTitleDisplayMode(.inline)
     }
 }

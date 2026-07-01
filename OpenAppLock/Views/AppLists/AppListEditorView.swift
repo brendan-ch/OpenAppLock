@@ -45,11 +45,11 @@ struct AppListEditorView: View {
         NavigationStack {
             List {
                 Section {
-                    TextField("List Name", text: $name)
+                    TextField(CopyKey.appListsEditorNameFieldPlaceholder.resource, text: $name)
                         .submitLabel(.done)
                         .accessibilityIdentifier("appListNameField")
                 } header: {
-                    Text("Name").textCase(nil)
+                    Text(.appListsEditorNameSectionHeader).textCase(nil)
                 }
 
                 // "Edit Apps" stays a list action (not a nav-bar item) but sits
@@ -59,14 +59,14 @@ struct AppListEditorView: View {
                     Button {
                         pickingApps = true
                     } label: {
-                        Label("Edit Apps", systemImage: "checklist")
+                        Label(CopyKey.appListsEditAppsLabel.resource, systemImage: "checklist")
                     }
                     .accessibilityIdentifier("editAppsButton")
                 }
 
                 Section {
                     if AppSelectionCodec.count(of: selection) == 0 {
-                        Text("No apps yet. Edit Apps to choose what this list includes.")
+                        Text(.appListsEditorNoAppsYetMessage)
                             .foregroundStyle(.secondary)
                             .accessibilityIdentifier("emptySelectionLabel")
                     } else {
@@ -74,31 +74,31 @@ struct AppListEditorView: View {
                     }
                 } header: {
                     HStack {
-                        Text("Apps").textCase(nil)
+                        Text(.appListsAppsSectionHeader).textCase(nil)
                         Spacer()
                         Text(countLabel).textCase(nil)
                     }
                 }
             }
-            .navigationTitle(list == nil ? "New List" : "Edit List")
+            .navigationTitle(list == nil ? CopyKey.appListsNewListLabel.resource : CopyKey.appListsEditListLabel.resource)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close", systemImage: "xmark") {
+                    Button(CopyKey.appListsCloseButtonLabel.resource, systemImage: "xmark") {
                         attemptClose()
                     }
                     .accessibilityIdentifier("closeAppListButton")
                     .confirmationDialog(
-                        "Discard Changes?",
+                        CopyKey.appListsDiscardChangesConfirmationTitle.resource,
                         isPresented: $confirmingDiscard,
                         titleVisibility: .visible
                     ) {
-                        Button("Discard Changes", role: .destructive) {
+                        Button(CopyKey.appListsDiscardChangesAction.resource, role: .destructive) {
                             dismiss()
                         }
-                        Button("Keep Editing", role: .cancel) {}
+                        Button(CopyKey.appListsKeepEditingAction.resource, role: .cancel) {}
                     } message: {
-                        Text("Your edits to this list haven't been saved.")
+                        Text(.appListsUnsavedEditsMessage)
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
@@ -107,7 +107,7 @@ struct AppListEditorView: View {
                     } label: {
                         Image(systemName: "checkmark")
                     }
-                    .accessibilityLabel("Save List")
+                    .accessibilityLabel(CopyKey.appListsSaveListAccessibilityLabel.resource)
                     .accessibilityIdentifier("saveAppListButton")
                 }
             }
@@ -122,7 +122,7 @@ struct AppListEditorView: View {
 
     private var countLabel: String {
         let count = AppSelectionCodec.count(of: selection)
-        return count == 1 ? "1 App" : "\(count) Apps"
+        return count == 1 ? CopyKey.appListsOneAppCountLabel.string : CopyKey.appListsAppsCountFormat.string(count)
     }
 
     private var hasOutstandingEdits: Bool {
@@ -145,7 +145,7 @@ struct AppListEditorView: View {
 
     private func save() {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
-        let resolvedName = trimmed.isEmpty ? "Untitled List" : trimmed
+        let resolvedName = trimmed.isEmpty ? CopyKey.appListsUntitledListDefaultName.string : trimmed
         let data = AppSelectionCodec.encode(selection)
         let count = AppSelectionCodec.count(of: selection)
 
@@ -173,7 +173,7 @@ private struct AppPickerScreen: View {
 
     var body: some View {
         FamilyActivityPicker(selection: $selection)
-            .navigationTitle("Edit Apps")
+            .navigationTitle(CopyKey.appListsEditAppsLabel.resource)
             .navigationBarTitleDisplayMode(.inline)
     }
 }

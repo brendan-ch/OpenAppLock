@@ -804,6 +804,114 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "App Lists" } }
       }
+    },
+    "home.navigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Home" } }
+      }
+    },
+    "home.nothingBlockingMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nothing is blocking right now." } }
+      }
+    },
+    "home.currentlyBlockingSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Currently Blocking" } }
+      }
+    },
+    "home.activeRulesSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Active Rules" } }
+      }
+    },
+    "onboarding.welcomeTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OpenAppLock" } }
+      }
+    },
+    "onboarding.welcomeDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Block your most distracting apps with rules that keep you honest — on a schedule, with no way out when you choose Hard Mode." } }
+      }
+    },
+    "onboarding.allowScreenTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow Screen Time Access" } }
+      }
+    },
+    "onboarding.screenTimeFrameworkBullet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OpenAppLock uses Apple’s Screen Time framework to block the apps you choose." } }
+      }
+    },
+    "onboarding.activityStaysPrivateBullet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your app activity stays on this device and is never collected." } }
+      }
+    },
+    "onboarding.changeAnytimeBullet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You can change this anytime in Settings." } }
+      }
+    },
+    "onboarding.accessDeclinedMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Screen Time access was declined. OpenAppLock can’t block apps without it." } }
+      }
+    },
+    "onboarding.openSettingsButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Settings" } }
+      }
+    },
+    "onboarding.continueButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue" } }
+      }
+    },
+    "nav.appTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OpenAppLock" } }
+      }
+    },
+    "nav.homeSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Home" } }
+      }
+    },
+    "nav.rulesSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rules" } }
+      }
+    },
+    "nav.settingsSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } }
+      }
+    },
+    "dayPicker.previewSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "On these days" } }
+      }
     }
   },
   "version" : "1.0"

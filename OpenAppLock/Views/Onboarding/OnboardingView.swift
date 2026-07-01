@@ -40,10 +40,10 @@ struct OnboardingView: View {
     private var welcome: some View {
         VStack(spacing: stepSpacing) {
             appLogo
-            Text("OpenAppLock")
+            Text(.onboardingWelcomeTitle)
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
-            Text("Block your most distracting apps with rules that keep you honest — on a schedule, with no way out when you choose Hard Mode.")
+            Text(.onboardingWelcomeDescription)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -66,22 +66,22 @@ struct OnboardingView: View {
             Image(systemName: "hourglass")
                 .font(.system(size: 52))
                 .foregroundStyle(.tint)
-            Text("Allow Screen Time Access")
+            Text(.onboardingAllowScreenTime)
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)
             VStack(alignment: .leading, spacing: 14) {
-                bullet("shield.fill", "OpenAppLock uses Apple's Screen Time framework to block the apps you choose.")
-                bullet("hand.raised.fill", "Your app activity stays on this device and is never collected.")
-                bullet("gearshape.fill", "You can change this anytime in Settings.")
+                bullet("shield.fill", CopyKey.onboardingScreenTimeFrameworkBullet.string)
+                bullet("hand.raised.fill", CopyKey.onboardingActivityStaysPrivateBullet.string)
+                bullet("gearshape.fill", CopyKey.onboardingChangeAnytimeBullet.string)
             }
             if authorization.status == .denied || authorization.lastRequestFailed {
                 VStack(spacing: 10) {
-                    Text("Screen Time access was declined. OpenAppLock can't block apps without it.")
+                    Text(.onboardingAccessDeclinedMessage)
                         .font(.footnote)
                         .foregroundStyle(.red)
                         .multilineTextAlignment(.center)
                         .accessibilityIdentifier("permissionDeniedLabel")
-                    Button("Open Settings") {
+                    Button(CopyKey.onboardingOpenSettingsButton.resource) {
                         if let url = URL(string: UIApplication.openSettingsURLString) {
                             openURL(url)
                         }
@@ -107,12 +107,12 @@ struct OnboardingView: View {
     private var footer: some View {
         switch step {
         case .welcome:
-            pillButton("Continue", identifier: "onboardingContinueButton") {
+            pillButton(CopyKey.onboardingContinueButton.string, identifier: "onboardingContinueButton") {
                 step = .permission
             }
         case .permission:
             pillButton(
-                isRequesting ? CopyKey.onboardingRequesting.string : "Allow Screen Time Access",
+                isRequesting ? CopyKey.onboardingRequesting.string : CopyKey.onboardingAllowScreenTime.string,
                 identifier: "allowScreenTimeButton"
             ) {
                 guard !isRequesting else { return }

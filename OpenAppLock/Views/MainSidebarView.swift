@@ -30,7 +30,7 @@ struct MainSidebarView: View {
                         .tag(section)
                 }
             }
-            .navigationTitle("OpenAppLock")
+            .navigationTitle(CopyKey.navAppTitle.resource)
         } detail: {
             detail(for: selection ?? .home)
         }

@@ -167,6 +167,32 @@ nonisolated enum CopyKey: String, CaseIterable {
     // MARK: - ManageAppListsView (Task 4)
     case appListsManageNavigationTitle = "appLists.manageNavigationTitle"
 
+    // MARK: - HomeView (Task 5)
+    case homeNavigationTitle = "home.navigationTitle"
+    case homeNothingBlockingMessage = "home.nothingBlockingMessage"
+    case homeCurrentlyBlockingSectionHeader = "home.currentlyBlockingSectionHeader"
+    case homeActiveRulesSectionHeader = "home.activeRulesSectionHeader"
+
+    // MARK: - OnboardingView (Task 5) — onboarding.requesting migrated in Task 1
+    case onboardingWelcomeTitle = "onboarding.welcomeTitle"
+    case onboardingWelcomeDescription = "onboarding.welcomeDescription"
+    case onboardingAllowScreenTime = "onboarding.allowScreenTime"
+    case onboardingScreenTimeFrameworkBullet = "onboarding.screenTimeFrameworkBullet"
+    case onboardingActivityStaysPrivateBullet = "onboarding.activityStaysPrivateBullet"
+    case onboardingChangeAnytimeBullet = "onboarding.changeAnytimeBullet"
+    case onboardingAccessDeclinedMessage = "onboarding.accessDeclinedMessage"
+    case onboardingOpenSettingsButton = "onboarding.openSettingsButton"
+    case onboardingContinueButton = "onboarding.continueButton"
+
+    // MARK: - Nav shell: MainSidebarView + AppSection (Task 5)
+    case navAppTitle = "nav.appTitle"
+    case navHomeSectionTitle = "nav.homeSectionTitle"
+    case navRulesSectionTitle = "nav.rulesSectionTitle"
+    case navSettingsSectionTitle = "nav.settingsSectionTitle"
+
+    // MARK: - DayOfWeekPicker (Task 5)
+    case dayPickerPreviewSectionHeader = "dayPicker.previewSectionHeader"
+
     /// Localized resource — the dedicated `Copy` table (`Shared/Copy.xcstrings`),
     /// `.main` bundle. A non-default table keeps our hand-authored symbolic keys
     /// isolated from Xcode's build-time string extraction, which only ever writes

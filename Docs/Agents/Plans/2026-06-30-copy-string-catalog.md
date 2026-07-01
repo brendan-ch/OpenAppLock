@@ -4,14 +4,15 @@
 
 **Goal:** Move every user-facing string into one String Catalog keyed by symbolic identifiers, so all copy and typography (’ “ ” …) live outside the code.
 
-**Architecture:** A single `Shared/Localizable.xcstrings` (default table), auto-embedded in all five product targets via the `Shared/` synchronized group, is the sole home for prose. A `nonisolated enum CopyKey` is the typed index of every key; call sites use `Text(.someKey)` (SwiftUI) or `CopyKey.someKey.string` (plain-String producers). Two guardrail tests (completeness + typography) make the silent-fallback risk of symbolic keys safe.
+**Architecture:** A single `Shared/Copy.xcstrings` (its own `Copy` table), auto-embedded in all five product targets via the `Shared/` synchronized group, is the sole home for prose. A `nonisolated enum CopyKey` is the typed index of every key; call sites use `Text(.someKey)` (SwiftUI) or `CopyKey.someKey.string` (plain-String producers). Two guardrail tests (completeness + typography) make the silent-fallback risk of symbolic keys safe.
 
 **Tech Stack:** Swift 6 / SwiftUI / SwiftData, Xcode String Catalogs (`.xcstrings`), `LocalizedStringResource` / `String(localized:)`, Swift Testing. Build & test through the **Xcode MCP** tools only.
 
 ## Global Constraints
 
 - iOS 26 target; Swift 6; project default actor isolation is **MainActor** — `CopyKey` is used from nonisolated extension code (shields, monitor), so it MUST be declared `nonisolated`.
-- One catalog only: `Shared/Localizable.xcstrings`, default `Localizable` table, `sourceLanguage: "en"`. Every entry uses `"extractionState": "manual"` (keys are symbolic, not code-extracted).
+- One catalog only: `Shared/Copy.xcstrings`, its **own `Copy` table** (NOT the default `Localizable` table), `sourceLanguage: "en"`. Every entry uses `"extractionState": "manual"` (keys are symbolic, not code-extracted).
+- `SWIFT_EMIT_LOC_STRINGS = NO` on all product targets, AND the catalog lives in its own `Copy` table — together these stop Xcode's build-time string extraction from polluting the catalog with raw-text-keyed stubs (extraction only writes literal `Text("…")` strings to the default `Localizable` table, which we do not use).
 - Keys are symbolic, dotted, `feature.element` camelCase. **No prose or typographic characters appear in code** — only in catalog values.
 - Typography: apostrophes/closing single quotes → `’` (U+2019), double quotes → `“ ”` (U+201C/U+201D), ellipsis → `…` (U+2026). Interpolation lives in catalog values as `%lld` / `%@`.
 - Ship `en` only. No new languages, no pluralization overhaul (existing count/plural branching stays in code; the catalog holds phrase templates).
@@ -26,7 +27,7 @@
 Create the catalog, the `CopyKey` accessor, the SwiftUI convenience init, and the two guardrail tests; prove the whole pipeline by migrating two real call sites end-to-end.
 
 **Files:**
-- Create: `Shared/Localizable.xcstrings`
+- Create: `Shared/Copy.xcstrings`
 - Create: `Shared/Copy/CopyKey.swift`
 - Create: `Shared/Copy/Text+CopyKey.swift`
 - Create: `OpenAppLockTests/CopyCatalogTests.swift`
@@ -86,7 +87,7 @@ Create `Shared/Copy/CopyKey.swift`:
 import Foundation
 
 /// The single index of every user-facing string in the app. The prose and all
-/// typography live in `Shared/Localizable.xcstrings`, keyed by these raw values;
+/// typography live in `Shared/Copy.xcstrings`, keyed by these raw values;
 /// code only ever references the symbolic case. `nonisolated` so shield/monitor
 /// extension code (outside the MainActor default) can resolve copy.
 nonisolated enum CopyKey: String, CaseIterable {
@@ -94,9 +95,11 @@ nonisolated enum CopyKey: String, CaseIterable {
     case onboardingRequesting = "onboarding.requesting"
     case ruleEditorCantPauseWhileActive = "ruleEditor.cantPauseWhileActive"
 
-    /// Localized resource — default `Localizable` table, `.main` bundle (the
-    /// catalog is embedded in every target, so `.main` resolves per process).
-    var resource: LocalizedStringResource { LocalizedStringResource(String.LocalizationValue(rawValue)) }
+    /// Localized resource — the dedicated `Copy` table (`Shared/Copy.xcstrings`),
+    /// `.main` bundle. A non-default table isolates our hand-authored symbolic keys
+    /// from Xcode build-time string extraction. The catalog is embedded in every
+    /// target, so `.main` resolves per process.
+    var resource: LocalizedStringResource { LocalizedStringResource(String.LocalizationValue(rawValue), table: "Copy") }
 
     /// Resolved String for non-SwiftUI producers (shields, notifications, logic).
     var string: String { String(localized: resource) }
@@ -121,7 +124,7 @@ extension Text {
 
 - [ ] **Step 5: Create the catalog with the two seed entries**
 
-Create `Shared/Localizable.xcstrings`:
+Create `Shared/Copy.xcstrings`:
 
 ```json
 {
@@ -178,7 +181,7 @@ isRequesting ? CopyKey.onboardingRequesting.string : "Allow Screen Time Access",
 In `AGENTS.md`, under "Where each topic is documented", add:
 
 ```
-| User-facing copy (String Catalog, symbolic keys) | `Shared/Copy/CopyKey.swift`, `Shared/Localizable.xcstrings`; design spec `Docs/Agents/Specs/COPY_STRING_CATALOG_MIGRATION.md` |
+| User-facing copy (String Catalog, symbolic keys) | `Shared/Copy/CopyKey.swift`, `Shared/Copy.xcstrings`; design spec `Docs/Agents/Specs/COPY_STRING_CATALOG_MIGRATION.md` |
 ```
 
 - [ ] **Step 9: Build, run tests, commit**
@@ -188,7 +191,7 @@ Xcode MCP `RunSomeTests` for `OpenAppLockTests/CopyCatalogTests` → expect PASS
 
 ```bash
 git checkout -b feat/copy-string-catalog
-git add Shared/Copy Shared/Localizable.xcstrings OpenAppLockTests/CopyCatalogTests.swift \
+git add Shared/Copy Shared/Copy.xcstrings OpenAppLockTests/CopyCatalogTests.swift \
         OpenAppLock/Views/Rules/RuleEditorView.swift OpenAppLock/Views/Onboarding/OnboardingView.swift AGENTS.md
 git commit -m "feat: add String Catalog + CopyKey scaffold with guardrail tests
 
@@ -203,7 +206,7 @@ Each surface task applies the same mechanical recipe. It is spelled out here onc
 
 For each user-facing literal in the task's file list:
 1. Choose a `feature.element` key (see the prefix list in the spec §2).
-2. Add the entry to `Shared/Localizable.xcstrings` by editing the JSON directly, with the **typographically-correct** value (`’ “ ” …`; interpolation as `%lld`/`%@`) and `"extractionState": "manual"`.
+2. Add the entry to `Shared/Copy.xcstrings` by editing the JSON directly, with the **typographically-correct** value (`’ “ ” …`; interpolation as `%lld`/`%@`) and `"extractionState": "manual"`.
 3. Add the matching `case` to `CopyKey`.
 4. Swap the call site:
    - SwiftUI text APIs → `Text(.key)`; where the API takes `LocalizedStringResource` (e.g. `.navigationTitle`, `Button`, `Section`, `Toggle`, `Label`), pass `CopyKey.key.resource`; if a specific overload won't compile, use the `Text`-closure form, e.g. `Button(action: …) { Text(.key) }`.
@@ -264,7 +267,7 @@ Xcode MCP `BuildProject` → expect success.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Shared/Localizable.xcstrings Shared/Copy/CopyKey.swift OpenAppLock/Views/Rules OpenAppLockUITests
+git add Shared/Copy.xcstrings Shared/Copy/CopyKey.swift OpenAppLock/Views/Rules OpenAppLockUITests
 git commit -m "feat: migrate Rules views copy to String Catalog
 
 Co-Authored-By: <agent/model> <email>"
@@ -445,7 +448,7 @@ Catalog values: `"shield.blockedTitle" → "App Blocked"`; `"shield.noOpensLeft"
 
 - [ ] **Step 5: Verify catalog is embedded in the extensions**
 
-After a build, confirm each `.appex` bundle contains the compiled strings (e.g. inspect `BUILT_PRODUCTS_DIR/OpenAppLockShieldConfig.appex/Localizable.strings` or `.lproj`). If missing, confirm the `.xcstrings` is in the target's *Copy Bundle Resources* (it should be automatic via the `Shared/` synchronized group).
+After a build, confirm each `.appex` bundle contains the compiled strings (e.g. inspect `BUILT_PRODUCTS_DIR/OpenAppLockShieldConfig.appex/Copy.strings` or `.lproj`). If missing, confirm the `.xcstrings` is in the target's *Copy Bundle Resources* (it should be automatic via the `Shared/` synchronized group).
 
 - [ ] **Step 6: Commit** (`feat: migrate shield/notification copy to String Catalog`).
 

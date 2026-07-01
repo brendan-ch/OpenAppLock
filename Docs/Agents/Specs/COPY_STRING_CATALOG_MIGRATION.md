@@ -57,14 +57,14 @@ single migration.
 | Copy home | Modern **String Catalog** (`.xcstrings`) | Apple-native, Xcode-editable, localization-ready |
 | Key style | **Symbolic** dotted keys (`ruleEditor.cantPauseWhileActive`) | Maximum decoupling; code holds zero prose/typography |
 | Scope | **Everything, one migration** | Views + logic producers + extensions in a single pass |
-| Catalog layout | **One file** `Shared/Localizable.xcstrings` | Single "separate place"; auto-embedded in every target |
+| Catalog layout | **One file** `Shared/Copy.xcstrings`, own `Copy` table | Single "separate place"; auto-embedded in every target; own table isolates it from auto-extraction |
 | Accessor | **Typed `CopyKey` enum** | Compile-checked; symbolic keys otherwise fail silently |
 
 ## Architecture
 
 ### 1. The catalog
 
-One file: `Shared/Localizable.xcstrings`, the **default `Localizable` table**.
+One file: `Shared/Copy.xcstrings`, its **own `Copy` table** (deliberately NOT the default `Localizable` table — see auto-extraction note below).
 
 The `Shared/` folder is a `PBXFileSystemSynchronizedRootGroup` that is a member
 of **all five product targets** (app, `OpenAppLockMonitor`,
@@ -77,6 +77,13 @@ catalog reaches the extensions without content duplication and without promoting
 
 All typography (’ “ ” …) and all format placeholders (`%lld`, `%@`) live in the
 catalog **values** only.
+
+**Auto-extraction isolation.** The product targets build with `SWIFT_EMIT_LOC_STRINGS`
+set to `NO`, and the catalog uses a non-default `Copy` table. Xcode's build-time
+string extraction only writes literal `Text("…")` strings into the default
+`Localizable` table, so our hand-authored `Copy` table is never polluted with
+raw-text-keyed stubs. (Discovered during Task 1: with the default table + 
+`SWIFT_EMIT_LOC_STRINGS = YES`, a build stub-inserted ~97 literal keys.)
 
 ### 2. Key convention
 
@@ -152,7 +159,7 @@ smart-typography values. This is the primary source of test churn.
 
 ## Migration mechanics & order (single PR)
 
-1. Add empty `Shared/Localizable.xcstrings`, `Shared/Copy/CopyKey.swift`
+1. Add empty `Shared/Copy.xcstrings`, `Shared/Copy/CopyKey.swift`
    (enum + `Text` init), and the two guardrail tests.
 2. Migrate surface by surface — **Views → logic producers → extensions** —
    moving each literal into the catalog with corrected typography and swapping the
@@ -161,8 +168,9 @@ smart-typography values. This is the primary source of test churn.
 4. Run the full unit + UI suite; manually validate the UI on the simulator.
 5. Branch `feat/copy-string-catalog`, open a PR for the maintainer.
 
-Catalog entries are authored via the Xcode MCP `StringCatalog*` tools rather than
-hand-editing the `.xcstrings` JSON.
+Catalog entries are authored by editing the `.xcstrings` JSON directly (single `en`
+source value per symbolic key). The Xcode MCP `StringCatalog*` tools target the
+translate-to-locale workflow and are not used.
 
 ## Out of scope (YAGNI)
 

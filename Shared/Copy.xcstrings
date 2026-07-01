@@ -1,0 +1,18 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "onboarding.requesting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Requesting…" } }
+      }
+    },
+    "ruleEditor.cantPauseWhileActive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This block can’t be paused while it’s active." } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

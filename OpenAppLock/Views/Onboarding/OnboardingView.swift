@@ -112,7 +112,7 @@ struct OnboardingView: View {
             }
         case .permission:
             pillButton(
-                isRequesting ? "Requesting…" : "Allow Screen Time Access",
+                isRequesting ? CopyKey.onboardingRequesting.string : "Allow Screen Time Access",
                 identifier: "allowScreenTimeButton"
             ) {
                 guard !isRequesting else { return }

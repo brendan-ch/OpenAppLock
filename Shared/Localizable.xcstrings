@@ -1,0 +1,326 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "^[%lld line](inflect: true)" : {
+
+    },
+    "About" : {
+
+    },
+    "Active Rules" : {
+
+    },
+    "Add Rule" : {
+
+    },
+    "Allow Notifications" : {
+
+    },
+    "Allow Screen Time Access" : {
+
+    },
+    "App List" : {
+
+    },
+    "App Lists" : {
+
+    },
+    "Apps" : {
+
+    },
+    "Apps are blocked" : {
+
+    },
+    "Apps unblock for 15 minutes, then blocking resumes automatically." : {
+
+    },
+    "Block your most distracting apps with rules that keep you honest — on a schedule, with no way out when you choose Hard Mode." : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Clear All Logs" : {
+
+    },
+    "Clear all logs?" : {
+
+    },
+    "Close" : {
+
+    },
+    "Create a rule to block distracting apps on a schedule." : {
+
+    },
+    "Create one to choose which apps a rule affects." : {
+
+    },
+    "Currently Blocking" : {
+
+    },
+    "Daily" : {
+
+    },
+    "Days" : {
+
+    },
+    "Delete" : {
+
+    },
+    "Details" : {
+
+    },
+    "Disable" : {
+
+    },
+    "Discard Changes" : {
+
+    },
+    "Discard Changes?" : {
+
+    },
+    "Done" : {
+
+    },
+    "During this time" : {
+
+    },
+    "Edit" : {
+
+    },
+    "Edit Apps" : {
+
+    },
+    "Edit List" : {
+
+    },
+    "Enable" : {
+
+    },
+    "For this long" : {
+
+    },
+    "From" : {
+
+    },
+    "General" : {
+
+    },
+    "GitHub" : {
+
+    },
+    "Hard Mode" : {
+
+    },
+    "Hard Mode is on — app lists are locked until the block ends." : {
+
+    },
+    "Hard Mode is on — this list is read-only until the block ends." : {
+
+    },
+    "Hard Mode is on — this rule is locked until the block ends." : {
+
+    },
+    "Home" : {
+
+    },
+    "Keep Editing" : {
+
+    },
+    "List Name" : {
+
+    },
+    "Locked while a Hard Mode rule is actively blocking." : {
+
+    },
+    "Logs" : {
+
+    },
+    "Logs stay on-device and do not include information about which apps are blocked." : {
+
+    },
+    "Mode" : {
+
+    },
+    "More Settings" : {
+
+    },
+    "More than" : {
+
+    },
+    "Name" : {
+
+    },
+    "New List" : {
+
+    },
+    "New Rule" : {
+
+    },
+    "No App Lists" : {
+
+    },
+    "No apps yet. Edit Apps to choose what this list includes." : {
+
+    },
+    "No logs yet. Logs are recorded automatically as rules enforce." : {
+
+    },
+    "No Rules Yet" : {
+
+    },
+    "Nothing is blocking right now." : {
+
+    },
+    "Notifications" : {
+
+    },
+    "Notifications allowed" : {
+
+    },
+    "Notify Me" : {
+
+    },
+    "OK" : {
+
+    },
+    "On these days" : {
+
+    },
+    "onboarding.requesting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requesting…"
+          }
+        }
+      }
+    },
+    "Only these apps are allowed" : {
+
+    },
+    "Open Settings" : {
+
+    },
+    "OpenAppLock" : {
+
+    },
+    "Pause %@?" : {
+
+    },
+    "Pause for 15 minutes" : {
+
+    },
+    "Permission" : {
+
+    },
+    "Protection" : {
+
+    },
+    "Remove it from the rules that use it before deleting." : {
+
+    },
+    "Resume Blocking" : {
+
+    },
+    "Rule Actions" : {
+
+    },
+    "Rule Name" : {
+
+    },
+    "Rule Type" : {
+
+    },
+    "ruleEditor.cantPauseWhileActive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This block can’t be paused while it’s active."
+          }
+        }
+      }
+    },
+    "Rules" : {
+
+    },
+    "Save List" : {
+
+    },
+    "Schedule starting soon" : {
+
+    },
+    "Screen Time access was declined. OpenAppLock can't block apps without it." : {
+
+    },
+    "Settings" : {
+
+    },
+    "Then block app" : {
+
+    },
+    "This list has no apps." : {
+
+    },
+    "This list is in use" : {
+
+    },
+    "This permanently deletes all recorded diagnostic logs on this device." : {
+
+    },
+    "Time limit almost up" : {
+
+    },
+    "To" : {
+
+    },
+    "Today's Usage" : {
+
+    },
+    "Uninstall Protection" : {
+
+    },
+    "Until" : {
+
+    },
+    "Usage" : {
+
+    },
+    "View" : {
+
+    },
+    "Website" : {
+
+    },
+    "When I open" : {
+
+    },
+    "When I use" : {
+
+    },
+    "Your App Lists" : {
+
+    },
+    "Your edits to this list haven't been saved." : {
+
+    }
+  },
+  "version" : "1.0"
+}

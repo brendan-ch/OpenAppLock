@@ -912,6 +912,282 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "On these days" } }
       }
+    },
+    "status.disabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Disabled" } }
+      }
+    },
+    "status.noDaysSelected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No days selected" } }
+      }
+    },
+    "status.resumesIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Resumes in %@" } }
+      }
+    },
+    "status.activeLeft" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ left" } }
+      }
+    },
+    "status.startsIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Starts in %@" } }
+      }
+    },
+    "status.countdownMinutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm" } }
+      }
+    },
+    "status.countdownHours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldh" } }
+      }
+    },
+    "status.countdownDays" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldd" } }
+      }
+    },
+    "status.blockedUntilTomorrow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Blocked until tomorrow" } }
+      }
+    },
+    "usage.minutesPerDay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm / day" } }
+      }
+    },
+    "usage.opensPerDay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld opens / day" } }
+      }
+    },
+    "usage.subtitleSeparator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ · %@" } }
+      }
+    },
+    "ruleKind.scheduleDisplayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Schedule" } }
+      }
+    },
+    "ruleKind.timeLimitDisplayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time Limit" } }
+      }
+    },
+    "ruleKind.openLimitDisplayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Limit" } }
+      }
+    },
+    "ruleKind.scheduleExampleText" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. 9-5, Daily" } }
+      }
+    },
+    "ruleKind.timeLimitExampleText" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. 45m/day" } }
+      }
+    },
+    "ruleKind.openLimitExampleText" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. 5 opens/day" } }
+      }
+    },
+    "weekday.shortLabelS" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "S" } }
+      }
+    },
+    "weekday.shortLabelM" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "M" } }
+      }
+    },
+    "weekday.shortLabelT" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "T" } }
+      }
+    },
+    "weekday.shortLabelW" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "W" } }
+      }
+    },
+    "weekday.shortLabelF" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "F" } }
+      }
+    },
+    "weekday.sundayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sun" } }
+      }
+    },
+    "weekday.mondayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mon" } }
+      }
+    },
+    "weekday.tuesdayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tue" } }
+      }
+    },
+    "weekday.wednesdayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wed" } }
+      }
+    },
+    "weekday.thursdayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Thu" } }
+      }
+    },
+    "weekday.fridayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fri" } }
+      }
+    },
+    "weekday.saturdayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sat" } }
+      }
+    },
+    "weekday.everyDaySummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Every day" } }
+      }
+    },
+    "weekday.weekdaysSummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weekdays" } }
+      }
+    },
+    "weekday.weekendsSummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weekends" } }
+      }
+    },
+    "weekday.neverSummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Never" } }
+      }
+    },
+    "preset.morningFocusName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Morning Focus" } }
+      }
+    },
+    "preset.deepWorkName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deep Work" } }
+      }
+    },
+    "preset.eveningResetName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Evening Reset" } }
+      }
+    },
+    "preset.lightsOutName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lights Out" } }
+      }
+    },
+    "preset.familyDinnerName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Family Dinner" } }
+      }
+    },
+    "preset.screenFreeSundayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Screen-Free Sunday" } }
+      }
+    },
+    "preset.focusSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Focus Time" } }
+      }
+    },
+    "preset.focusSectionSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Protect your deep-work hours." } }
+      }
+    },
+    "preset.restSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rest & Recharge" } }
+      }
+    },
+    "preset.restSectionSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wind the day down on schedule." } }
+      }
+    },
+    "preset.balanceSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Healthy Balance" } }
+      }
+    },
+    "preset.balanceSectionSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Make room for what matters." } }
+      }
     }
   },
   "version" : "1.0"

@@ -32,18 +32,18 @@ struct RulePresetSection: Identifiable, Hashable, Sendable {
     static let all: [RulePresetSection] = [
         RulePresetSection(
             id: "focus",
-            title: "Focus Time",
-            subtitle: "Protect your deep-work hours.",
+            title: CopyKey.presetFocusSectionTitle.string,
+            subtitle: CopyKey.presetFocusSectionSubtitle.string,
             presets: [
                 RulePreset(
-                    id: "morning-focus", name: "Morning Focus",
+                    id: "morning-focus", name: CopyKey.presetMorningFocusName.string,
                     startMinutes: 8 * 60, endMinutes: 11 * 60 + 30, days: Weekday.weekdays,
                     symbolName: "sunrise.fill",
                     gradientTop: Color(red: 0.33, green: 0.23, blue: 0.13),
                     gradientBottom: Color(red: 0.12, green: 0.07, blue: 0.03)
                 ),
                 RulePreset(
-                    id: "deep-work", name: "Deep Work",
+                    id: "deep-work", name: CopyKey.presetDeepWorkName.string,
                     startMinutes: 13 * 60 + 30, endMinutes: 16 * 60, days: Weekday.weekdays,
                     symbolName: "scope",
                     gradientTop: Color(red: 0.13, green: 0.20, blue: 0.33),
@@ -53,18 +53,18 @@ struct RulePresetSection: Identifiable, Hashable, Sendable {
         ),
         RulePresetSection(
             id: "rest",
-            title: "Rest & Recharge",
-            subtitle: "Wind the day down on schedule.",
+            title: CopyKey.presetRestSectionTitle.string,
+            subtitle: CopyKey.presetRestSectionSubtitle.string,
             presets: [
                 RulePreset(
-                    id: "evening-reset", name: "Evening Reset",
+                    id: "evening-reset", name: CopyKey.presetEveningResetName.string,
                     startMinutes: 21 * 60, endMinutes: 23 * 60, days: Weekday.everyDay,
                     symbolName: "moon.haze.fill",
                     gradientTop: Color(red: 0.25, green: 0.18, blue: 0.33),
                     gradientBottom: Color(red: 0.08, green: 0.05, blue: 0.12)
                 ),
                 RulePreset(
-                    id: "lights-out", name: "Lights Out",
+                    id: "lights-out", name: CopyKey.presetLightsOutName.string,
                     startMinutes: 23 * 60, endMinutes: 6 * 60 + 30, days: Weekday.everyDay,
                     symbolName: "moon.zzz.fill",
                     gradientTop: Color(red: 0.10, green: 0.13, blue: 0.30),
@@ -74,18 +74,18 @@ struct RulePresetSection: Identifiable, Hashable, Sendable {
         ),
         RulePresetSection(
             id: "balance",
-            title: "Healthy Balance",
-            subtitle: "Make room for what matters.",
+            title: CopyKey.presetBalanceSectionTitle.string,
+            subtitle: CopyKey.presetBalanceSectionSubtitle.string,
             presets: [
                 RulePreset(
-                    id: "family-dinner", name: "Family Dinner",
+                    id: "family-dinner", name: CopyKey.presetFamilyDinnerName.string,
                     startMinutes: 18 * 60, endMinutes: 19 * 60 + 30, days: Weekday.everyDay,
                     symbolName: "fork.knife",
                     gradientTop: Color(red: 0.16, green: 0.27, blue: 0.22),
                     gradientBottom: Color(red: 0.05, green: 0.10, blue: 0.08)
                 ),
                 RulePreset(
-                    id: "screen-free-sunday", name: "Screen-Free Sunday",
+                    id: "screen-free-sunday", name: CopyKey.presetScreenFreeSundayName.string,
                     startMinutes: 9 * 60, endMinutes: 20 * 60, days: [.sunday],
                     symbolName: "leaf.fill",
                     gradientTop: Color(red: 0.13, green: 0.30, blue: 0.30),

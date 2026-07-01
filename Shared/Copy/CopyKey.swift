@@ -193,6 +193,62 @@ nonisolated enum CopyKey: String, CaseIterable {
     // MARK: - DayOfWeekPicker (Task 5)
     case dayPickerPreviewSectionHeader = "dayPicker.previewSectionHeader"
 
+    // MARK: - RuleStatus (Task 6)
+    case statusDisabled = "status.disabled"
+    case statusNoDaysSelected = "status.noDaysSelected"
+    case statusResumesIn = "status.resumesIn"
+    case statusActiveLeft = "status.activeLeft"
+    case statusStartsIn = "status.startsIn"
+    case statusCountdownMinutes = "status.countdownMinutes"
+    case statusCountdownHours = "status.countdownHours"
+    case statusCountdownDays = "status.countdownDays"
+    case statusBlockedUntilTomorrow = "status.blockedUntilTomorrow"
+
+    // MARK: - UsageDisplay (Task 6)
+    case usageMinutesPerDay = "usage.minutesPerDay"
+    case usageOpensPerDay = "usage.opensPerDay"
+    case usageSubtitleSeparator = "usage.subtitleSeparator"
+
+    // MARK: - RuleKind (Task 6)
+    case ruleKindScheduleDisplayName = "ruleKind.scheduleDisplayName"
+    case ruleKindTimeLimitDisplayName = "ruleKind.timeLimitDisplayName"
+    case ruleKindOpenLimitDisplayName = "ruleKind.openLimitDisplayName"
+    case ruleKindScheduleExampleText = "ruleKind.scheduleExampleText"
+    case ruleKindTimeLimitExampleText = "ruleKind.timeLimitExampleText"
+    case ruleKindOpenLimitExampleText = "ruleKind.openLimitExampleText"
+
+    // MARK: - Weekday (Task 6)
+    case weekdayShortLabelS = "weekday.shortLabelS"
+    case weekdayShortLabelM = "weekday.shortLabelM"
+    case weekdayShortLabelT = "weekday.shortLabelT"
+    case weekdayShortLabelW = "weekday.shortLabelW"
+    case weekdayShortLabelF = "weekday.shortLabelF"
+    case weekdaySundayAbbreviation = "weekday.sundayAbbreviation"
+    case weekdayMondayAbbreviation = "weekday.mondayAbbreviation"
+    case weekdayTuesdayAbbreviation = "weekday.tuesdayAbbreviation"
+    case weekdayWednesdayAbbreviation = "weekday.wednesdayAbbreviation"
+    case weekdayThursdayAbbreviation = "weekday.thursdayAbbreviation"
+    case weekdayFridayAbbreviation = "weekday.fridayAbbreviation"
+    case weekdaySaturdayAbbreviation = "weekday.saturdayAbbreviation"
+    case weekdayEveryDaySummary = "weekday.everyDaySummary"
+    case weekdayWeekdaysSummary = "weekday.weekdaysSummary"
+    case weekdayWeekendsSummary = "weekday.weekendsSummary"
+    case weekdayNeverSummary = "weekday.neverSummary"
+
+    // MARK: - RulePreset (Task 6)
+    case presetMorningFocusName = "preset.morningFocusName"
+    case presetDeepWorkName = "preset.deepWorkName"
+    case presetEveningResetName = "preset.eveningResetName"
+    case presetLightsOutName = "preset.lightsOutName"
+    case presetFamilyDinnerName = "preset.familyDinnerName"
+    case presetScreenFreeSundayName = "preset.screenFreeSundayName"
+    case presetFocusSectionTitle = "preset.focusSectionTitle"
+    case presetFocusSectionSubtitle = "preset.focusSectionSubtitle"
+    case presetRestSectionTitle = "preset.restSectionTitle"
+    case presetRestSectionSubtitle = "preset.restSectionSubtitle"
+    case presetBalanceSectionTitle = "preset.balanceSectionTitle"
+    case presetBalanceSectionSubtitle = "preset.balanceSectionSubtitle"
+
     /// Localized resource — the dedicated `Copy` table (`Shared/Copy.xcstrings`),
     /// `.main` bundle. A non-default table keeps our hand-authored symbolic keys
     /// isolated from Xcode's build-time string extraction, which only ever writes

@@ -41,9 +41,9 @@ enum RuleKind: String, Codable, CaseIterable, Sendable {
     /// Default name given to a brand-new rule of this kind (e.g. "In the Zone", "Time Keeper").
     var defaultRuleName: String {
         switch self {
-        case .schedule: "In the Zone"
-        case .timeLimit: "Time Keeper"
-        case .openLimit: "Gate Keeper"
+        case .schedule: CopyKey.ruleKindDefaultNameSchedule.string
+        case .timeLimit: CopyKey.ruleKindDefaultNameTimeLimit.string
+        case .openLimit: CopyKey.ruleKindDefaultNameOpenLimit.string
         }
     }
 }
@@ -57,8 +57,8 @@ enum SelectionMode: String, Codable, CaseIterable, Sendable {
 
     var displayName: String {
         switch self {
-        case .block: "Block"
-        case .allowOnly: "Allow Only"
+        case .block: CopyKey.selectionModeBlock.string
+        case .allowOnly: CopyKey.selectionModeAllowOnly.string
         }
     }
 }

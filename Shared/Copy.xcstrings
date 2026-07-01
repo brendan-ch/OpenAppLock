@@ -1,6 +1,36 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "ruleKind.defaultNameSchedule" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "In the Zone" } }
+      }
+    },
+    "ruleKind.defaultNameTimeLimit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time Keeper" } }
+      }
+    },
+    "ruleKind.defaultNameOpenLimit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Gate Keeper" } }
+      }
+    },
+    "selectionMode.block" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Block" } }
+      }
+    },
+    "selectionMode.allowOnly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow Only" } }
+      }
+    },
     "onboarding.requesting" : {
       "extractionState" : "manual",
       "localizations" : {

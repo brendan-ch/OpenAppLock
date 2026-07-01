@@ -32,7 +32,7 @@ struct NotificationSettingsView: View {
             permissionSection
             typesSection
         }
-        .navigationTitle("Notifications")
+        .navigationTitle(CopyKey.notificationsNavigationTitle.resource)
         .navigationBarTitleDisplayMode(.inline)
         // Pick up changes the user made in the system Settings app (including a
         // revocation, which surfaces the denied state and disables delivery).
@@ -44,14 +44,16 @@ struct NotificationSettingsView: View {
             switch authorization.status {
             case .authorized:
                 HStack {
-                    Label("Notifications allowed", systemImage: "checkmark.circle.fill")
+                    Label(
+                        CopyKey.notificationsAllowedStatusLabel.resource,
+                        systemImage: "checkmark.circle.fill")
                         .foregroundStyle(Color.green)
                     Spacer()
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("notificationStatusLabel")
             case .notDetermined:
-                Button("Allow Notifications") {
+                Button(CopyKey.notificationsAllowButton.resource) {
                     Task {
                         await authorization.request()
                         enforcer.refresh(rules: rules)
@@ -59,7 +61,7 @@ struct NotificationSettingsView: View {
                 }
                 .accessibilityIdentifier("allowNotificationsButton")
             case .denied:
-                Button("Open Settings") {
+                Button(CopyKey.notificationsOpenSettingsButton.resource) {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
                         openURL(url)
                     }
@@ -67,30 +69,30 @@ struct NotificationSettingsView: View {
                 .accessibilityIdentifier("openNotificationSettingsButton")
             }
         } header: {
-            Text("Permission").textCase(nil)
+            Text(.notificationsPermissionSectionHeader).textCase(nil)
         } footer: {
             if authorization.status == .denied {
-                Text(
-                    "Notifications are turned off for OpenAppLock. Turn them on in Settings to "
-                        + "get these reminders.")
+                Text(.notificationsDeniedFooter)
             }
         }
     }
 
     @ViewBuilder private var typesSection: some View {
         Section {
-            Toggle("Schedule starting soon", isOn: toggleBinding(\.notifyScheduleStartEnabled))
+            Toggle(
+                CopyKey.notificationsScheduleStartToggleLabel.resource,
+                isOn: toggleBinding(\.notifyScheduleStartEnabled))
                 .accessibilityIdentifier("scheduleStartNotificationToggle")
                 .disabled(!isAuthorized)
-            Toggle("Time limit almost up", isOn: toggleBinding(\.notifyTimeLimitEndingEnabled))
+            Toggle(
+                CopyKey.notificationsTimeLimitToggleLabel.resource,
+                isOn: toggleBinding(\.notifyTimeLimitEndingEnabled))
                 .accessibilityIdentifier("timeLimitNotificationToggle")
                 .disabled(!isAuthorized)
         } header: {
-            Text("Notify Me").textCase(nil)
+            Text(.notificationsNotifyMeSectionHeader).textCase(nil)
         } footer: {
-            Text(
-                "“Schedule starting soon” warns 5 minutes before a schedule rule blocks. "
-                    + "“Time limit almost up” warns when a time limit has 5 minutes left.")
+            Text(.notificationsFooter)
         }
     }
 

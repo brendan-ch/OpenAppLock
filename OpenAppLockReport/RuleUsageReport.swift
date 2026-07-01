@@ -27,7 +27,7 @@ struct RuleUsageReport: DeviceActivityReportScene {
                 for await app in category.applications {
                     let name = app.application.localizedDisplayName
                         ?? app.application.bundleIdentifier
-                        ?? "Unknown"
+                        ?? CopyKey.usageReportUnknownAppName.string
                     apps.append((name, app.totalActivityDuration))
                 }
             }

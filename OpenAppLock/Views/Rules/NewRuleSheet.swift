@@ -21,7 +21,7 @@ struct NewRuleSheet: View {
                         kindRow(kind)
                     }
                 } header: {
-                    Text("Rule Type").textCase(nil)
+                    Text(.newRuleRuleTypeSectionHeader).textCase(nil)
                 }
                 ForEach(RulePresetSection.all) { section in
                     Section {
@@ -39,11 +39,11 @@ struct NewRuleSheet: View {
                     }
                 }
             }
-            .navigationTitle("New Rule")
+            .navigationTitle(CopyKey.newRuleNavigationTitle.resource)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close", systemImage: "xmark") {
+                    Button(CopyKey.newRuleCloseButton.resource, systemImage: "xmark") {
                         dismiss()
                     }
                     .accessibilityIdentifier("closeNewRuleButton")
@@ -96,7 +96,7 @@ struct NewRuleSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(preset.name)
                         .foregroundStyle(Color.primary)
-                    Text("\(preset.schedule.timeRangeLabel) · \(preset.days.summary)")
+                    Text(CopyKey.newRulePresetSummaryFormat.string(preset.schedule.timeRangeLabel, preset.days.summary))
                         .font(.caption)
                         .foregroundStyle(Color.secondary)
                 }

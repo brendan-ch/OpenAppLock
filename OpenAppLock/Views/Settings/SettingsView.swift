@@ -42,7 +42,7 @@ struct SettingsView: View {
                         // the control is replaced by a red lock so the setting
                         // can't be turned off mid-block (its whole purpose).
                         HStack {
-                            Text("Uninstall Protection")
+                            Text(.settingsUninstallProtectionToggleLabel)
                             Spacer()
                             Image(systemName: "lock.fill")
                                 .foregroundStyle(.red)
@@ -50,59 +50,61 @@ struct SettingsView: View {
                         .accessibilityElement(children: .combine)
                         .accessibilityIdentifier("uninstallProtectionLockIcon")
                     } else {
-                        Toggle("Uninstall Protection", isOn: uninstallProtectionBinding)
+                        Toggle(
+                            CopyKey.settingsUninstallProtectionToggleLabel.resource,
+                            isOn: uninstallProtectionBinding)
                             .accessibilityIdentifier("uninstallProtectionToggle")
                     }
                 } header: {
-                    Text("Protection").textCase(nil)
+                    Text(.settingsProtectionSectionHeader).textCase(nil)
                 } footer: {
                     if isUninstallProtectionLocked {
-                        Text(
-                            "Locked while a Hard Mode rule is actively blocking.")
+                        Text(.settingsUninstallProtectionLockedFooter)
                             .accessibilityIdentifier("uninstallProtectionLockedNotice")
                     } else {
-                        Text(
-                            "While on, apps can't be deleted from this device whenever a "
-                                + "Hard Mode rule is actively blocking.")
+                        Text(.settingsUninstallProtectionUnlockedFooter)
                     }
                 }
                 Section {
                     NavigationLink {
                         ManageAppListsView()
                     } label: {
-                        Label("App Lists", systemImage: "square.stack.3d.up")
+                        Label(CopyKey.settingsAppListsRowLabel.resource, systemImage: "square.stack.3d.up")
                     }
                     .accessibilityIdentifier("manageAppListsButton")
-                    
+
                     NavigationLink {
                         NotificationSettingsView()
                     } label: {
-                        Label("Notifications", systemImage: "bell.badge")
+                        Label(CopyKey.settingsNotificationsRowLabel.resource, systemImage: "bell.badge")
                     }
                     .accessibilityIdentifier("notificationSettingsButton")
-                    
+
                     NavigationLink {
                         DiagnosticLogsView()
                     } label: {
-                        Label("Logs", systemImage: "doc.text.magnifyingglass")
+                        Label(CopyKey.settingsLogsRowLabel.resource, systemImage: "doc.text.magnifyingglass")
                     }
                     .accessibilityIdentifier("diagnosticsLogsRow")
                 } header: {
-                    Text("More Settings").textCase(nil)
+                    Text(.settingsMoreSettingsSectionHeader).textCase(nil)
                 }
                 
                 linkSection
                 if launch.isUITesting {
                     // Test-only probe: the destination of the last intercepted
                     // link tap, so a UI test can assert the buttons open the
-                    // configured URLs without launching Safari.
+                    // configured URLs without launching Safari. The "none"
+                    // fallback below is test-harness plumbing, never seen by a
+                    // real user (only rendered when `-ui-testing` is passed) —
+                    // left as a raw literal rather than migrated to the catalog.
                     Section {
                         Text(lastOpenedLink?.absoluteString ?? "none")
                             .accessibilityIdentifier("openedLinkProbe")
                     }
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle(CopyKey.settingsNavigationTitle.resource)
             .captureLinkTaps(when: launch.isUITesting) { lastOpenedLink = $0 }
         }
         .onAppear {
@@ -117,15 +119,15 @@ struct SettingsView: View {
         if gitHubURL != nil || websiteURL != nil {
             Section {
                 if let gitHubURL {
-                    Link("GitHub", destination: gitHubURL)
+                    Link(CopyKey.settingsGithubLinkLabel.resource, destination: gitHubURL)
                         .accessibilityIdentifier("githubLinkButton")
                 }
                 if let websiteURL {
-                    Link("Website", destination: websiteURL)
+                    Link(CopyKey.settingsWebsiteLinkLabel.resource, destination: websiteURL)
                         .accessibilityIdentifier("websiteLinkButton")
                 }
             } header: {
-                Text("About").textCase(nil)
+                Text(.settingsAboutSectionHeader).textCase(nil)
             }
         }
     }

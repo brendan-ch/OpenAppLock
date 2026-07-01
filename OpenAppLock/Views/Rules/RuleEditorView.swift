@@ -30,7 +30,7 @@ struct RuleEditorView: View {
                     } label: {
                         Image(systemName: "checkmark")
                     }
-                    .accessibilityLabel("Add Rule")
+                    .accessibilityLabel(CopyKey.ruleEditorAddRuleLabel.resource)
                     .accessibilityIdentifier("commitRuleButton")
                 }
             }

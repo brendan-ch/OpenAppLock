@@ -31,24 +31,24 @@ nonisolated enum Weekday: Int, CaseIterable, Codable, Hashable, Sendable {
     /// Single-letter label for the circular day toggles.
     var shortLabel: String {
         switch self {
-        case .sunday, .saturday: "S"
-        case .monday: "M"
-        case .tuesday, .thursday: "T"
-        case .wednesday: "W"
-        case .friday: "F"
+        case .sunday, .saturday: CopyKey.weekdayShortLabelS.string
+        case .monday: CopyKey.weekdayShortLabelM.string
+        case .tuesday, .thursday: CopyKey.weekdayShortLabelT.string
+        case .wednesday: CopyKey.weekdayShortLabelW.string
+        case .friday: CopyKey.weekdayShortLabelF.string
         }
     }
 
     /// Three-letter abbreviation used in custom day summaries ("Mon, Wed, Fri").
     var abbreviation: String {
         switch self {
-        case .sunday: "Sun"
-        case .monday: "Mon"
-        case .tuesday: "Tue"
-        case .wednesday: "Wed"
-        case .thursday: "Thu"
-        case .friday: "Fri"
-        case .saturday: "Sat"
+        case .sunday: CopyKey.weekdaySundayAbbreviation.string
+        case .monday: CopyKey.weekdayMondayAbbreviation.string
+        case .tuesday: CopyKey.weekdayTuesdayAbbreviation.string
+        case .wednesday: CopyKey.weekdayWednesdayAbbreviation.string
+        case .thursday: CopyKey.weekdayThursdayAbbreviation.string
+        case .friday: CopyKey.weekdayFridayAbbreviation.string
+        case .saturday: CopyKey.weekdaySaturdayAbbreviation.string
         }
     }
 }
@@ -57,10 +57,10 @@ extension Set<Weekday> {
     /// Human-readable summary shown next to the day picker and in rule details:
     /// "Weekdays", "Weekends", "Every day", "Never", or a list like "Mon, Wed, Fri".
     var summary: String {
-        if self == Weekday.everyDay { return "Every day" }
-        if self == Weekday.weekdays { return "Weekdays" }
-        if self == Weekday.weekends { return "Weekends" }
-        if isEmpty { return "Never" }
+        if self == Weekday.everyDay { return CopyKey.weekdayEveryDaySummary.string }
+        if self == Weekday.weekdays { return CopyKey.weekdayWeekdaysSummary.string }
+        if self == Weekday.weekends { return CopyKey.weekdayWeekendsSummary.string }
+        if isEmpty { return CopyKey.weekdayNeverSummary.string }
         return Weekday.displayOrder
             .filter(contains)
             .map(\.abbreviation)

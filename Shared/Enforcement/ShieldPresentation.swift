@@ -15,12 +15,12 @@ struct ShieldPresentation: Equatable {
     /// no way through (a full block, or a spent open-limit budget).
     let secondaryButton: String?
 
-    static let blockedTitle = "App Blocked"
+    static let blockedTitle = CopyKey.shieldBlockedTitle.string
 
     /// A plain, fully-blocked app: no counts, no way through.
     static let blocked = ShieldPresentation(
         title: blockedTitle,
-        subtitle: "This app is blocked by OpenAppLock.",
+        subtitle: CopyKey.shieldBlockedSubtitle.string,
         secondaryButton: nil
     )
 
@@ -33,15 +33,16 @@ struct ShieldPresentation: Equatable {
         guard remaining > 0 else {
             return ShieldPresentation(
                 title: blockedTitle,
-                subtitle: "No opens left today — the block lifts tomorrow.",
+                subtitle: CopyKey.shieldNoOpensLeft.string,
                 secondaryButton: nil
             )
         }
         return ShieldPresentation(
             title: blockedTitle,
-            subtitle: "Opened \(opensUsed) of \(maxOpens) times today. "
-                + "Each open lasts \(sessionMinutes) minutes.",
-            secondaryButton: remaining == 1 ? "Open (1 left)" : "Open (\(remaining) left)"
+            subtitle: CopyKey.shieldOpenLimitSubtitle.string(opensUsed, maxOpens, sessionMinutes),
+            secondaryButton: remaining == 1
+                ? CopyKey.shieldOpenButtonOne.string
+                : CopyKey.shieldOpenButtonMany.string(remaining)
         )
     }
 }

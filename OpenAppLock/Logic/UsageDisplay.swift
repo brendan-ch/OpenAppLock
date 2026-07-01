@@ -15,7 +15,8 @@ enum UsageDisplay {
     static func homeSubtitle(
         for snapshot: RuleSnapshotDTO, status: RuleStatus, usage: RuleUsageDTO, relativeTo now: Date
     ) -> String {
-        "\(snapshot.kind.displayName) · \(snapshot.rowContext(for: status, usage: usage, relativeTo: now))"
+        CopyKey.usageSubtitleSeparator.string(
+            snapshot.kind.displayName, snapshot.rowContext(for: status, usage: usage, relativeTo: now))
     }
 
     /// "45m / day" / "5 opens / day" — the plain daily allowance, shown while a
@@ -25,9 +26,9 @@ enum UsageDisplay {
         case .schedule:
             ""
         case .timeLimit:
-            "\(snapshot.dailyLimitMinutes)m / day"
+            CopyKey.usageMinutesPerDay.string(snapshot.dailyLimitMinutes)
         case .openLimit:
-            "\(snapshot.maxOpens) opens / day"
+            CopyKey.usageOpensPerDay.string(snapshot.maxOpens)
         }
     }
 }

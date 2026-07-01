@@ -25,11 +25,11 @@ enum RuleStatus: Equatable, Sendable {
     /// "6h left", "Starts in 22h", "Resumes in 12m", "Disabled".
     func label(relativeTo now: Date) -> String {
         switch self {
-        case .disabled: "Disabled"
-        case .dormant: "No days selected"
-        case .paused(let until): "Resumes in \(Self.countdown(from: now, to: until))"
-        case .active(let until): "\(Self.countdown(from: now, to: until)) left"
-        case .upcoming(let start): "Starts in \(Self.countdown(from: now, to: start))"
+        case .disabled: CopyKey.statusDisabled.string
+        case .dormant: CopyKey.statusNoDaysSelected.string
+        case .paused(let until): CopyKey.statusResumesIn.string(Self.countdown(from: now, to: until))
+        case .active(let until): CopyKey.statusActiveLeft.string(Self.countdown(from: now, to: until))
+        case .upcoming(let start): CopyKey.statusStartsIn.string(Self.countdown(from: now, to: start))
         }
     }
 
@@ -37,10 +37,10 @@ enum RuleStatus: Equatable, Sendable {
     /// hours (rounded up) under two days, then days.
     static func countdown(from now: Date, to target: Date) -> String {
         let minutes = max(1, Int(ceil(target.timeIntervalSince(now) / 60)))
-        guard minutes >= 60 else { return "\(minutes)m" }
+        guard minutes >= 60 else { return CopyKey.statusCountdownMinutes.string(minutes) }
         let hours = (minutes + 59) / 60
-        guard hours >= 48 else { return "\(hours)h" }
-        return "\(hours / 24)d"
+        guard hours >= 48 else { return CopyKey.statusCountdownHours.string(hours) }
+        return CopyKey.statusCountdownDays.string(hours / 24)
     }
 }
 
@@ -85,7 +85,7 @@ extension RuleSnapshotDTO {
             case .active:
                 // A spent budget blocks for the rest of the day; the detail row
                 // ("Then block until: Tomorrow") names the same moment.
-                return "Blocked until tomorrow"
+                return CopyKey.statusBlockedUntilTomorrow.string
             case .upcoming:
                 return UsageDisplay.budgetPhrase(for: self)
             }

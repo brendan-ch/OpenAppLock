@@ -21,7 +21,7 @@ struct HomeView: View {
             TimelineView(.periodic(from: .now, by: 30)) { timeline in
                 homeList(now: timeline.date)
             }
-            .navigationTitle("Home")
+            .navigationTitle(CopyKey.homeNavigationTitle.resource)
         }
         .sheet(item: $detailRule) { rule in
             RuleDetailSheet(rule: rule)
@@ -49,7 +49,7 @@ struct HomeView: View {
         let blocking = rules.filter { liveStatus(for: $0, now: now).isActive }
         Section {
             if blocking.isEmpty {
-                Text("Nothing is blocking right now.")
+                Text(.homeNothingBlockingMessage)
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("nothingBlockedLabel")
             } else {
@@ -58,7 +58,7 @@ struct HomeView: View {
                 }
             }
         } header: {
-            Text("Currently Blocking").textCase(nil)
+            Text(.homeCurrentlyBlockingSectionHeader).textCase(nil)
         }
     }
 
@@ -114,7 +114,7 @@ struct HomeView: View {
                     activeRuleRow(for: rule, now: now)
                 }
             } header: {
-                Text("Active Rules").textCase(nil)
+                Text(.homeActiveRulesSectionHeader).textCase(nil)
             }
         }
     }

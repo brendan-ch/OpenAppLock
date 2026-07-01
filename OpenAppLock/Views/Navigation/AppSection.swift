@@ -18,9 +18,9 @@ enum AppSection: String, CaseIterable, Identifiable {
     /// User-facing label shown in the tab item and the sidebar row.
     var title: String {
         switch self {
-        case .home: "Home"
-        case .rules: "Rules"
-        case .settings: "Settings"
+        case .home: CopyKey.navHomeSectionTitle.string
+        case .rules: CopyKey.navRulesSectionTitle.string
+        case .settings: CopyKey.navSettingsSectionTitle.string
         }
     }
 

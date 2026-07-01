@@ -37,18 +37,11 @@ struct RuleSchedulerPlanTests {
             defaults: defaults)
     }
 
-    private func limitRule(kind: RuleKind, limit: Int? = nil) throws -> BlockingRule {
+    private func limitRule(kind: RuleKind) throws -> BlockingRule {
         let context = try makeInMemoryContext()
         let list = AppList(name: "Apps", selectionData: Data([1]), selectionCount: 1)
-        let rule: BlockingRule
-        if kind == .timeLimit, let limit {
-            rule = BlockingRule(
-                name: "Limit", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: limit)),
-                days: Weekday.everyDay)
-        } else {
-            rule = BlockingRule(
-                name: "Limit", configuration: .default(for: kind), days: Weekday.everyDay)
-        }
+        let rule = BlockingRule(
+            name: "Limit", configuration: .default(for: kind), days: Weekday.everyDay)
         context.insert(list)
         context.insert(rule)
         rule.appList = list
@@ -74,32 +67,14 @@ struct RuleSchedulerPlanTests {
 
     // MARK: limitPlan
 
-    @Test("limitPlan for a time limit plans one block event at the budget and flags accounting reset")
-    func limitPlanTimeLimit() throws {
-        let scheduler = makeScheduler()
-        let rule = try limitRule(kind: .timeLimit, limit: 45)
-
-        let plan = scheduler.limitPlan(for: rule, selectionData: Data([1]))
-
-        #expect(plan.name == MonitoringPlan.dailyActivityName(for: rule.id))
-        #expect(plan.resetsThresholdAccountingOnRestart == true)
-        guard case let .daily(selectionData, events) = plan.payload else {
-            Issue.record("expected a .daily payload")
-            return
-        }
-        #expect(selectionData == Data([1]))
-        #expect(events == MonitoringPlan.blockEvent(forLimit: 45))
-        #expect(events[MonitoringPlan.minuteEventName(for: 45)] == 45)
-    }
-
-    @Test("limitPlan for an open limit plans no usage events but still flags accounting reset")
+    @Test("limitPlan for an open limit plans no usage events and flags no accounting risk")
     func limitPlanOpenLimit() throws {
         let scheduler = makeScheduler()
         let rule = try limitRule(kind: .openLimit)
 
         let plan = scheduler.limitPlan(for: rule, selectionData: Data([1]))
 
-        #expect(plan.resetsThresholdAccountingOnRestart == true)
+        #expect(plan.resetsThresholdAccountingOnRestart == false)
         guard case let .daily(_, events) = plan.payload else {
             Issue.record("expected a .daily payload")
             return
@@ -110,7 +85,14 @@ struct RuleSchedulerPlanTests {
     @Test("limitPlan fingerprint encodes kind/budget/selection and changes only when those do")
     func limitPlanFingerprintTracksConfiguration() throws {
         let scheduler = makeScheduler()
-        let rule = try limitRule(kind: .timeLimit, limit: 45)
+        let rule = try limitRule(kind: .openLimit)
+        // `limitPlan` only ever runs for open limits (see its doc comment), so
+        // this uses that kind — even though the fingerprint it locks below
+        // still keys on `dailyLimitMinutes`, not `maxOpens`, the field that
+        // actually drives an open limit's behavior. That mismatch is
+        // pre-existing and out of scope here; this test only pins the current
+        // fingerprint format against the 002ac19 regression.
+        rule.dailyLimitMinutes = 45
 
         let fingerprint = scheduler.limitPlan(for: rule, selectionData: Data([1])).fingerprint
         // Locked to the exact format so a per-process-unstable hash (the 002ac19

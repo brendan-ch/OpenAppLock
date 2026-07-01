@@ -164,11 +164,14 @@ never thrashes a live activity):
   which it currently never does (it only ever `stopMonitoring`s)** — a
   device-verification item (§11). The foreground net (N = 2) is what de-risks it.
   The self-arm and the foreground reconcile share no fingerprint state, so each
-  must avoid tearing down the other's live activity (a restart resets Screen
-  Time's usage count to "from now", EC7): the self-arm **skips** a target already
-  in `DeviceActivityCenter().activities`, and the foreground reconcile **adopts**
-  a monitored activity that carries no recorded fingerprint — records it without
-  a restart — rather than re-arming it.
+  must avoid tearing down the other's live activity (a needless restart, EC7):
+  the self-arm **skips** a target already in `DeviceActivityCenter().activities`,
+  and the foreground reconcile **adopts** a monitored activity that carries no
+  recorded fingerprint — records it without a restart — rather than re-arming
+  it. (Every `DeviceActivityEvent` this app constructs sets `includesPastActivity:
+  true`, so a restart backfills same-interval accrual instead of discarding the
+  whole day outright — only up to the current hour is now at risk, per its
+  documented hour-rounding — but an avoidable restart is still avoided.)
 
 **Reaping is automatic.** `RuleScheduler.reconcile` already stops any rule-owned
 activity not in the freshly-computed desired set (`:214`). Once the §4 parser
@@ -184,8 +187,11 @@ suspenders).
   shield clear rides the same `RuleEnforcer.refresh → clearShields(except:)` path.
   `stopMonitoring(names:)` already takes an array.
 - **Edit budget / selection:** the affected days' block (and warn) plans get a new
-  fingerprint → restart. Same "editing a time-limit rule resets its accounting"
-  semantics as today (EC7), applied to the day-keyed names.
+  fingerprint → restart. `includesPastActivity: true` (see EC7, §5) backfills
+  that day's already-accrued minutes into the new threshold, so a lowered
+  budget is enforced against real same-day usage rather than only usage
+  accrued after the edit — with the same up-to-an-hour rounding gap as any
+  other restart.
 - **Edit the `days` set / toggle the nudge:** next `sync` recomputes the next-N
   scheduled occurrences; a removed weekday or a turned-off nudge drops the plan, so
   its activity becomes stale → stopped; an added one is emitted when it enters the

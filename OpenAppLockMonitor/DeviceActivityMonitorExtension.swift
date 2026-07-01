@@ -144,9 +144,10 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             : MonitoringPlan.dailyActivityName(for: ruleID, dayKey: nextKey)
         let center = DeviceActivityCenter()
         // The foreground net (N=2) may already have armed the next scheduled day
-        // from its own midnight; restarting it here would reset Screen Time's
-        // usage count to "from now" (EC7), losing that day's morning accrual.
-        // Only arm when it isn't already running.
+        // from its own midnight; restarting it here is a needless duplicate
+        // start (EC7: `includesPastActivity` would backfill any midnight-to-now
+        // gap anyway, since `nextStart` is a round hour). Only arm when it isn't
+        // already running.
         guard !center.activities.contains(DeviceActivityName(nextName)) else {
             Diag.log(.scheduler, "self-arm \(nextName): already armed, skipping")
             return

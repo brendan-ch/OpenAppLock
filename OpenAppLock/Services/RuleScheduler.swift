@@ -77,9 +77,14 @@ final class RuleScheduler {
         let name: String
         let fingerprint: String
         let payload: Payload
-        /// Only the daily limit-enforcement activity resets usage-threshold
-        /// accounting when it restarts; carry that so `reconcile` logs the reset
-        /// for it and nothing else.
+        /// Whether `reconcile` should log this restart's accounting risk: true
+        /// only for the time-limit block activity, the one plan with a real
+        /// usage-threshold event. `includesPastActivity` (set on every
+        /// `DeviceActivityEvent` this app constructs) backfills same-interval
+        /// accrual from before the restart, so a restart no longer discards the
+        /// whole day — only up to the current hour is at risk, per its
+        /// documented hour-rounding. Open limits carry no events at all, so
+        /// there is nothing to lose.
         let resetsThresholdAccountingOnRestart: Bool
     }
 
@@ -156,22 +161,19 @@ final class RuleScheduler {
         monitor.stopMonitoring(names: stale)
     }
 
-    /// The daily enforcement activity for a limit rule. Time limits carry one
-    /// block event at the budget; open limits carry none. Restarting it resets
-    /// usage-threshold accounting, so it is fingerprinted on kind, budget, and
-    /// selection — the field that must stay process-stable (see EC7).
+    /// The daily enforcement activity for an open-limit rule (time-limit rules
+    /// are planned by `dayPlans` instead). Open limits carry no usage-threshold
+    /// events, so a restart has no accrual to lose; it is still fingerprinted
+    /// on kind, budget, and selection to detect the configuration changes that
+    /// should restart the activity (e.g. an app-list swap).
     func limitPlan(for rule: BlockingRule, selectionData: Data) -> PlannedActivity {
-        let events =
-            rule.kind == .timeLimit
-            ? MonitoringPlan.blockEvent(forLimit: rule.dailyLimitMinutes)
-            : [:]
         let fingerprint = "\(rule.kindRaw)|\(rule.dailyLimitMinutes)|"
             + Self.selectionFingerprint(selectionData)
         return PlannedActivity(
             name: MonitoringPlan.dailyActivityName(for: rule.id),
             fingerprint: fingerprint,
-            payload: .daily(selectionData: selectionData, eventMinutes: events),
-            resetsThresholdAccountingOnRestart: true)
+            payload: .daily(selectionData: selectionData, eventMinutes: [:]),
+            resetsThresholdAccountingOnRestart: false)
     }
 
     /// The per-day block (and, when opted in, warn) activities for a time-limit
@@ -250,10 +252,12 @@ final class RuleScheduler {
             }
             guard needsRestart(plan.name, plan.fingerprint, in: fingerprints) else { continue }
             if plan.resetsThresholdAccountingOnRestart {
-                // EC7: a restart resets threshold accounting to "from now".
-                // Log the fingerprint change so a mid-day count reset can be
-                // correlated to its cause (config change vs not-monitored). A new
-                // day legitimately starts a fresh per-day activity name.
+                // EC7: `includesPastActivity` backfills same-interval accrual, so
+                // a restart no longer discards the whole day — only up to the
+                // current hour is at risk. Log the fingerprint change so a
+                // mid-day accounting gap can still be correlated to its cause
+                // (config change vs not-monitored). A new day legitimately
+                // starts a fresh per-day activity name.
                 let events: [String: Int]
                 switch plan.payload {
                 case let .daily(_, e): events = e
@@ -262,7 +266,7 @@ final class RuleScheduler {
                 }
                 Diag.log(
                     .scheduler, .event,
-                    "dailyActivity restart \(plan.name): events=\(events) fp \(Self.shortFingerprint(fingerprints[plan.name]))->\(Self.shortFingerprint(plan.fingerprint)) (resets threshold accounting)")
+                    "dailyActivity restart \(plan.name): events=\(events) fp \(Self.shortFingerprint(fingerprints[plan.name]))->\(Self.shortFingerprint(plan.fingerprint)) (may lose up to the current hour of accrual)")
             }
             attemptWithFallback(name: plan.name) {
                 try start(plan.payload, named: plan.name)

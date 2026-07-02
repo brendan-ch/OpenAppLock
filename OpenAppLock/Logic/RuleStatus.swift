@@ -92,7 +92,15 @@ extension RuleSnapshotDTO {
                 guard isScheduledToday(at: now, calendar: calendar),
                       let reset = calendar.nextMidnight(after: now)
                 else {
-                    return status.label(relativeTo: now)
+                    // Not scheduled today: the daily budget next takes effect at
+                    // the START of the next enabled day (midnight), when the budget
+                    // resets — not the vestigial schedule-window start that the
+                    // shared `nextStart` primitive reports for limit rules.
+                    guard let nextDayStart = ScheduledDayPlanner.nextScheduledDayStart(
+                        after: now, days: days, calendar: calendar)
+                    else { return status.label(relativeTo: now) }
+                    return CopyKey.statusStartsIn.string(
+                        RuleStatus.countdown(from: now, to: nextDayStart))
                 }
                 return CopyKey.statusResetsIn.string(RuleStatus.countdown(from: now, to: reset))
             }

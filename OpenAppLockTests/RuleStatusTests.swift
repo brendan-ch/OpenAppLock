@@ -74,9 +74,9 @@ struct RuleStatusTests {
 
     @Test("Active label rounds hours up")
     func activeLabel() {
-        // 11:28 → 17:00 is 5h32m; rounds up to "6h left".
+        // 11:28 → 17:00 is 5h32m; rounds up to "Ends in 6h".
         let status = workTime().dto.status(at: date(2025, 1, 6, 11, 28), calendar: utc)
-        #expect(status.label(relativeTo: date(2025, 1, 6, 11, 28)) == "6h left")
+        #expect(status.label(relativeTo: date(2025, 1, 6, 11, 28)) == "Ends in 6h")
     }
 
     @Test("Upcoming label formats hours until start")
@@ -113,24 +113,28 @@ struct RuleStatusTests {
 
     // MARK: - Kind-aware row context
 
-    /// An untouched time-limit rule has no clock window, so it shows its daily
-    /// budget — never the vestigial 09:00 start as "Starts in 22h".
-    @Test("Untouched time-limit rule shows its daily budget, not a clock countdown")
+    /// A limit rule scheduled today reads a countdown to tonight's midnight, when
+    /// its daily budget resets — not the vestigial 09:00 window start.
+    @Test("Scheduled-today time-limit rule shows the reset countdown")
     func timeLimitDisplayLabel() {
         let rule = BlockingRule(
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
-        let now = date(2025, 1, 6, 11, 38) // past the vestigial 09:00 window start
+        let now = date(2025, 1, 6, 11, 38) // Monday — a scheduled weekday
         let status = rule.dto.status(at: now, calendar: utc)
-        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "15m / day")
+        #expect(
+            rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now, calendar: utc)
+                == "Resets in 13h")
     }
 
-    @Test("Untouched open-limit rule shows its daily opens budget")
+    @Test("Scheduled-today open-limit rule shows the reset countdown")
     func openLimitDisplayLabel() {
         let rule = BlockingRule(
             name: "Gate Keeper", configuration: .openLimit(OpenLimitConfig(maxOpens: 5)))
         let now = date(2025, 1, 6, 11, 38)
         let status = rule.dto.status(at: now, calendar: utc)
-        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "5 opens / day")
+        #expect(
+            rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now, calendar: utc)
+                == "Resets in 13h")
     }
 
     @Test("Schedule rule still shows the clock countdown")
@@ -138,12 +142,14 @@ struct RuleStatusTests {
         let weekend = BlockingRule(name: "Weekend Zen", days: Weekday.weekends)
         let friday = date(2025, 1, 10, 11, 28)
         let status = weekend.dto.status(at: friday, calendar: utc)
-        #expect(weekend.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: friday) == "Starts in 22h")
+        #expect(
+            weekend.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: friday, calendar: utc)
+                == "Starts in 22h")
     }
 
-    /// Limit rules block by budget, not by the clock, so a spent one reads
-    /// "Blocked until tomorrow", never a countdown (that is schedule-only).
-    @Test("A spent time-limit budget reads 'Blocked until tomorrow'")
+    /// A limit rule reads the same "Resets in" countdown whether the budget is
+    /// spent (blocking) or still available — both reset at tonight's midnight.
+    @Test("A spent time-limit budget reads 'Resets in {countdown}'")
     func timeLimitBlockingDisplayLabel() {
         let rule = BlockingRule(
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
@@ -151,7 +157,26 @@ struct RuleStatusTests {
         let usage = RuleUsageDTO(minutesUsed: 15)
         let status = rule.dto.status(at: now, calendar: utc, usage: usage)
         #expect(status.isActive)
-        #expect(rule.dto.rowContext(for: status, usage: usage, relativeTo: now) == "Blocked until tomorrow")
+        #expect(
+            rule.dto.rowContext(for: status, usage: usage, relativeTo: now, calendar: utc)
+                == "Resets in 13h")
+    }
+
+    /// A limit rule on a day it is NOT scheduled has no budget to reset today, so
+    /// it falls back to the upcoming "Starts in" countdown to its next enabled day.
+    @Test("Not-scheduled-today limit rule shows the upcoming Starts-in countdown")
+    func limitNotScheduledTodayShowsStartsIn() {
+        let rule = BlockingRule(
+            name: "Weekend Limit",
+            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 30)),
+            days: Weekday.weekends)
+        let now = date(2025, 1, 6, 11, 38) // Monday — not a scheduled weekend day
+        let status = rule.dto.status(at: now, calendar: utc)
+        #expect(!rule.dto.isScheduledToday(at: now, calendar: utc))
+        #expect(
+            rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now, calendar: utc)
+                == status.label(relativeTo: now))
+        #expect(status.label(relativeTo: now).hasPrefix("Starts in "))
     }
 }
 

@@ -1,1348 +1,2446 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "ruleKind.defaultNameSchedule" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "In the Zone" } }
-      }
-    },
-    "ruleKind.defaultNameTimeLimit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time Keeper" } }
-      }
-    },
-    "ruleKind.defaultNameOpenLimit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Gate Keeper" } }
-      }
-    },
-    "selectionMode.block" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Block" } }
-      }
-    },
-    "selectionMode.allowOnly" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow Only" } }
-      }
-    },
-    "onboarding.requesting" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Requesting…" } }
-      }
-    },
-    "ruleEditor.cantPauseWhileActive" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This block can’t be paused while it’s active." } }
-      }
-    },
-    "ruleEditor.addRuleLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Rule" } }
-      }
-    },
-    "ruleEditor.appListTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "App List" } }
-      }
-    },
-    "ruleEditor.ruleNamePlaceholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rule Name" } }
-      }
-    },
-    "ruleEditor.nameSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Name" } }
-      }
-    },
-    "ruleEditor.fromLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "From" } }
-      }
-    },
-    "ruleEditor.toLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "To" } }
-      }
-    },
-    "ruleEditor.duringThisTimeHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "During this time" } }
-      }
-    },
-    "ruleEditor.modeLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mode" } }
-      }
-    },
-    "ruleEditor.appsAreBlockedHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apps are blocked" } }
-      }
-    },
-    "ruleEditor.onlyTheseAppsAllowedHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Only these apps are allowed" } }
-      }
-    },
-    "ruleEditor.whenIUseHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "When I use" } }
-      }
-    },
-    "ruleEditor.forThisLongHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "For this long" } }
-      }
-    },
-    "ruleEditor.whenIOpenHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "When I open" } }
-      }
-    },
-    "ruleEditor.moreThanHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "More than" } }
-      }
-    },
-    "ruleEditor.onTheseDaysHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "On these days" } }
-      }
-    },
-    "ruleEditor.untilLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Until" } }
-      }
-    },
-    "ruleEditor.tomorrowValue" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tomorrow" } }
-      }
-    },
-    "ruleEditor.thenBlockAppHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Then block app" } }
-      }
-    },
-    "ruleEditor.hardModeToggle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hard Mode" } }
-      }
-    },
-    "ruleEditor.chooseAppListPlaceholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose" } }
-      }
-    },
-    "ruleEditor.appListSummaryFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ · %@" } }
-      }
-    },
-    "ruleEditor.dailyLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily" } }
-      }
-    },
-    "ruleEditor.dailyTimeLimitAccessibilityLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily time limit" } }
-      }
-    },
-    "ruleEditor.dailyOpenLimitAccessibilityLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily open limit" } }
-      }
-    },
-    "ruleEditor.dailyMinutesAbbreviatedFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm" } }
-      }
-    },
-    "ruleEditor.dailyMinutesAccessibilityFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld minutes" } }
-      }
-    },
-    "ruleEditor.opensCountFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld opens" } }
-      }
-    },
-    "ruleDetail.generalSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "General" } }
-      }
-    },
-    "ruleDetail.detailsSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Details" } }
-      }
-    },
-    "ruleDetail.todaysUsageLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today’s Usage" } }
-      }
-    },
-    "ruleDetail.hardModeLockedNotice" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hard Mode is on — this rule is locked until the block ends." } }
-      }
-    },
-    "ruleDetail.closeButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } }
-      }
-    },
-    "ruleDetail.editButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } }
-      }
-    },
-    "ruleDetail.pauseConfirmationTitleFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pause %@?" } }
-      }
-    },
-    "ruleDetail.pauseConfirmationMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apps unblock for 15 minutes, then blocking resumes automatically." } }
-      }
-    },
-    "ruleDetail.pauseFor15MinutesAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pause for 15 minutes" } }
-      }
-    },
-    "ruleDetail.resumeBlockingAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Resume Blocking" } }
-      }
-    },
-    "ruleDetail.disableAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Disable" } }
-      }
-    },
-    "ruleDetail.enableAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable" } }
-      }
-    },
-    "ruleDetail.deleteAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } }
-      }
-    },
-    "ruleDetail.ruleActionsLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rule Actions" } }
-      }
-    },
-    "ruleDetail.kindRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Kind" } }
-      }
-    },
-    "ruleDetail.statusRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Status" } }
-      }
-    },
-    "ruleDetail.duringThisTimeRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "During this time" } }
-      }
-    },
-    "ruleDetail.onTheseDaysRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "On these days" } }
-      }
-    },
-    "ruleDetail.pausingAllowedRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pausing allowed" } }
-      }
-    },
-    "ruleDetail.noValue" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No" } }
-      }
-    },
-    "ruleDetail.yesValue" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Yes" } }
-      }
-    },
-    "ruleDetail.whenIUseRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "When I use" } }
-      }
-    },
-    "ruleDetail.forThisLongRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "For this long" } }
-      }
-    },
-    "ruleDetail.dailyMinutesSummaryFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm daily" } }
-      }
-    },
-    "ruleDetail.thenBlockUntilRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Then block until" } }
-      }
-    },
-    "ruleDetail.tomorrowValue" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tomorrow" } }
-      }
-    },
-    "ruleDetail.whenIOpenRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "When I open" } }
-      }
-    },
-    "ruleDetail.moreThanRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "More than" } }
-      }
-    },
-    "ruleDetail.opensCountSummaryFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld opens daily" } }
-      }
-    },
-    "ruleDetail.noAppsPlaceholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No apps" } }
-      }
-    },
-    "ruleDetail.appListSummaryFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ · %@" } }
-      }
-    },
-    "ruleDetail.usageReportNavigationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Usage" } }
-      }
-    },
-    "rulesList.navigationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rules" } }
-      }
-    },
-    "rulesList.newRuleButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "New Rule" } }
-      }
-    },
-    "rulesList.noRulesYetTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Rules Yet" } }
-      }
-    },
-    "rulesList.emptyStateDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create a rule to block distracting apps on a schedule." } }
-      }
-    },
-    "newRule.ruleTypeSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rule Type" } }
-      }
-    },
-    "newRule.navigationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "New Rule" } }
-      }
-    },
-    "newRule.closeButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } }
-      }
-    },
-    "newRule.presetSummaryFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ · %@" } }
-      }
-    },
-    "settings.uninstallProtectionToggleLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Uninstall Protection" } }
-      }
-    },
-    "settings.protectionSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Protection" } }
-      }
-    },
-    "settings.uninstallProtectionLockedFooter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Locked while a Hard Mode rule is actively blocking." } }
-      }
-    },
-    "settings.uninstallProtectionUnlockedFooter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "While on, apps can’t be deleted from this device whenever a Hard Mode rule is actively blocking." } }
-      }
-    },
-    "settings.appListsRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Lists" } }
-      }
-    },
-    "settings.notificationsRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } }
-      }
-    },
-    "settings.logsRowLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Logs" } }
-      }
-    },
-    "settings.moreSettingsSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "More Settings" } }
-      }
-    },
-    "settings.navigationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } }
-      }
-    },
-    "settings.githubLinkLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "GitHub" } }
-      }
-    },
-    "settings.websiteLinkLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Website" } }
-      }
-    },
-    "settings.aboutSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } }
-      }
-    },
-    "notifications.navigationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } }
-      }
-    },
-    "notifications.allowedStatusLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications allowed" } }
-      }
-    },
-    "notifications.allowButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow Notifications" } }
-      }
-    },
-    "notifications.openSettingsButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Settings" } }
-      }
-    },
-    "notifications.permissionSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Permission" } }
-      }
-    },
-    "notifications.deniedFooter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications are turned off for OpenAppLock. Turn them on in Settings to get these reminders." } }
-      }
-    },
-    "notifications.scheduleStartToggleLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Schedule starting soon" } }
-      }
-    },
-    "notifications.timeLimitToggleLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time limit almost up" } }
-      }
-    },
-    "notifications.notifyMeSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notify Me" } }
-      }
-    },
-    "notifications.footer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "“Schedule starting soon” warns 5 minutes before a schedule rule blocks. “Time limit almost up” warns when a time limit has 5 minutes left." } }
-      }
-    },
-    "diagnostics.noLogsMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No logs yet. Logs are recorded automatically as rules enforce." } }
-      }
-    },
-    "diagnostics.daysSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Days" } }
-      }
-    },
-    "diagnostics.daysSectionFooter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Logs stay on-device and do not include information about which apps are blocked." } }
-      }
-    },
-    "diagnostics.clearAllLogsButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear All Logs" } }
-      }
-    },
-    "diagnostics.clearLogsConfirmationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Clear all logs?" } }
-      }
-    },
-    "diagnostics.cancelButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } }
-      }
-    },
-    "diagnostics.clearLogsConfirmationMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This permanently deletes all recorded diagnostic logs on this device." } }
-      }
-    },
-    "diagnostics.navigationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Logs" } }
-      }
-    },
-    "diagnostics.noEntriesPlaceholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No entries." } }
-      }
-    },
-    "appLists.editAppsLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit Apps" } }
+    "appLists.appsCountFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Apps"
+          }
+        }
       }
     },
     "appLists.appsSectionHeader" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apps" } }
-      }
-    },
-    "appLists.newListLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "New List" } }
-      }
-    },
-    "appLists.editorNameFieldPlaceholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "List Name" } }
-      }
-    },
-    "appLists.editorNameSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Name" } }
-      }
-    },
-    "appLists.editorNoAppsYetMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No apps yet. Edit Apps to choose what this list includes." } }
-      }
-    },
-    "appLists.oneAppCountLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "1 App" } }
-      }
-    },
-    "appLists.appsCountFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld Apps" } }
-      }
-    },
-    "appLists.editListLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit List" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps"
+          }
+        }
       }
     },
     "appLists.closeButtonLabel" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } }
-      }
-    },
-    "appLists.discardChangesConfirmationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discard Changes?" } }
-      }
-    },
-    "appLists.discardChangesAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discard Changes" } }
-      }
-    },
-    "appLists.keepEditingAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keep Editing" } }
-      }
-    },
-    "appLists.unsavedEditsMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your edits to this list haven’t been saved." } }
-      }
-    },
-    "appLists.saveListAccessibilityLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save List" } }
-      }
-    },
-    "appLists.untitledListDefaultName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Untitled List" } }
-      }
-    },
-    "appLists.libraryEmptyStateTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No App Lists" } }
-      }
-    },
-    "appLists.libraryEmptyStateDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create one to choose which apps a rule affects." } }
-      }
-    },
-    "appLists.libraryYourAppListsSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your App Lists" } }
-      }
-    },
-    "appLists.libraryLockedFooter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hard Mode is on — app lists are locked until the block ends." } }
-      }
-    },
-    "appLists.libraryDeletionBlockedAlertTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This list is in use" } }
-      }
-    },
-    "appLists.okButtonLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } }
-      }
-    },
-    "appLists.libraryDeletionBlockedAlertMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove it from the rules that use it before deleting." } }
-      }
-    },
-    "appLists.libraryViewButtonLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "View" } }
-      }
-    },
-    "appLists.libraryEditButtonLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } }
-      }
-    },
-    "appLists.libraryDeleteButtonLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } }
-      }
-    },
-    "appLists.detailEmptyMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This list has no apps." } }
-      }
-    },
-    "appLists.detailReadOnlyFooter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hard Mode is on — this list is read-only until the block ends." } }
-      }
-    },
-    "appLists.manageNavigationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Lists" } }
-      }
-    },
-    "home.navigationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Home" } }
-      }
-    },
-    "home.nothingBlockingMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nothing is blocking right now." } }
-      }
-    },
-    "home.currentlyBlockingSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Currently Blocking" } }
-      }
-    },
-    "home.activeRulesSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Active Rules" } }
-      }
-    },
-    "onboarding.welcomeTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "OpenAppLock" } }
-      }
-    },
-    "onboarding.welcomeDescription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Block your most distracting apps with rules that keep you honest — on a schedule, with no way out when you choose Hard Mode." } }
-      }
-    },
-    "onboarding.allowScreenTime" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow Screen Time Access" } }
-      }
-    },
-    "onboarding.screenTimeFrameworkBullet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "OpenAppLock uses Apple’s Screen Time framework to block the apps you choose." } }
-      }
-    },
-    "onboarding.activityStaysPrivateBullet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your app activity stays on this device and is never collected." } }
-      }
-    },
-    "onboarding.changeAnytimeBullet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "You can change this anytime in Settings." } }
-      }
-    },
-    "onboarding.accessDeclinedMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Screen Time access was declined. OpenAppLock can’t block apps without it." } }
-      }
-    },
-    "onboarding.openSettingsButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Settings" } }
-      }
-    },
-    "onboarding.continueButton" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue" } }
-      }
-    },
-    "nav.appTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "OpenAppLock" } }
-      }
-    },
-    "nav.homeSectionTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Home" } }
-      }
-    },
-    "nav.rulesSectionTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rules" } }
-      }
-    },
-    "nav.settingsSectionTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } }
-      }
-    },
-    "dayPicker.previewSectionHeader" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "On these days" } }
-      }
-    },
-    "status.disabled" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Disabled" } }
-      }
-    },
-    "status.noDaysSelected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No days selected" } }
-      }
-    },
-    "status.resumesIn" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Resumes in %@" } }
-      }
-    },
-    "status.activeLeft" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ left" } }
-      }
-    },
-    "status.startsIn" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Starts in %@" } }
-      }
-    },
-    "status.countdownMinutes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm" } }
-      }
-    },
-    "status.countdownHours" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldh" } }
-      }
-    },
-    "status.countdownDays" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldd" } }
-      }
-    },
-    "status.blockedUntilTomorrow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Blocked until tomorrow" } }
-      }
-    },
-    "usage.minutesPerDay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm / day" } }
-      }
-    },
-    "usage.opensPerDay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld opens / day" } }
-      }
-    },
-    "usage.subtitleSeparator" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ · %@" } }
-      }
-    },
-    "ruleKind.scheduleDisplayName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Schedule" } }
-      }
-    },
-    "ruleKind.timeLimitDisplayName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time Limit" } }
-      }
-    },
-    "ruleKind.openLimitDisplayName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Limit" } }
-      }
-    },
-    "ruleKind.scheduleExampleText" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. 9-5, Daily" } }
-      }
-    },
-    "ruleKind.timeLimitExampleText" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. 45m/day" } }
-      }
-    },
-    "ruleKind.openLimitExampleText" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "e.g. 5 opens/day" } }
-      }
-    },
-    "weekday.shortLabelS" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "S" } }
-      }
-    },
-    "weekday.shortLabelM" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "M" } }
-      }
-    },
-    "weekday.shortLabelT" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "T" } }
-      }
-    },
-    "weekday.shortLabelW" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "W" } }
-      }
-    },
-    "weekday.shortLabelF" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "F" } }
-      }
-    },
-    "weekday.sundayAbbreviation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sun" } }
-      }
-    },
-    "weekday.mondayAbbreviation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mon" } }
-      }
-    },
-    "weekday.tuesdayAbbreviation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tue" } }
-      }
-    },
-    "weekday.wednesdayAbbreviation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wed" } }
-      }
-    },
-    "weekday.thursdayAbbreviation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Thu" } }
-      }
-    },
-    "weekday.fridayAbbreviation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fri" } }
-      }
-    },
-    "weekday.saturdayAbbreviation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sat" } }
-      }
-    },
-    "weekday.everyDaySummary" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Every day" } }
-      }
-    },
-    "weekday.weekdaysSummary" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weekdays" } }
-      }
-    },
-    "weekday.weekendsSummary" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weekends" } }
-      }
-    },
-    "weekday.neverSummary" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Never" } }
-      }
-    },
-    "preset.morningFocusName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Morning Focus" } }
-      }
-    },
-    "preset.deepWorkName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deep Work" } }
-      }
-    },
-    "preset.eveningResetName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Evening Reset" } }
-      }
-    },
-    "preset.lightsOutName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lights Out" } }
-      }
-    },
-    "preset.familyDinnerName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Family Dinner" } }
-      }
-    },
-    "preset.screenFreeSundayName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Screen-Free Sunday" } }
-      }
-    },
-    "preset.focusSectionTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Focus Time" } }
-      }
-    },
-    "preset.focusSectionSubtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Protect your deep-work hours." } }
-      }
-    },
-    "preset.restSectionTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rest & Recharge" } }
-      }
-    },
-    "preset.restSectionSubtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wind the day down on schedule." } }
-      }
-    },
-    "preset.balanceSectionTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Healthy Balance" } }
-      }
-    },
-    "preset.balanceSectionSubtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Make room for what matters." } }
-      }
-    },
-    "shield.blockedTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "App Blocked" } }
-      }
-    },
-    "shield.blockedSubtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This app is blocked by OpenAppLock." } }
-      }
-    },
-    "shield.noOpensLeft" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No opens left today — the block lifts tomorrow." } }
-      }
-    },
-    "shield.openLimit.subtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Opened %lld of %lld times today. Each open lasts %lld minutes." } }
-      }
-    },
-    "shield.openButtonOne" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open (1 left)" } }
-      }
-    },
-    "shield.openButtonMany" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open (%lld left)" } }
-      }
-    },
-    "shield.primaryButtonLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } }
-      }
-    },
-    "notification.timeLimitWarningTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time limit almost up" } }
-      }
-    },
-    "notification.timeLimitWarningBodyFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@: %lld minutes of your time limit left." } }
-      }
-    },
-    "usageReport.noUsageToday" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No usage today" } }
-      }
-    },
-    "usageReport.todayTotalFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@ today" } }
-      }
-    },
-    "usageReport.durationHoursMinutesFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldh %lldm" } }
-      }
-    },
-    "usageReport.durationHoursFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldh" } }
-      }
-    },
-    "usageReport.durationMinutesFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm" } }
-      }
-    },
-    "usageReport.underAMinute" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "<1m" } }
-      }
-    },
-    "usageReport.unknownAppName" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unknown" } }
-      }
-    },
-    "ruleDetail.doneLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } }
-      }
-    },
-    "ruleDetail.discardChangesTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discard Changes?" } }
-      }
-    },
-    "ruleDetail.discardChangesAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Discard Changes" } }
-      }
-    },
-    "ruleDetail.keepEditingAction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Keep Editing" } }
-      }
-    },
-    "ruleDetail.unsavedEditsMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your edits to this rule haven’t been saved." } }
-      }
-    },
-    "ruleDetail.deleteConfirmationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete this rule?" } }
-      }
-    },
-    "ruleDetail.deleteConfirmationMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This rule will be permanently removed." } }
-      }
-    },
-    "appLists.listActionsLabel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "List Actions" } }
-      }
-    },
-    "appLists.deleteConfirmationTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete this list?" } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
       }
     },
     "appLists.deleteConfirmationMessage" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "This app list will be permanently removed." } }
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This app list will be permanently removed."
+          }
+        }
+      }
+    },
+    "appLists.deleteConfirmationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this list?"
+          }
+        }
+      }
+    },
+    "appLists.detailEmptyMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This list has no apps."
+          }
+        }
+      }
+    },
+    "appLists.detailReadOnlyFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hard Mode is on — this list is read-only until the block ends."
+          }
+        }
+      }
+    },
+    "appLists.discardChangesAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard Changes"
+          }
+        }
+      }
+    },
+    "appLists.discardChangesConfirmationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard Changes?"
+          }
+        }
+      }
+    },
+    "appLists.editAppsLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Apps"
+          }
+        }
+      }
+    },
+    "appLists.editListLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit List"
+          }
+        }
+      }
+    },
+    "appLists.editorNameFieldPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "List Name"
+          }
+        }
+      }
+    },
+    "appLists.editorNameSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        }
+      }
+    },
+    "appLists.editorNoAppsYetMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No apps yet. Edit Apps to choose what this list includes."
+          }
+        }
+      }
+    },
+    "appLists.keepEditingAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Editing"
+          }
+        }
+      }
+    },
+    "appLists.libraryDeleteButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
+    "appLists.libraryDeletionBlockedAlertMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove it from the rules that use it before deleting."
+          }
+        }
+      }
+    },
+    "appLists.libraryDeletionBlockedAlertTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This list is in use"
+          }
+        }
+      }
+    },
+    "appLists.libraryEditButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
+    },
+    "appLists.libraryEmptyStateDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create one to choose which apps a rule affects."
+          }
+        }
+      }
+    },
+    "appLists.libraryEmptyStateTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No App Lists"
+          }
+        }
+      }
+    },
+    "appLists.libraryLockedFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hard Mode is on — app lists are locked until the block ends."
+          }
+        }
+      }
+    },
+    "appLists.libraryViewButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View"
+          }
+        }
+      }
+    },
+    "appLists.libraryYourAppListsSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your App Lists"
+          }
+        }
+      }
+    },
+    "appLists.listActionsLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "List Actions"
+          }
+        }
+      }
+    },
+    "appLists.manageNavigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Lists"
+          }
+        }
+      }
+    },
+    "appLists.newListLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New List"
+          }
+        }
+      }
+    },
+    "appLists.okButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "appLists.oneAppCountLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 App"
+          }
+        }
+      }
+    },
+    "appLists.saveListAccessibilityLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save List"
+          }
+        }
+      }
+    },
+    "appLists.unsavedEditsMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your edits to this list haven’t been saved."
+          }
+        }
+      }
+    },
+    "appLists.untitledListDefaultName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untitled List"
+          }
+        }
+      }
+    },
+    "dayPicker.previewSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On these days"
+          }
+        }
+      }
+    },
+    "diagnostics.cancelButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "diagnostics.clearAllLogsButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear All Logs"
+          }
+        }
+      }
+    },
+    "diagnostics.clearLogsConfirmationMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This permanently deletes all recorded diagnostic logs on this device."
+          }
+        }
+      }
+    },
+    "diagnostics.clearLogsConfirmationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear all logs?"
+          }
+        }
+      }
+    },
+    "diagnostics.daysSectionFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logs stay on-device and do not include information about which apps are blocked."
+          }
+        }
+      }
+    },
+    "diagnostics.daysSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Days"
+          }
+        }
+      }
+    },
+    "diagnostics.navigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logs"
+          }
+        }
+      }
+    },
+    "diagnostics.noEntriesPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No entries."
+          }
+        }
+      }
+    },
+    "diagnostics.noLogsMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No logs yet. Logs are recorded automatically as rules enforce."
+          }
+        }
+      }
+    },
+    "home.activeRulesSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active Rules"
+          }
+        }
+      }
+    },
+    "home.currentlyBlockingSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Currently Blocking"
+          }
+        }
+      }
+    },
+    "home.navigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        }
+      }
+    },
+    "home.nothingBlockingMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing is blocking right now."
+          }
+        }
+      }
+    },
+    "nav.appTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAppLock"
+          }
+        }
+      }
+    },
+    "nav.homeSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        }
+      }
+    },
+    "nav.rulesSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rules"
+          }
+        }
+      }
+    },
+    "nav.settingsSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "newRule.closeButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "newRule.navigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Rule"
+          }
+        }
+      }
+    },
+    "newRule.presetSummaryFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@"
+          }
+        }
+      }
+    },
+    "newRule.ruleTypeSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rule Type"
+          }
+        }
+      }
+    },
+    "notification.timeLimitWarningBodyFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %lld minutes of your time limit left."
+          }
+        }
+      }
+    },
+    "notification.timeLimitWarningTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time limit almost up"
+          }
+        }
+      }
+    },
+    "notifications.allowButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Notifications"
+          }
+        }
+      }
+    },
+    "notifications.allowedStatusLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications allowed"
+          }
+        }
+      }
+    },
+    "notifications.deniedFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are turned off for OpenAppLock. Turn them on in Settings to get these reminders."
+          }
+        }
+      }
+    },
+    "notifications.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Schedule starting soon” warns 5 minutes before a schedule rule blocks. “Time limit almost up” warns when a time limit has 5 minutes left."
+          }
+        }
+      }
+    },
+    "notifications.navigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        }
+      }
+    },
+    "notifications.notifyMeSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notify Me"
+          }
+        }
+      }
+    },
+    "notifications.openSettingsButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        }
+      }
+    },
+    "notifications.permissionSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permission"
+          }
+        }
+      }
+    },
+    "notifications.scheduleStartToggleLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schedule starting soon"
+          }
+        }
+      }
+    },
+    "notifications.timeLimitToggleLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time limit almost up"
+          }
+        }
+      }
+    },
+    "onboarding.accessDeclinedMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screen Time access was declined. OpenAppLock can’t block apps without it."
+          }
+        }
+      }
+    },
+    "onboarding.activityStaysPrivateBullet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your app activity stays on this device and is never collected."
+          }
+        }
+      }
+    },
+    "onboarding.allowScreenTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Screen Time Access"
+          }
+        }
+      }
+    },
+    "onboarding.changeAnytimeBullet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can change this anytime in Settings."
+          }
+        }
+      }
+    },
+    "onboarding.continueButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
+    "onboarding.openSettingsButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        }
+      }
+    },
+    "onboarding.requesting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requesting…"
+          }
+        }
+      }
+    },
+    "onboarding.screenTimeFrameworkBullet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAppLock uses Apple’s Screen Time framework to block the apps you choose."
+          }
+        }
+      }
+    },
+    "onboarding.welcomeDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block your most distracting apps with rules that keep you honest — on a schedule, with no way out when you choose Hard Mode."
+          }
+        }
+      }
+    },
+    "onboarding.welcomeTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAppLock"
+          }
+        }
+      }
+    },
+    "preset.balanceSectionSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make room for what matters."
+          }
+        }
+      }
+    },
+    "preset.balanceSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Healthy Balance"
+          }
+        }
+      }
+    },
+    "preset.deepWorkName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deep Work"
+          }
+        }
+      }
+    },
+    "preset.eveningResetName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evening Reset"
+          }
+        }
+      }
+    },
+    "preset.familyDinnerName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Family Dinner"
+          }
+        }
+      }
+    },
+    "preset.focusSectionSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protect your deep-work hours."
+          }
+        }
+      }
+    },
+    "preset.focusSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus Time"
+          }
+        }
+      }
+    },
+    "preset.lightsOutName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lights Out"
+          }
+        }
+      }
+    },
+    "preset.morningFocusName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Morning Focus"
+          }
+        }
+      }
+    },
+    "preset.restSectionSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wind the day down on schedule."
+          }
+        }
+      }
+    },
+    "preset.restSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rest & Recharge"
+          }
+        }
+      }
+    },
+    "preset.screenFreeSundayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screen-Free Sunday"
+          }
+        }
+      }
+    },
+    "ruleDetail.appListSummaryFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@"
+          }
+        }
+      }
+    },
+    "ruleDetail.closeButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "ruleDetail.dailyMinutesSummaryFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm daily"
+          }
+        }
+      }
+    },
+    "ruleDetail.deleteAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
+    "ruleDetail.deleteConfirmationMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This rule will be permanently removed."
+          }
+        }
+      }
+    },
+    "ruleDetail.deleteConfirmationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this rule?"
+          }
+        }
+      }
+    },
+    "ruleDetail.detailsSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
+    },
+    "ruleDetail.disableAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable"
+          }
+        }
+      }
+    },
+    "ruleDetail.discardChangesAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard Changes"
+          }
+        }
+      }
+    },
+    "ruleDetail.discardChangesTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard Changes?"
+          }
+        }
+      }
+    },
+    "ruleDetail.doneLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
+    "ruleDetail.duringThisTimeRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "During this time"
+          }
+        }
+      }
+    },
+    "ruleDetail.editButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
+    },
+    "ruleDetail.enableAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable"
+          }
+        }
+      }
+    },
+    "ruleDetail.forThisLongRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For this long"
+          }
+        }
+      }
+    },
+    "ruleDetail.generalSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        }
+      }
+    },
+    "ruleDetail.hardModeLockedNotice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hard Mode is on — this rule is locked until the block ends."
+          }
+        }
+      }
+    },
+    "ruleDetail.keepEditingAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Editing"
+          }
+        }
+      }
+    },
+    "ruleDetail.kindRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kind"
+          }
+        }
+      }
+    },
+    "ruleDetail.moreThanRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More than"
+          }
+        }
+      }
+    },
+    "ruleDetail.noAppsPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No apps"
+          }
+        }
+      }
+    },
+    "ruleDetail.noValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No"
+          }
+        }
+      }
+    },
+    "ruleDetail.onTheseDaysRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On these days"
+          }
+        }
+      }
+    },
+    "ruleDetail.opensCountSummaryFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld opens daily"
+          }
+        }
+      }
+    },
+    "ruleDetail.pauseConfirmationMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps unblock for 15 minutes, then blocking resumes automatically."
+          }
+        }
+      }
+    },
+    "ruleDetail.pauseConfirmationTitleFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause %@?"
+          }
+        }
+      }
+    },
+    "ruleDetail.pauseFor15MinutesAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause for 15 minutes"
+          }
+        }
+      }
+    },
+    "ruleDetail.pausingAllowedRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausing allowed"
+          }
+        }
+      }
+    },
+    "ruleDetail.resumeBlockingAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume Blocking"
+          }
+        }
+      }
+    },
+    "ruleDetail.ruleActionsLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rule Actions"
+          }
+        }
+      }
+    },
+    "ruleDetail.statusRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        }
+      }
+    },
+    "ruleDetail.thenBlockUntilRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then block until"
+          }
+        }
+      }
+    },
+    "ruleDetail.todaysUsageLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today’s Usage"
+          }
+        }
+      }
+    },
+    "ruleDetail.tomorrowValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomorrow"
+          }
+        }
+      }
+    },
+    "ruleDetail.unsavedEditsMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your edits to this rule haven’t been saved."
+          }
+        }
+      }
+    },
+    "ruleDetail.usageReportNavigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usage"
+          }
+        }
+      }
+    },
+    "ruleDetail.whenIOpenRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When I open"
+          }
+        }
+      }
+    },
+    "ruleDetail.whenIUseRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When I use"
+          }
+        }
+      }
+    },
+    "ruleDetail.yesValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yes"
+          }
+        }
+      }
+    },
+    "ruleEditor.addRuleLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Rule"
+          }
+        }
+      }
+    },
+    "ruleEditor.appListSummaryFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@"
+          }
+        }
+      }
+    },
+    "ruleEditor.appListTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App List"
+          }
+        }
+      }
+    },
+    "ruleEditor.appsAreBlockedHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps are blocked"
+          }
+        }
+      }
+    },
+    "ruleEditor.cantPauseWhileActive" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This block can’t be paused while it’s active."
+          }
+        }
+      }
+    },
+    "ruleEditor.chooseAppListPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose"
+          }
+        }
+      }
+    },
+    "ruleEditor.dailyLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily"
+          }
+        }
+      }
+    },
+    "ruleEditor.dailyMinutesAbbreviatedFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm"
+          }
+        }
+      }
+    },
+    "ruleEditor.dailyMinutesAccessibilityFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld minutes"
+          }
+        }
+      }
+    },
+    "ruleEditor.dailyOpenLimitAccessibilityLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily open limit"
+          }
+        }
+      }
+    },
+    "ruleEditor.dailyTimeLimitAccessibilityLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily time limit"
+          }
+        }
+      }
+    },
+    "ruleEditor.duringThisTimeHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "During this time"
+          }
+        }
+      }
+    },
+    "ruleEditor.forThisLongHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For this long"
+          }
+        }
+      }
+    },
+    "ruleEditor.fromLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From"
+          }
+        }
+      }
+    },
+    "ruleEditor.hardModeToggle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hard Mode"
+          }
+        }
+      }
+    },
+    "ruleEditor.modeLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode"
+          }
+        }
+      }
+    },
+    "ruleEditor.moreThanHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More than"
+          }
+        }
+      }
+    },
+    "ruleEditor.nameSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        }
+      }
+    },
+    "ruleEditor.onlyTheseAppsAllowedHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only these apps are allowed"
+          }
+        }
+      }
+    },
+    "ruleEditor.onTheseDaysHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On these days"
+          }
+        }
+      }
+    },
+    "ruleEditor.opensCountFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld opens"
+          }
+        }
+      }
+    },
+    "ruleEditor.ruleNamePlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rule Name"
+          }
+        }
+      }
+    },
+    "ruleEditor.thenBlockAppHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then block app"
+          }
+        }
+      }
+    },
+    "ruleEditor.toLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To"
+          }
+        }
+      }
+    },
+    "ruleEditor.tomorrowValue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomorrow"
+          }
+        }
+      }
+    },
+    "ruleEditor.untilLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Until"
+          }
+        }
+      }
+    },
+    "ruleEditor.whenIOpenHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When I open"
+          }
+        }
+      }
+    },
+    "ruleEditor.whenIUseHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When I use"
+          }
+        }
+      }
+    },
+    "ruleKind.defaultNameOpenLimit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gate Keeper"
+          }
+        }
+      }
+    },
+    "ruleKind.defaultNameSchedule" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In the Zone"
+          }
+        }
+      }
+    },
+    "ruleKind.defaultNameTimeLimit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Keeper"
+          }
+        }
+      }
+    },
+    "ruleKind.openLimitDisplayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Limit"
+          }
+        }
+      }
+    },
+    "ruleKind.openLimitExampleText" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. 5 opens/day"
+          }
+        }
+      }
+    },
+    "ruleKind.scheduleDisplayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schedule"
+          }
+        }
+      }
+    },
+    "ruleKind.scheduleExampleText" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. 9-5, Daily"
+          }
+        }
+      }
+    },
+    "ruleKind.timeLimitDisplayName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Limit"
+          }
+        }
+      }
+    },
+    "ruleKind.timeLimitExampleText" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. 45m/day"
+          }
+        }
+      }
+    },
+    "rulesList.emptyStateDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a rule to block distracting apps on a schedule."
+          }
+        }
+      }
+    },
+    "rulesList.navigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rules"
+          }
+        }
+      }
+    },
+    "rulesList.newRuleButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Rule"
+          }
+        }
+      }
+    },
+    "rulesList.noRulesYetTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Rules Yet"
+          }
+        }
+      }
+    },
+    "selectionMode.allowOnly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Only"
+          }
+        }
+      }
+    },
+    "selectionMode.block" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block"
+          }
+        }
+      }
+    },
+    "settings.aboutSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About"
+          }
+        }
+      }
+    },
+    "settings.appListsRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Lists"
+          }
+        }
+      }
+    },
+    "settings.githubLinkLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub"
+          }
+        }
+      }
+    },
+    "settings.logsRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logs"
+          }
+        }
+      }
+    },
+    "settings.moreSettingsSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More Settings"
+          }
+        }
+      }
+    },
+    "settings.navigationTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "settings.notificationsRowLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        }
+      }
+    },
+    "settings.protectionSectionHeader" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protection"
+          }
+        }
+      }
+    },
+    "settings.uninstallProtectionLockedFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locked while a Hard Mode rule is actively blocking."
+          }
+        }
+      }
+    },
+    "settings.uninstallProtectionToggleLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uninstall Protection"
+          }
+        }
+      }
+    },
+    "settings.uninstallProtectionUnlockedFooter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While on, apps can’t be deleted from this device whenever a Hard Mode rule is actively blocking."
+          }
+        }
+      }
+    },
+    "settings.websiteLinkLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Website"
+          }
+        }
+      }
+    },
+    "shield.blockedSubtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This app is blocked by OpenAppLock."
+          }
+        }
+      }
+    },
+    "shield.blockedTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Blocked"
+          }
+        }
+      }
+    },
+    "shield.noOpensLeft" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No opens left today — the block lifts tomorrow."
+          }
+        }
+      }
+    },
+    "shield.openButtonMany" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open (%lld left)"
+          }
+        }
+      }
+    },
+    "shield.openButtonOne" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open (1 left)"
+          }
+        }
+      }
+    },
+    "shield.openLimit.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opened %lld of %lld times today. Each open lasts %lld minutes."
+          }
+        }
+      }
+    },
+    "shield.primaryButtonLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "status.activeLeft" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ends in %@"
+          }
+        }
+      }
+    },
+    "status.countdownDays" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldd"
+          }
+        }
+      }
+    },
+    "status.countdownHours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldh"
+          }
+        }
+      }
+    },
+    "status.countdownMinutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm"
+          }
+        }
+      }
+    },
+    "status.disabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disabled"
+          }
+        }
+      }
+    },
+    "status.noDaysSelected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No days selected"
+          }
+        }
+      }
+    },
+    "status.resetsIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resets in %@"
+          }
+        }
+      }
+    },
+    "status.resumesIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resumes in %@"
+          }
+        }
+      }
+    },
+    "status.startsIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts in %@"
+          }
+        }
+      }
+    },
+    "usage.subtitleSeparator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ · %@"
+          }
+        }
+      }
+    },
+    "usageReport.durationHoursFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldh"
+          }
+        }
+      }
+    },
+    "usageReport.durationHoursMinutesFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldh %lldm"
+          }
+        }
+      }
+    },
+    "usageReport.durationMinutesFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm"
+          }
+        }
+      }
+    },
+    "usageReport.noUsageToday" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No usage today"
+          }
+        }
+      }
+    },
+    "usageReport.todayTotalFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ today"
+          }
+        }
+      }
+    },
+    "usageReport.underAMinute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<1m"
+          }
+        }
+      }
+    },
+    "usageReport.unknownAppName" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        }
+      }
+    },
+    "weekday.everyDaySummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every day"
+          }
+        }
+      }
+    },
+    "weekday.fridayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fri"
+          }
+        }
+      }
+    },
+    "weekday.mondayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mon"
+          }
+        }
+      }
+    },
+    "weekday.neverSummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Never"
+          }
+        }
+      }
+    },
+    "weekday.saturdayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sat"
+          }
+        }
+      }
+    },
+    "weekday.shortLabelF" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "F"
+          }
+        }
+      }
+    },
+    "weekday.shortLabelM" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "M"
+          }
+        }
+      }
+    },
+    "weekday.shortLabelS" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S"
+          }
+        }
+      }
+    },
+    "weekday.shortLabelT" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "T"
+          }
+        }
+      }
+    },
+    "weekday.shortLabelW" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W"
+          }
+        }
+      }
+    },
+    "weekday.sundayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sun"
+          }
+        }
+      }
+    },
+    "weekday.thursdayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thu"
+          }
+        }
+      }
+    },
+    "weekday.tuesdayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tue"
+          }
+        }
+      }
+    },
+    "weekday.wednesdayAbbreviation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wed"
+          }
+        }
+      }
+    },
+    "weekday.weekdaysSummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekdays"
+          }
+        }
+      }
+    },
+    "weekday.weekendsSummary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekends"
+          }
+        }
       }
     }
   },

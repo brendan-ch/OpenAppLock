@@ -20,7 +20,11 @@ nonisolated struct RuleSnapshotDTO: Codable, Equatable {
     var selectionData: Data?
     var dayNumbers: [Int]
     /// Schedule-window bounds, minutes from midnight (mirrors `BlockingRule`).
-    /// Only meaningful for `.schedule` rules; limit rules carry 0/0.
+    /// Only meaningful for `.schedule` rules. Limit rules retain a vestigial
+    /// window — the new-rule default, or a prior schedule's bounds — that
+    /// enforcement ignores and the status layer must not treat as a real start;
+    /// see `rowContext`, which counts a not-scheduled-today limit rule to the
+    /// next enabled day's midnight rather than this window's start.
     var startMinutes: Int
     var endMinutes: Int
     var dailyLimitMinutes: Int

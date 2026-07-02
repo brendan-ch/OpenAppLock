@@ -162,21 +162,77 @@ struct RuleStatusTests {
                 == "Resets in 13h")
     }
 
-    /// A limit rule on a day it is NOT scheduled has no budget to reset today, so
-    /// it falls back to the upcoming "Starts in" countdown to its next enabled day.
+    /// A limit rule on a day it is NOT scheduled reads a "Starts in" countdown to
+    /// its next enabled day. This day-granularity case ("4d") does not distinguish
+    /// the day start from the vestigial 09:00 window start (both round to "4d");
+    /// `limitNotScheduledTodayCountsToNextEnabledDayStart` pins the finer boundary.
     @Test("Not-scheduled-today limit rule shows the upcoming Starts-in countdown")
     func limitNotScheduledTodayShowsStartsIn() {
         let rule = BlockingRule(
             name: "Weekend Limit",
             configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 30)),
             days: Weekday.weekends)
-        let now = date(2025, 1, 6, 11, 38) // Monday — not a scheduled weekend day
+        let now = date(2025, 1, 6, 11, 38) // Monday — next enabled day is Saturday
         let status = rule.dto.status(at: now, calendar: utc)
         #expect(!rule.dto.isScheduledToday(at: now, calendar: utc))
         #expect(
             rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now, calendar: utc)
-                == status.label(relativeTo: now))
-        #expect(status.label(relativeTo: now).hasPrefix("Starts in "))
+                == "Starts in 4d")
+    }
+
+    /// The daily budget of a not-scheduled-today limit rule next takes effect at
+    /// the START of the next enabled day (midnight), when the budget resets — not
+    /// the vestigial 09:00 schedule-window start that the shared `nextStart`
+    /// primitive reports. Reproduces the "Starts in 30h" bug: at 03:00 the next
+    /// enabled day begins in 21h, but the 09:00 window start added 9h → "30h".
+    @Test("Not-scheduled-today limit rule counts down to the next enabled day's start")
+    func limitNotScheduledTodayCountsToNextEnabledDayStart() {
+        // Monday 03:00, enabled every day except today (Monday) — the user just
+        // deselected today — so the next enabled day is Tuesday, whose daily
+        // budget opens at Tuesday 00:00, 21h away (not the 09:00 window, 30h away).
+        let rule = BlockingRule(
+            name: "Daily Limit",
+            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 30)),
+            days: Set(Weekday.everyDay).subtracting([.monday]))
+        let now = date(2025, 1, 6, 3, 0)
+        let status = rule.dto.status(at: now, calendar: utc)
+        #expect(!rule.dto.isScheduledToday(at: now, calendar: utc))
+        #expect(
+            rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now, calendar: utc)
+                == "Starts in 21h")
+    }
+
+    /// Open-limit rules share the not-scheduled-today path, so they must count to
+    /// the next enabled day's start too (not the vestigial 09:00 window).
+    @Test("Not-scheduled-today open-limit rule counts down to the next enabled day's start")
+    func openLimitNotScheduledTodayCountsToNextEnabledDayStart() {
+        let rule = BlockingRule(
+            name: "Gate Keeper",
+            configuration: .openLimit(OpenLimitConfig(maxOpens: 5)),
+            days: Set(Weekday.everyDay).subtracting([.monday]))
+        let now = date(2025, 1, 6, 3, 0) // Monday 03:00 — next enabled day is Tuesday
+        let status = rule.dto.status(at: now, calendar: utc)
+        #expect(!rule.dto.isScheduledToday(at: now, calendar: utc))
+        #expect(
+            rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now, calendar: utc)
+                == "Starts in 21h")
+    }
+
+    /// The next enabled day's start can be under an hour away — the countdown must
+    /// read minutes to that midnight ("Starts in 20m"), not the vestigial 09:00
+    /// window (which would still be hours away).
+    @Test("Not-scheduled-today limit rule reads minutes when the next day starts within the hour")
+    func limitNotScheduledTodayReadsMinutesNearMidnight() {
+        let rule = BlockingRule(
+            name: "Daily Limit",
+            configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 30)),
+            days: Set(Weekday.everyDay).subtracting([.monday]))
+        let now = date(2025, 1, 6, 23, 40) // Monday 23:40 — Tuesday 00:00 is 20m away
+        let status = rule.dto.status(at: now, calendar: utc)
+        #expect(!rule.dto.isScheduledToday(at: now, calendar: utc))
+        #expect(
+            rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now, calendar: utc)
+                == "Starts in 20m")
     }
 }
 

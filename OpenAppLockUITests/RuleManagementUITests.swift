@@ -24,7 +24,7 @@ final class RuleManagementUITests: XCTestCase {
         let kind = app.element("detailRow-Kind").waitToAppear()
         XCTAssertTrue(kind.label.contains("Schedule"), "Got: \(kind.label)")
         let status = app.element("detailRow-Status")
-        XCTAssertTrue(status.label.contains("left"), "Got: \(status.label)")
+        XCTAssertTrue(status.label.contains("Ends in"), "Got: \(status.label)")
         app.element("detailRow-During this time").waitToAppear()
         XCTAssertTrue(app.element("detailRow-On these days").exists)
         XCTAssertTrue(app.element("detailRow-Pausing allowed").exists)

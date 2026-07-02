@@ -74,9 +74,9 @@ struct RuleStatusTests {
 
     @Test("Active label rounds hours up")
     func activeLabel() {
-        // 11:28 → 17:00 is 5h32m; rounds up to "6h left".
+        // 11:28 → 17:00 is 5h32m; rounds up to "Ends in 6h".
         let status = workTime().dto.status(at: date(2025, 1, 6, 11, 28), calendar: utc)
-        #expect(status.label(relativeTo: date(2025, 1, 6, 11, 28)) == "6h left")
+        #expect(status.label(relativeTo: date(2025, 1, 6, 11, 28)) == "Ends in 6h")
     }
 
     @Test("Upcoming label formats hours until start")
@@ -113,24 +113,22 @@ struct RuleStatusTests {
 
     // MARK: - Kind-aware row context
 
-    /// An untouched time-limit rule has no clock window, so it shows its daily
-    /// budget — never the vestigial 09:00 start as "Starts in 22h".
-    @Test("Untouched time-limit rule shows its daily budget, not a clock countdown")
+    @Test("Untouched time-limit rule shows Running status")
     func timeLimitDisplayLabel() {
         let rule = BlockingRule(
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
         let now = date(2025, 1, 6, 11, 38) // past the vestigial 09:00 window start
         let status = rule.dto.status(at: now, calendar: utc)
-        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "15m / day")
+        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "Running")
     }
 
-    @Test("Untouched open-limit rule shows its daily opens budget")
+    @Test("Untouched open-limit rule shows Running status")
     func openLimitDisplayLabel() {
         let rule = BlockingRule(
             name: "Gate Keeper", configuration: .openLimit(OpenLimitConfig(maxOpens: 5)))
         let now = date(2025, 1, 6, 11, 38)
         let status = rule.dto.status(at: now, calendar: utc)
-        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "5 opens / day")
+        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "Running")
     }
 
     @Test("Schedule rule still shows the clock countdown")

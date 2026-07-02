@@ -196,10 +196,12 @@ nonisolated enum CopyKey: String, CaseIterable {
     case statusResumesIn = "status.resumesIn"
     case statusActiveLeft = "status.activeLeft"
     case statusStartsIn = "status.startsIn"
+    case statusResetsIn = "status.resetsIn"
     case statusCountdownMinutes = "status.countdownMinutes"
     case statusCountdownHours = "status.countdownHours"
     case statusCountdownDays = "status.countdownDays"
     case statusBlockedUntilTomorrow = "status.blockedUntilTomorrow"
+    case statusRunning = "status.running"
 
     // MARK: - UsageDisplay (Task 6)
     case usageMinutesPerDay = "usage.minutesPerDay"

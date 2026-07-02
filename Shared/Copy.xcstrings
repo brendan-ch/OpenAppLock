@@ -2091,17 +2091,6 @@
         }
       }
     },
-    "status.blockedUntilTomorrow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blocked until tomorrow"
-          }
-        }
-      }
-    },
     "status.countdownDays" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2179,17 +2168,6 @@
         }
       }
     },
-    "status.running" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Running"
-          }
-        }
-      }
-    },
     "status.startsIn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2197,28 +2175,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Starts in %@"
-          }
-        }
-      }
-    },
-    "usage.minutesPerDay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lldm / day"
-          }
-        }
-      }
-    },
-    "usage.opensPerDay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld opens / day"
           }
         }
       }

@@ -200,12 +200,8 @@ nonisolated enum CopyKey: String, CaseIterable {
     case statusCountdownMinutes = "status.countdownMinutes"
     case statusCountdownHours = "status.countdownHours"
     case statusCountdownDays = "status.countdownDays"
-    case statusBlockedUntilTomorrow = "status.blockedUntilTomorrow"
-    case statusRunning = "status.running"
 
     // MARK: - UsageDisplay (Task 6)
-    case usageMinutesPerDay = "usage.minutesPerDay"
-    case usageOpensPerDay = "usage.opensPerDay"
     case usageSubtitleSeparator = "usage.subtitleSeparator"
 
     // MARK: - RuleKind (Task 6)

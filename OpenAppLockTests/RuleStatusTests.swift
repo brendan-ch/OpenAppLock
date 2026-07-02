@@ -113,22 +113,24 @@ struct RuleStatusTests {
 
     // MARK: - Kind-aware row context
 
-    @Test("Untouched time-limit rule shows Running status")
+    /// An untouched time-limit rule has no clock window, so it shows its daily
+    /// budget — never the vestigial 09:00 start as "Starts in 22h".
+    @Test("Untouched time-limit rule shows its daily budget, not a clock countdown")
     func timeLimitDisplayLabel() {
         let rule = BlockingRule(
             name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig(dailyLimitMinutes: 15)))
         let now = date(2025, 1, 6, 11, 38) // past the vestigial 09:00 window start
         let status = rule.dto.status(at: now, calendar: utc)
-        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "Running")
+        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "15m / day")
     }
 
-    @Test("Untouched open-limit rule shows Running status")
+    @Test("Untouched open-limit rule shows its daily opens budget")
     func openLimitDisplayLabel() {
         let rule = BlockingRule(
             name: "Gate Keeper", configuration: .openLimit(OpenLimitConfig(maxOpens: 5)))
         let now = date(2025, 1, 6, 11, 38)
         let status = rule.dto.status(at: now, calendar: utc)
-        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "Running")
+        #expect(rule.dto.rowContext(for: status, usage: RuleUsageDTO(), relativeTo: now) == "5 opens / day")
     }
 
     @Test("Schedule rule still shows the clock countdown")

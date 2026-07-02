@@ -25,8 +25,8 @@ final class RuleManagementUITests: XCTestCase {
         XCTAssertTrue(kind.label.contains("Schedule"), "Got: \(kind.label)")
         let status = app.element("detailRow-Status")
         XCTAssertTrue(status.label.contains("Ends in"), "Got: \(status.label)")
-        app.element("detailRow-During this time").waitToAppear()
-        XCTAssertTrue(app.element("detailRow-On these days").exists)
+        app.element("detailRow-Timeframe").waitToAppear()
+        XCTAssertTrue(app.element("detailRow-Days").exists)
         XCTAssertTrue(app.element("detailRow-Pausing allowed").exists)
         app.buttons["editRuleButton"].waitToAppear()
 
@@ -51,7 +51,7 @@ final class RuleManagementUITests: XCTestCase {
             app.swipeUp()
             hardMode.waitToAppear()
         }
-        XCTAssertEqual(hardMode.label, "Hard Mode", "The Hard Mode switch must carry its label for VoiceOver")
+        XCTAssertEqual(hardMode.label, "Lock while blocking", "The Lock while blocking switch must carry its label for VoiceOver")
         XCTAssertEqual(hardMode.value as? String, "0", "Hard Mode starts off")
 
         // A centered `.tap()` lands on the row label and doesn't flip a SwiftUI

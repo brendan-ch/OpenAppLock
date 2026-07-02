@@ -73,7 +73,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hard Mode is on — this list is read-only until the block ends."
+            "value" : "Lock while blocking is on — this list is read-only until the block ends."
           }
         }
       }
@@ -238,7 +238,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hard Mode is on — app lists are locked until the block ends."
+            "value" : "Lock while blocking is on — app lists are locked until the block ends."
           }
         }
       }
@@ -821,7 +821,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Block your most distracting apps with rules that keep you honest — on a schedule, with no way out when you choose Hard Mode."
+            "value" : "Block your most distracting apps with rules that keep you honest — on a schedule, with no way out when you turn on Lock while blocking."
           }
         }
       }
@@ -1096,7 +1096,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "During this time"
+            "value" : "Timeframe"
           }
         }
       }
@@ -1129,7 +1129,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "For this long"
+            "value" : "Usage limit"
           }
         }
       }
@@ -1151,7 +1151,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hard Mode is on — this rule is locked until the block ends."
+            "value" : "Lock while blocking is on — this rule is locked until the block ends."
           }
         }
       }
@@ -1184,7 +1184,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "More than"
+            "value" : "Number of opens"
           }
         }
       }
@@ -1217,7 +1217,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "On these days"
+            "value" : "Days"
           }
         }
       }
@@ -1316,7 +1316,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Then block until"
+            "value" : "Block until"
           }
         }
       }
@@ -1371,7 +1371,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When I open"
+            "value" : "Apps"
           }
         }
       }
@@ -1382,7 +1382,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When I use"
+            "value" : "Apps"
           }
         }
       }
@@ -1558,7 +1558,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hard Mode"
+            "value" : "Lock while blocking"
           }
         }
       }
@@ -1855,7 +1855,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow Only"
+            "value" : "Allow only"
           }
         }
       }
@@ -1965,7 +1965,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Locked while a Hard Mode rule is actively blocking."
+            "value" : "Can’t be changed while a locked rule is actively blocking."
           }
         }
       }
@@ -1976,7 +1976,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uninstall Protection"
+            "value" : "Block uninstalls for locked rules"
           }
         }
       }
@@ -1987,7 +1987,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "While on, apps can’t be deleted from this device whenever a Hard Mode rule is actively blocking."
+            "value" : "While on, apps can’t be deleted from this device whenever a locked rule is actively blocking."
           }
         }
       }

@@ -22,7 +22,7 @@ enum RuleStatus: Equatable, Sendable {
     }
 
     /// Short status label shown on rule cards and detail sheets:
-    /// "6h left", "Starts in 22h", "Resumes in 12m", "Disabled".
+    /// "Ends in 6h", "Starts in 22h", "Resumes in 12m", "Disabled".
     func label(relativeTo now: Date) -> String {
         switch self {
         case .disabled: CopyKey.statusDisabled.string

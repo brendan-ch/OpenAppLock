@@ -22,7 +22,7 @@ enum RuleStatus: Equatable, Sendable {
     }
 
     /// Short status label shown on rule cards and detail sheets:
-    /// "6h left", "Starts in 22h", "Resumes in 12m", "Disabled".
+    /// "Ends in 6h", "Starts in 22h", "Resumes in 12m", "Disabled".
     func label(relativeTo now: Date) -> String {
         switch self {
         case .disabled: CopyKey.statusDisabled.string
@@ -64,17 +64,23 @@ extension RuleSnapshotDTO {
     }
 
     /// The live "context" line shown under a rule's name on the Home and Rules
-    /// lists, and as the rule-detail caption. A single source of truth so every
+    /// lists, and as the rule-detail Status row. A single source of truth so every
     /// screen renders a given kind/state the same way.
     ///
-    /// - Schedule rules read their clock status: "6h left", "Starts in 22h",
-    ///   "Paused", "Disabled", "No days selected".
-    /// - Limit rules share that wording while disabled / dormant / paused;
-    ///   otherwise they read their budget — live usage once the rule has been
-    ///   used today ("18m of 45m used"), and the plain daily allowance while
-    ///   still untouched ("45m / day"). A spent limit therefore reads
-    ///   "45m of 45m used", never a clock countdown.
-    func rowContext(for status: RuleStatus, usage: RuleUsageDTO, relativeTo now: Date) -> String {
+    /// - Schedule rules read their clock status: "Ends in 6h", "Starts in 22h",
+    ///   "Resumes in 12m", "Disabled", "No days selected".
+    /// - Limit rules (time/open) share that wording while disabled / dormant /
+    ///   paused. On a day they are scheduled — whether the budget is spent
+    ///   (blocking) or still available — they read "Resets in {countdown}" to
+    ///   tonight's midnight, when the daily budget resets. On a day they are not
+    ///   scheduled they read the upcoming "Starts in {countdown}" to the next
+    ///   enabled day. `isScheduledToday` (not the active/upcoming distinction)
+    ///   picks between the two, because a limit rule is only ever `.active` on a
+    ///   day it is already scheduled.
+    func rowContext(
+        for status: RuleStatus, usage: RuleUsageDTO, relativeTo now: Date,
+        calendar: Calendar = .current
+    ) -> String {
         switch kind {
         case .schedule:
             return status.label(relativeTo: now)
@@ -82,12 +88,13 @@ extension RuleSnapshotDTO {
             switch status {
             case .disabled, .dormant, .paused:
                 return status.label(relativeTo: now)
-            case .active:
-                // A spent budget blocks for the rest of the day; the detail row
-                // ("Then block until: Tomorrow") names the same moment.
-                return CopyKey.statusBlockedUntilTomorrow.string
-            case .upcoming:
-                return UsageDisplay.budgetPhrase(for: self)
+            case .active, .upcoming:
+                guard isScheduledToday(at: now, calendar: calendar),
+                      let reset = calendar.nextMidnight(after: now)
+                else {
+                    return status.label(relativeTo: now)
+                }
+                return CopyKey.statusResetsIn.string(RuleStatus.countdown(from: now, to: reset))
             }
         }
     }

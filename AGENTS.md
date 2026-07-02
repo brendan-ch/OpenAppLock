@@ -101,7 +101,8 @@ un-prefixed doc remains off-limits to agent edits.
   *starts* on. `start == end` = 24h window.
 - Status is always **derived** (`rule.status(at:calendar:)`), never stored:
   `disabled / dormant / active(until:) / paused(until:) / upcoming(startsAt:)`.
-  Countdown labels round hours **up** (e.g. "6h left").
+  Countdown labels round hours **up** (e.g. "Ends in 6h" for a schedule rule,
+  "Resets in 8h" for a limit rule).
 - **Hard Mode**: `RulePolicy` is the single gate — while a hard-mode rule is
   actively blocking, canEdit/canDisable/canDelete/canPause are all false.
   Soft schedule/time-limit rules with >15 min left support a **Temporary Pause**
@@ -139,7 +140,7 @@ Where each topic is documented:
 |---|---|
 | Rule kinds, sum-type options, Schedule-only rationale | `Shared/Models/RuleConfiguration.swift`, `Shared/Models/RuleKind.swift` |
 | Persisted rule + common attributes; editor draft; cross-process mirror | `OpenAppLock/Models/BlockingRule.swift`, `OpenAppLock/Models/RuleDraft.swift`, `Shared/DTOs/RuleSnapshotDTO.swift` |
-| Derived status & countdown labels | `OpenAppLock/Logic/RuleStatus.swift` |
+| Derived status & countdown labels (row-context copy per kind/state) | `OpenAppLock/Logic/RuleStatus.swift`, `OpenAppLock/Logic/UsageDisplay.swift`; design spec `Docs/Agents/Specs/RULE_STATUS_LABEL_REDESIGN.md` |
 | Day-of-week picker & summary | `OpenAppLock/Views/Components/DayOfWeekPicker.swift`, `Shared/Models/Weekday.swift` |
 | Presets; editor form; New Rule + in-place detail editing; discard prompt | `OpenAppLock/Models/RulePreset.swift`, `OpenAppLock/Views/Rules/RuleEditorForm.swift` (shared form body), `OpenAppLock/Views/Rules/RuleEditorView.swift` (New Rule wrapper), `OpenAppLock/Views/Rules/RuleDetailSheet.swift` (detail ⇄ editor cross-fade), `OpenAppLock/Logic/RuleEditState.swift` (outstanding-edits check) |
 | App lists (model, picker, library, edit) + legacy migration | `OpenAppLock/Models/AppList.swift`, `OpenAppLock/Views/AppLists/*`, `OpenAppLock/Services/AppListMigration.swift` |

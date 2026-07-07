@@ -2,92 +2,87 @@
   "fill" : "system-light",
   "groups" : [
     {
-      "hidden" : false,
       "layers" : [
         {
-          "image-name" : "openapplock-light 2.svg",
-          "name" : "openapplock-light"
-        }
-      ],
-      "opacity-specializations" : [
-        {
-          "appearance" : "dark",
-          "value" : 0
-        },
-        {
-          "appearance" : "tinted",
-          "value" : 0
-        }
-      ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
-      },
-      "specular" : true,
-      "translucency" : {
-        "enabled" : false,
-        "value" : 0.5
-      }
-    },
-    {
-      "hidden" : false,
-      "layers" : [
-        {
+          "blend-mode" : "normal",
           "fill-specializations" : [
             {
-              "value" : "none"
+              "value" : {
+                "solid" : "srgb:0.00000,0.00000,0.00000,1.00000"
+              }
             },
             {
               "appearance" : "dark",
-              "value" : "automatic"
+              "value" : {
+                "solid" : "extended-gray:0.50000,1.00000"
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : {
+                "solid" : "extended-gray:0.75000,1.00000"
+              }
             }
           ],
           "glass" : true,
-          "image-name" : "openapplock-dark 4.svg",
-          "name" : "openapplock-dark"
+          "image-name" : "openapplock-light layer 2.svg",
+          "name" : "Cross"
         }
       ],
-      "lighting" : "individual",
-      "opacity-specializations" : [
-        {
-          "value" : 0
-        },
-        {
-          "appearance" : "dark",
-          "value" : 1
-        }
-      ],
+      "name" : "Cross",
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.5
       },
-      "specular" : true,
       "translucency" : {
-        "enabled" : false,
+        "enabled" : true,
         "value" : 0.5
       }
     },
     {
-      "hidden" : false,
       "layers" : [
         {
-          "image-name" : "openapplock-mono.svg",
-          "name" : "openapplock-mono"
-        }
-      ],
-      "opacity-specializations" : [
-        {
-          "value" : 0
+          "glass" : false,
+          "image-name" : "Apps.svg",
+          "name" : "Apps"
         },
         {
-          "appearance" : "dark",
-          "value" : 0
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "extended-gray:0.50000,0.05000"
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : "none"
+            }
+          ],
+          "glass" : false,
+          "image-name" : "Dock.svg",
+          "name" : "Dock"
         },
         {
-          "appearance" : "tinted",
-          "value" : 1
+          "fill-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-gray:0.50000,1.00000"
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : {
+                "solid" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+              }
+            }
+          ],
+          "glass" : false,
+          "image-name" : "Frame.svg",
+          "name" : "Frame"
         }
       ],
+      "name" : "Phone",
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.5

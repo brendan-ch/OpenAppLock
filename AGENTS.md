@@ -314,15 +314,18 @@ Gotchas learned the hard way:
   `Docs/Agents/Specs/TIME_LIMIT_DAY_KEYED_ENFORCEMENT.md`) makes each time-limit
   fire self-dating: the block and warn run on **per-day, non-repeating**
   activities (`rule-<uuid>-<dayKey>` / `tlwarn-<uuid>-<dayKey>`), armed for the
-  next two scheduled days (`RuleScheduler.dayPlans` + `ScheduledDayPlanner`), and
-  the monitor **drops any fire whose day key isn't today** — closing
-  `TIME_LIMIT_COUNTING_HARDENING.md` §4d's Scenario B false block at the source
-  rather than relying on the (still-unwired) Part B foreground reconciliation.
-  Open limits keep their single repeating activity. Implemented + unit-tested;
-  device-verification pending: the monitor can `startMonitoring` to self-arm the
-  next day at `intervalDidEnd`; full-day capture from a midnight-armed activity;
-  a real cross-midnight flush is dropped; and the per-day activity count stays
-  under DeviceActivity's ~20 ceiling.
+  current scheduled day only (N = 1) (`RuleScheduler.dayPlans` +
+  `ScheduledDayPlanner`; see `Docs/Agents/Specs/RULE_HARD_CAP_AND_N1_ARMING.md`),
+  with the total rule count capped at 10 so the worst-case per-rule activity cost
+  fits Apple's ~20 ceiling, and the monitor **drops any fire whose day key isn't
+  today** — closing `TIME_LIMIT_COUNTING_HARDENING.md` §4d's Scenario B false
+  block at the source rather than relying on the (still-unwired) Part B
+  foreground reconciliation. Open limits keep their single repeating activity.
+  Implemented + unit-tested; device-verification pending: the monitor can
+  `startMonitoring` to self-arm the next day at `intervalDidEnd` (now
+  load-bearing under N = 1, with no foreground buffer behind it); full-day
+  capture from a midnight-armed activity; a real cross-midnight flush is dropped;
+  and the per-day activity count stays under DeviceActivity's ~20 ceiling.
 - **Schedule-rule background transitions** are now backed by DeviceActivity:
   `RuleScheduler` registers a repeating window activity per schedule rule
   (`sched-<uuid>`, plus `sched2-<uuid>` for midnight-crossing windows) and the

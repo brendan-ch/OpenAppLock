@@ -16,6 +16,7 @@ struct RulesListView: View {
 
     @State private var detailRule: BlockingRule?
     @State private var showingNewRule = false
+    @State private var showingRuleLimitAlert = false
 
     var body: some View {
         NavigationStack {
@@ -26,7 +27,7 @@ struct RulesListView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(CopyKey.rulesListNewRuleButton.resource, systemImage: "plus") {
-                        showingNewRule = true
+                        attemptNewRule()
                     }
                     .accessibilityIdentifier("newRuleButton")
                 }
@@ -37,6 +38,25 @@ struct RulesListView: View {
         }
         .sheet(isPresented: $showingNewRule) {
             NewRuleSheet()
+        }
+        .alert(
+            Text(CopyKey.rulesListRuleLimitAlertTitle.resource),
+            isPresented: $showingRuleLimitAlert
+        ) {
+            Button(CopyKey.appListsOkButtonLabel.resource, role: .cancel) {}
+        } message: {
+            Text(CopyKey.rulesListRuleLimitAlertMessage.string(RuleCreationPolicy.maxRuleCount))
+        }
+    }
+
+    /// Presents the New Rule sheet, or the cap alert when the rule limit is
+    /// reached (see `RuleCreationPolicy`). Both the toolbar and empty-state
+    /// buttons route through here.
+    private func attemptNewRule() {
+        if RuleCreationPolicy.canCreateRule(existingRuleCount: rules.count) {
+            showingNewRule = true
+        } else {
+            showingRuleLimitAlert = true
         }
     }
 
@@ -53,7 +73,7 @@ struct RulesListView: View {
                     .accessibilityIdentifier("emptyRulesCard")
             } actions: {
                 Button(CopyKey.rulesListNewRuleButton.resource) {
-                    showingNewRule = true
+                    attemptNewRule()
                 }
                 .accessibilityIdentifier("emptyStateNewRuleButton")
             }

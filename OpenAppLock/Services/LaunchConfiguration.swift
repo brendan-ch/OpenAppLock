@@ -17,6 +17,9 @@ struct LaunchConfiguration: Equatable {
         /// "Gate Keeper" (2 of 5 opens), and "Doom Scroll" (budget spent →
         /// blocked until tomorrow).
         case limits
+        /// Ten rules — exactly `RuleCreationPolicy.maxRuleCount` — so the New Rule
+        /// button trips the rule-limit alert.
+        case atRuleCap = "at-rule-cap"
     }
 
     var isUITesting = false

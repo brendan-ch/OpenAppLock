@@ -185,8 +185,8 @@ struct RuleSchedulerTests {
         #expect(monitor.startedDayWindows["rule-x-2025-01-06"]?.to == to)
     }
 
-    @Test("A time limit arms a per-day block activity for today and tomorrow")
-    func timeLimitArmsTwoDayKeyedActivities() throws {
+    @Test("A time limit arms a per-day block activity for today only (N=1)")
+    func timeLimitArmsTodayOnly() throws {
         let (scheduler, monitor, store) = makeScheduler()
         let rule = try limitRule(kind: .timeLimit, name: "Time Keeper")
         let now = date(2025, 1, 6, 10, 0)
@@ -198,7 +198,8 @@ struct RuleSchedulerTests {
         let tomorrow = MonitoringPlan.dailyActivityName(
             for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 7), calendar: utc))
         #expect(monitor.monitoredNames.contains(today))
-        #expect(monitor.monitoredNames.contains(tomorrow))
+        // N=1: the next day is armed only by the monitor self-arm, not in the foreground.
+        #expect(!monitor.monitoredNames.contains(tomorrow))
         #expect(
             monitor.startedEvents[today]?[MonitoringPlan.minuteEventName(for: rule.dailyLimitMinutes)]
                 == rule.dailyLimitMinutes)
@@ -207,20 +208,23 @@ struct RuleSchedulerTests {
         #expect(store.snapshot(for: rule.id) != nil)
     }
 
-    @Test("Rolling the day forward arms the new day and reaps the day that fell out of the horizon")
+    @Test("Rolling the day forward arms the new day and reaps the previous day")
     func dayRolloverReapsPastActivity() throws {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try limitRule(kind: .timeLimit, name: "Time Keeper")
 
-        scheduler.sync(snapshots: [rule.dto], at: date(2025, 1, 6, 10, 0), calendar: utc)  // arms 01-06, 01-07
-        scheduler.sync(snapshots: [rule.dto], at: date(2025, 1, 7, 10, 0), calendar: utc)  // arms 01-07, 01-08
+        scheduler.sync(snapshots: [rule.dto], at: date(2025, 1, 6, 10, 0), calendar: utc)  // arms 01-06
+        scheduler.sync(snapshots: [rule.dto], at: date(2025, 1, 7, 10, 0), calendar: utc)  // arms 01-07, reaps 01-06
 
         let jan6 = MonitoringPlan.dailyActivityName(
             for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc))
+        let jan7 = MonitoringPlan.dailyActivityName(
+            for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 7), calendar: utc))
         let jan8 = MonitoringPlan.dailyActivityName(
             for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 8), calendar: utc))
-        #expect(!monitor.monitoredNames.contains(jan6))   // reaped
-        #expect(monitor.monitoredNames.contains(jan8))    // newly armed
+        #expect(!monitor.monitoredNames.contains(jan6))  // reaped
+        #expect(monitor.monitoredNames.contains(jan7))   // today
+        #expect(!monitor.monitoredNames.contains(jan8))  // N=1: next day not pre-armed
     }
 
     @Test("A background self-armed activity is adopted, not restarted, by the next sync")
@@ -240,13 +244,13 @@ struct RuleSchedulerTests {
         let startsAfterSelfArm = monitor.startCallCount  // 1
 
         scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
-        // Today's activity is adopted (not restarted → its live count is kept);
-        // only tomorrow's is newly armed.
-        #expect(monitor.startCallCount == startsAfterSelfArm + 1)
+        // Today's activity is adopted (not restarted → its live count is kept),
+        // and N=1 means there is no next day to arm — no new start.
+        #expect(monitor.startCallCount == startsAfterSelfArm)
 
         // A second sync also leaves today's alone (its fingerprint was recorded).
         scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
-        #expect(monitor.startCallCount == startsAfterSelfArm + 1)
+        #expect(monitor.startCallCount == startsAfterSelfArm)
     }
 
     @Test("Open-limit rules monitor the day without usage checkpoints")
@@ -430,11 +434,11 @@ struct RuleSchedulerTests {
 
         scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
         scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
-        #expect(monitor.startCallCount == 2)  // today + tomorrow, each started once
+        #expect(monitor.startCallCount == 1)  // today only, started once
 
         rule.dailyLimitMinutes = 60
         scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
-        #expect(monitor.startCallCount == 4)  // both day activities restart on budget change
+        #expect(monitor.startCallCount == 2)  // the one day activity restarts on budget change
     }
 
     @Test("Selection fingerprint is a deterministic SHA-256, stable across launches")

@@ -79,6 +79,8 @@ nonisolated enum CopyKey: String, CaseIterable {
     case rulesListNewRuleButton = "rulesList.newRuleButton"
     case rulesListNoRulesYetTitle = "rulesList.noRulesYetTitle"
     case rulesListEmptyStateDescription = "rulesList.emptyStateDescription"
+    case rulesListRuleLimitAlertTitle = "rulesList.ruleLimitAlertTitle"
+    case rulesListRuleLimitAlertMessage = "rulesList.ruleLimitAlertMessage"
 
     // MARK: - NewRuleSheet (Task 2)
     case newRuleRuleTypeSectionHeader = "newRule.ruleTypeSectionHeader"

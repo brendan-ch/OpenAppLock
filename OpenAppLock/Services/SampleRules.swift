@@ -50,6 +50,14 @@ enum SampleRules {
             usage?.usageByRule[gateKeeper.id] = RuleUsageDTO(opensUsed: 2)
             usage?.usageByRule[doomScroll.id] = RuleUsageDTO(minutesUsed: 30)
             rules = [timeKeeper, gateKeeper, doomScroll]
+        case .atRuleCap:
+            rules = (1...RuleCreationPolicy.maxRuleCount).map { index in
+                BlockingRule(
+                    name: String(format: "Rule %02d", index),
+                    configuration: .schedule(
+                        ScheduleConfig(startMinutes: 9 * 60, endMinutes: 17 * 60)),
+                    days: Weekday.everyDay)
+            }
         }
         // Relationships are wired only after both sides are managed
         // (see BlockingRule.appList).

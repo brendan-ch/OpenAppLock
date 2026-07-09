@@ -10,7 +10,7 @@ import Foundation
 /// A window whose end is at or before its start crosses midnight: 22:00 → 06:00
 /// starts on an enabled day and ends the following morning. `start == end`
 /// means a full 24-hour window.
-struct RuleSchedule: Hashable, Sendable {
+nonisolated struct RuleSchedule: Hashable, Sendable {
     var startMinutes: Int
     var endMinutes: Int
     var days: Set<Weekday>

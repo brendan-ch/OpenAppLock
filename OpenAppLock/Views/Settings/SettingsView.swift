@@ -150,7 +150,7 @@ struct SettingsView: View {
                 guard !isUninstallProtectionLocked else { return }
                 uninstallProtectionOn = newValue
                 settings.uninstallProtectionEnabled = newValue
-                enforcer.refresh(rules: rules)
+                Task { await enforcer.refresh(rules: rules) }
             }
         )
     }

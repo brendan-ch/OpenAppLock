@@ -94,7 +94,7 @@ struct RuleDetailSheet: View {
             titleVisibility: .visible
         ) {
             Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
-                enforcer.pause(rule, rules: rules)
+                Task { await enforcer.pause(rule, rules: rules) }
                 pendingPause = false
             }
         } message: {
@@ -228,7 +228,7 @@ struct RuleDetailSheet: View {
             if !isEditing {
                 if dto.isPaused(at: now) {
                     Button(CopyKey.ruleDetailResumeBlockingAction.resource) {
-                        enforcer.resume(rule, rules: rules)
+                        Task { await enforcer.resume(rule, rules: rules) }
                     }
                     .accessibilityIdentifier("resumeRuleButton")
                 } else if RulePolicy.canPause(dto, usage: usage, at: now) {

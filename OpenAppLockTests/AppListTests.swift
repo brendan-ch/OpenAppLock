@@ -232,7 +232,7 @@ struct AppListEnforcementTests {
     let mondayDuringWork = date(2025, 1, 6, 10, 0)
 
     @Test("The rule's app-list selection reaches the shield layer")
-    func forwardsAppListSelection() throws {
+    func forwardsAppListSelection() async throws {
         let context = try makeInMemoryContext()
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
@@ -242,7 +242,7 @@ struct AppListEnforcementTests {
         context.insert(rule)
         rule.appList = list
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.appliedSelectionData[rule.id] == Data([1, 2, 3]))
     }

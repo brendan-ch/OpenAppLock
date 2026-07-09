@@ -164,7 +164,7 @@ struct UsageEnforcementTests {
     let mondayMorning = date(2025, 1, 6, 10, 0)
 
     @Test("A spent time-limit rule is shielded in Block mode")
-    func shieldsSpentTimeLimit() {
+    func shieldsSpentTimeLimit() async {
         let shields = MockShieldController()
         let ledger = MockUsageLedger()
         let enforcer = RuleEnforcer(shields: shields, usage: ledger)
@@ -174,14 +174,14 @@ struct UsageEnforcementTests {
             days: Weekday.everyDay)
         ledger.usageByRule[rule.id] = RuleUsageDTO(minutesUsed: 45)
 
-        enforcer.refresh(rules: [rule], at: mondayMorning, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayMorning, calendar: utc)
 
         #expect(shields.shieldedRuleIDs == [rule.id])
         #expect(shields.appliedModes[rule.id] == .block)
     }
 
     @Test("A time-limit rule with budget left is not shielded")
-    func leavesUnspentTimeLimitAlone() {
+    func leavesUnspentTimeLimitAlone() async {
         let shields = MockShieldController()
         let ledger = MockUsageLedger()
         let enforcer = RuleEnforcer(shields: shields, usage: ledger)
@@ -191,7 +191,7 @@ struct UsageEnforcementTests {
             days: Weekday.everyDay)
         ledger.usageByRule[rule.id] = RuleUsageDTO(minutesUsed: 20)
 
-        enforcer.refresh(rules: [rule], at: mondayMorning, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayMorning, calendar: utc)
 
         // Time limits let the OS meter usage on the unshielded app, so nothing
         // is shielded until the budget is spent. (Open limits differ — the
@@ -201,7 +201,7 @@ struct UsageEnforcementTests {
     }
 
     @Test("An open-limit rule not scheduled today is not gated")
-    func leavesOffDayOpenLimitAlone() {
+    func leavesOffDayOpenLimitAlone() async {
         let shields = MockShieldController()
         let ledger = MockUsageLedger()
         let enforcer = RuleEnforcer(shields: shields, usage: ledger)
@@ -212,7 +212,7 @@ struct UsageEnforcementTests {
         ledger.usageByRule[rule.id] = RuleUsageDTO(opensUsed: 2)
 
         // mondayMorning is a weekday, so the weekend-only rule does not gate.
-        enforcer.refresh(rules: [rule], at: mondayMorning, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayMorning, calendar: utc)
 
         #expect(shields.shieldedRuleIDs.isEmpty)
     }

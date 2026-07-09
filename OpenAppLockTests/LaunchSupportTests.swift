@@ -124,7 +124,8 @@ struct SampleRulesTests {
         #expect(auth.lastRequestFailed)
     }
 
-    @Test func atRuleCapSeedsExactlyTheCapCount() throws {
+    @Test("The at-rule-cap scenario seeds exactly maxRuleCount rules")
+    func atRuleCapSeedsExactlyTheCapCount() throws {
         let context = try makeInMemoryContext()
         SampleRules.seed(.atRuleCap, into: context)
         let rules = try context.fetch(FetchDescriptor<BlockingRule>())

@@ -6,7 +6,7 @@
 import Foundation
 
 /// The live state of a rule at a moment in time. Derived, never stored.
-enum RuleStatus: Equatable, Sendable {
+nonisolated enum RuleStatus: Equatable, Sendable {
     case disabled
     /// Enabled but no days selected, so it never fires.
     case dormant
@@ -44,7 +44,7 @@ enum RuleStatus: Equatable, Sendable {
     }
 }
 
-extension RuleSnapshotDTO {
+nonisolated extension RuleSnapshotDTO {
     /// Live status of this rule, for the UI. Derived from the shared
     /// `activation` primitive, with the disabled / dormant distinctions the UI
     /// needs layered on top: schedule rules block by the clock; limit rules

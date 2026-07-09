@@ -191,7 +191,7 @@ struct RuleSchedulerTests {
         let rule = try limitRule(kind: .timeLimit, name: "Time Keeper")
         let now = date(2025, 1, 6, 10, 0)
 
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
 
         let today = MonitoringPlan.dailyActivityName(
             for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc))
@@ -212,8 +212,8 @@ struct RuleSchedulerTests {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try limitRule(kind: .timeLimit, name: "Time Keeper")
 
-        scheduler.sync(rules: [rule], at: date(2025, 1, 6, 10, 0), calendar: utc)  // arms 01-06, 01-07
-        scheduler.sync(rules: [rule], at: date(2025, 1, 7, 10, 0), calendar: utc)  // arms 01-07, 01-08
+        scheduler.sync(snapshots: [rule.dto], at: date(2025, 1, 6, 10, 0), calendar: utc)  // arms 01-06, 01-07
+        scheduler.sync(snapshots: [rule.dto], at: date(2025, 1, 7, 10, 0), calendar: utc)  // arms 01-07, 01-08
 
         let jan6 = MonitoringPlan.dailyActivityName(
             for: rule.id, dayKey: UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc))
@@ -239,13 +239,13 @@ struct RuleSchedulerTests {
             eventMinutes: MonitoringPlan.blockEvent(forLimit: rule.dailyLimitMinutes))
         let startsAfterSelfArm = monitor.startCallCount  // 1
 
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
         // Today's activity is adopted (not restarted → its live count is kept);
         // only tomorrow's is newly armed.
         #expect(monitor.startCallCount == startsAfterSelfArm + 1)
 
         // A second sync also leaves today's alone (its fingerprint was recorded).
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
         #expect(monitor.startCallCount == startsAfterSelfArm + 1)
     }
 
@@ -254,7 +254,7 @@ struct RuleSchedulerTests {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try limitRule(kind: .openLimit, name: "Gate Keeper")
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
 
         #expect(monitor.startedEvents[MonitoringPlan.dailyActivityName(for: rule.id)]?.isEmpty == true)
     }
@@ -268,7 +268,7 @@ struct RuleSchedulerTests {
         context.insert(applessSchedule)
         context.insert(applessLimit)
 
-        scheduler.sync(rules: [applessSchedule, applessLimit])
+        scheduler.sync(snapshots: [applessSchedule.dto, applessLimit.dto])
 
         #expect(monitor.monitoredNames.isEmpty)
     }
@@ -278,7 +278,7 @@ struct RuleSchedulerTests {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try scheduleRule(name: "Work Time", start: 9 * 60, end: 17 * 60)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
 
         let primary = MonitoringPlan.scheduleWindowName(for: rule.id)
         #expect(monitor.monitoredNames == [primary])
@@ -293,7 +293,7 @@ struct RuleSchedulerTests {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try scheduleRule(name: "No Days", start: 9 * 60, end: 17 * 60, days: [])
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
 
         #expect(monitor.monitoredNames.isEmpty)
     }
@@ -303,7 +303,7 @@ struct RuleSchedulerTests {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try scheduleRule(name: "Deep Sleep", start: 22 * 60, end: 6 * 60)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
 
         let primary = MonitoringPlan.scheduleWindowName(for: rule.id)
         let late = MonitoringPlan.scheduleWindowLateName(for: rule.id)
@@ -320,7 +320,7 @@ struct RuleSchedulerTests {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try scheduleRule(name: "Late", start: 22 * 60, end: 0)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
 
         let primary = MonitoringPlan.scheduleWindowName(for: rule.id)
         let late = MonitoringPlan.scheduleWindowLateName(for: rule.id)
@@ -335,7 +335,7 @@ struct RuleSchedulerTests {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try scheduleRule(name: "Always", start: 0, end: 0)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
 
         let primary = MonitoringPlan.scheduleWindowName(for: rule.id)
         #expect(monitor.monitoredNames == [primary])
@@ -347,7 +347,7 @@ struct RuleSchedulerTests {
     func dropsLateActivityWhenWindowStopsCrossing() throws {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try scheduleRule(name: "Deep Sleep", start: 22 * 60, end: 6 * 60)
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
 
         let primary = MonitoringPlan.scheduleWindowName(for: rule.id)
         let late = MonitoringPlan.scheduleWindowLateName(for: rule.id)
@@ -356,7 +356,7 @@ struct RuleSchedulerTests {
         // Now a normal daytime window — the post-midnight half must be stopped.
         rule.startMinutes = 9 * 60
         rule.endMinutes = 17 * 60
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
         #expect(monitor.monitoredNames == [primary])
         #expect(monitor.startedWindows[late] == nil)
     }
@@ -367,13 +367,13 @@ struct RuleSchedulerTests {
         let rule = try scheduleRule(
             name: "Work Time", start: 9 * 60, end: 17 * 60, days: Weekday.weekdays)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
         #expect(monitor.startCallCount == 1)
 
         // The window interval is unchanged, so the DeviceActivity activity that
         // only encodes start/end need not restart — reconcile() reads days fresh.
         rule.days = Weekday.everyDay
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
         #expect(monitor.startCallCount == 1)
     }
 
@@ -382,11 +382,11 @@ struct RuleSchedulerTests {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try scheduleRule(name: "Work Time", start: 9 * 60, end: 17 * 60)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
         #expect(!monitor.monitoredNames.isEmpty)
 
         rule.isEnabled = false
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
         #expect(monitor.monitoredNames.isEmpty)
     }
 
@@ -395,12 +395,12 @@ struct RuleSchedulerTests {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try scheduleRule(name: "Work Time", start: 9 * 60, end: 17 * 60)
 
-        scheduler.sync(rules: [rule])
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
+        scheduler.sync(snapshots: [rule.dto])
         #expect(monitor.startCallCount == 1)
 
         rule.endMinutes = 18 * 60
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
         #expect(monitor.startCallCount == 2)
         let primary = MonitoringPlan.scheduleWindowName(for: rule.id)
         #expect(monitor.startedWindows[primary]?.end == 18 * 60)
@@ -410,15 +410,15 @@ struct RuleSchedulerTests {
     func stopsStaleMonitoring() throws {
         let (scheduler, monitor, _) = makeScheduler()
         let rule = try limitRule(kind: .timeLimit, name: "Time Keeper")
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
 
         rule.isEnabled = false
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
         #expect(monitor.monitoredNames.isEmpty)
 
         rule.isEnabled = true
-        scheduler.sync(rules: [rule])
-        scheduler.sync(rules: [])
+        scheduler.sync(snapshots: [rule.dto])
+        scheduler.sync(snapshots: [])
         #expect(monitor.monitoredNames.isEmpty)
     }
 
@@ -428,12 +428,12 @@ struct RuleSchedulerTests {
         let rule = try limitRule(kind: .timeLimit, name: "Time Keeper")
         let now = date(2025, 1, 6, 10, 0)
 
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
         #expect(monitor.startCallCount == 2)  // today + tomorrow, each started once
 
         rule.dailyLimitMinutes = 60
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
         #expect(monitor.startCallCount == 4)  // both day activities restart on budget change
     }
 
@@ -482,7 +482,7 @@ struct RuleSchedulerTests {
             now: date(2025, 1, 6, 10, 0), calendar: utc)
         #expect(monitor.monitoredNames.contains(pauseName))
 
-        scheduler.sync(rules: [rule])  // rule.pausedUntil == nil → reaped
+        scheduler.sync(snapshots: [rule.dto])  // rule.pausedUntil == nil → reaped
         #expect(!monitor.monitoredNames.contains(pauseName))
     }
 
@@ -496,7 +496,7 @@ struct RuleSchedulerTests {
             for: rule.id, until: rule.pausedUntil!,
             now: date(2025, 1, 6, 10, 0), calendar: utc)
 
-        scheduler.sync(rules: [rule])
+        scheduler.sync(snapshots: [rule.dto])
         #expect(monitor.monitoredNames.contains(pauseName))
     }
 
@@ -511,7 +511,7 @@ struct RuleSchedulerTests {
         #expect(monitor.monitoredNames.contains(pauseName))
 
         // The rule is gone from the sync set (deleted mid-pause) → reaped.
-        scheduler.sync(rules: [])
+        scheduler.sync(snapshots: [])
         #expect(!monitor.monitoredNames.contains(pauseName))
     }
 }

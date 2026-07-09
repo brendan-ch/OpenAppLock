@@ -341,7 +341,9 @@ In `OpenAppLock/Services/SampleRules.swift`, add a `case` to the `switch scenari
 Run: `OpenAppLockTests/SampleRulesTests`
 Expected: PASS.
 
-- [ ] **Step 5: Add the copy keys (fails the catalog test first)**
+- [ ] **Step 5: Add the copy keys**
+
+The two `Copy.xcstrings` entries are **already present in the working tree** — the controller added them via Xcode's exact String-Catalog format (`"key" : {`, 2-space indent, sorted position), because Python `json.dump` would reformat all 2448 lines and the Xcode `StringCatalogEdit` MCP tool is translation-oriented. Values: `rulesList.ruleLimitAlertTitle` = "Rule limit reached"; `rulesList.ruleLimitAlertMessage` = "You can have up to %lld rules. Delete one to add another." (smart typography, no straight quotes/apostrophes/ellipsis). **Do NOT edit `Shared/Copy.xcstrings`.**
 
 In `Shared/Copy/CopyKey.swift`, add after `case rulesListEmptyStateDescription`:
 
@@ -350,33 +352,10 @@ In `Shared/Copy/CopyKey.swift`, add after `case rulesListEmptyStateDescription`:
     case rulesListRuleLimitAlertMessage = "rulesList.ruleLimitAlertMessage"
 ```
 
-Run: `OpenAppLockTests/CopyCatalogTests`
-Expected: FAIL — "Missing catalog entry for key 'rulesList.ruleLimitAlertTitle'".
+- [ ] **Step 6: Controller verifies the catalog invariant**
 
-- [ ] **Step 6: Add the catalog entries (makes the catalog test pass)**
-
-Add the two entries to `Shared/Copy.xcstrings` with this script (robust against the file's exact whitespace):
-
-```bash
-python3 - <<'PY'
-import json
-p = "Shared/Copy.xcstrings"
-d = json.load(open(p))
-def entry(v):
-    return {"extractionState": "manual",
-            "localizations": {"en": {"stringUnit": {"state": "translated", "value": v}}}}
-d["strings"]["rulesList.ruleLimitAlertTitle"] = entry("Rule limit reached")
-d["strings"]["rulesList.ruleLimitAlertMessage"] = entry(
-    "You can have up to %lld rules. Delete one to add another.")
-json.dump(d, open(p, "w"), indent=2, ensure_ascii=False, sort_keys=True)
-open(p, "a").write("\n")
-PY
-```
-
-(Values use smart typography already — no straight quotes/apostrophes/ellipsis, satisfying `everyValueUsesSmartTypography`.)
-
-Run: `OpenAppLockTests/CopyCatalogTests`
-Expected: PASS.
+Controller runs: `OpenAppLockTests/CopyCatalogTests`
+Expected: PASS — the new keys resolve to their (already-present) catalog values and use smart typography. (If it FAILS with "Missing catalog entry", the CopyKey raw value and the catalog key are mismatched — fix the `CopyKey` case, not the catalog.)
 
 - [ ] **Step 7: Commit**
 

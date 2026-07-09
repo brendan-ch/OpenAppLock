@@ -5,12 +5,13 @@
 
 import Foundation
 
-/// Read access to per-rule, per-day usage.
-protocol UsageReading: AnyObject {
+/// Read access to per-rule, per-day usage. `nonisolated` + `Sendable` so the
+/// off-main enforcement engine can read usage without hopping to the main actor.
+nonisolated protocol UsageReading: AnyObject, Sendable {
     func usage(for ruleID: UUID, onDayContaining date: Date, calendar: Calendar) -> RuleUsageDTO
 }
 
-extension UsageReading {
+nonisolated extension UsageReading {
     func usage(for ruleID: UUID, onDayContaining date: Date) -> RuleUsageDTO {
         usage(for: ruleID, onDayContaining: date, calendar: .current)
     }
@@ -18,7 +19,7 @@ extension UsageReading {
 
 /// Usage bookkeeping in the shared app-group defaults, keyed by calendar day
 /// and rule. Old days are simply ignored; midnight needs no reset step.
-final class UsageLedger: UsageReading {
+nonisolated final class UsageLedger: UsageReading, @unchecked Sendable {
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = AppGroup.defaults) {
@@ -80,7 +81,8 @@ final class UsageLedger: UsageReading {
 }
 
 /// Seedable in-memory usage for tests and UI-test scenarios.
-final class MockUsageLedger: UsageReading {
+/// `@unchecked Sendable`: a test double; mutations are ordered behind the enforcer's `await`.
+nonisolated final class MockUsageLedger: UsageReading, @unchecked Sendable {
     var usageByRule: [UUID: RuleUsageDTO] = [:]
 
     func usage(

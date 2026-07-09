@@ -66,7 +66,9 @@ struct MainView: View {
     }
 
     private func refreshEnforcement() {
-        enforcer.refresh(rules: rules)
+        // Enforcement I/O runs off the main thread inside the enforcer; this
+        // fire-and-forget Task hands it the current rules and returns immediately.
+        Task { await enforcer.refresh(rules: rules) }
     }
 
     /// Keeps shields in sync while the app is open, so windows that begin or end
@@ -77,7 +79,7 @@ struct MainView: View {
             // The 30 s foreground backstop. Logged each tick so coverage gaps
             // (when the app isn't open to run this) are visible as timeline holes.
             Diag.log(.lifecycle, "refresh trigger: foreground 30s loop")
-            enforcer.refresh(rules: allRules)
+            await enforcer.refresh(rules: allRules)
             try? await Task.sleep(for: .seconds(30))
         }
     }

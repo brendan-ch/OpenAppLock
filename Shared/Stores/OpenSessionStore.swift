@@ -6,7 +6,8 @@
 import Foundation
 
 /// Read access to in-progress granted "Open" sessions, keyed by rule.
-protocol OpenSessionReading: AnyObject {
+/// `nonisolated` + `Sendable` so the off-main enforcement engine can consult it.
+nonisolated protocol OpenSessionReading: AnyObject, Sendable {
     /// Whether a granted open for `ruleID` is still running at `now`.
     func hasActiveSession(for ruleID: UUID, at now: Date) -> Bool
 }
@@ -17,7 +18,7 @@ protocol OpenSessionReading: AnyObject {
 /// lets the foreground enforcer leave that one rule un-shielded for the life of
 /// the session instead of re-locking the app mid-session. The monitor clears it
 /// when the session's one-shot activity ends.
-final class OpenSessionStore: OpenSessionReading {
+nonisolated final class OpenSessionStore: OpenSessionReading, @unchecked Sendable {
     private static let key = "openSessionExpiry"
     private let defaults: UserDefaults
 
@@ -50,7 +51,8 @@ final class OpenSessionStore: OpenSessionReading {
 }
 
 /// In-memory granted sessions for tests and UI-test launches.
-final class MockOpenSessionStore: OpenSessionReading {
+/// `@unchecked Sendable`: a test double; mutations are ordered behind the enforcer's `await`.
+nonisolated final class MockOpenSessionStore: OpenSessionReading, @unchecked Sendable {
     var activeRuleIDs: Set<UUID> = []
 
     func hasActiveSession(for ruleID: UUID, at now: Date) -> Bool {

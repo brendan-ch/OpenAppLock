@@ -16,7 +16,7 @@ import Foundation
 /// press) rather than deriving "is it blocking now", so they compose the same
 /// sub-primitives (`RuleSchedule.isActive`, `isScheduledToday`, `limitReached`,
 /// `isPaused`) directly. Keep their blocking semantics in step with this type.
-enum RuleActivation: Equatable, Sendable {
+nonisolated enum RuleActivation: Equatable, Sendable {
     /// Not blocking now. `nextStart` is when the rule's next window begins, or
     /// nil when it never will (disabled, or no days selected).
     case inactive(nextStart: Date?)
@@ -31,7 +31,7 @@ enum RuleActivation: Equatable, Sendable {
     }
 }
 
-extension RuleSnapshotDTO {
+nonisolated extension RuleSnapshotDTO {
     /// Whether this rule is blocking right now, and until/from when. Schedule
     /// rules block by the clock; limit rules block once the day's budget is spent
     /// on an enabled day (requires usage). A pause only surfaces when the rule

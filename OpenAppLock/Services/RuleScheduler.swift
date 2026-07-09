@@ -9,7 +9,8 @@ import FamilyControls
 import Foundation
 
 /// Abstracts `DeviceActivityCenter` so scheduling can be unit-tested.
-protocol ActivityMonitoring: AnyObject {
+/// `nonisolated` + `Sendable` so `RuleScheduler.sync` can run off the main thread.
+nonisolated protocol ActivityMonitoring: AnyObject, Sendable {
     /// Starts (or replaces) an always-on, midnight-to-midnight repeating
     /// activity. `eventMinutes` maps event names to cumulative usage
     /// thresholds (in minutes) over the rule's selection.
@@ -43,7 +44,11 @@ protocol ActivityMonitoring: AnyObject {
 /// daily activity (time limits with one usage checkpoint per budget minute).
 /// Activities are only restarted when their configuration changes, which is
 /// the purpose of the fingerprint given to each propagated rule.
-final class RuleScheduler {
+///
+/// `nonisolated` + `Sendable` (no mutable stored state — fingerprints live in
+/// `UserDefaults`) so its `sync` can run off the main thread from
+/// `RuleEnforcementEngine`.
+nonisolated final class RuleScheduler: @unchecked Sendable {
     private static let fingerprintsKey = "monitoringFingerprints"
 
     /// How many upcoming scheduled days a time-limit rule arms ahead. **N = 1**:
@@ -93,35 +98,39 @@ final class RuleScheduler {
         let resetsThresholdAccountingOnRestart: Bool
     }
 
-    func sync(rules: [BlockingRule], at now: Date = .now, calendar: Calendar = .current) {
-        snapshotsUserDefaultsStore.save(rules.map(\.dto))
-        Diag.log(.scheduler, "sync: \(rules.count) rules; mirrored snapshots")
+    /// Reconciles monitoring against the given rule snapshots. Takes
+    /// `RuleSnapshotDTO`s (not `@Model` `BlockingRule`s) so it can run off the
+    /// main thread — the caller snapshots on the main actor and hands the
+    /// Sendable values here. See `RuleEnforcementEngine`.
+    func sync(snapshots: [RuleSnapshotDTO], at now: Date = .now, calendar: Calendar = .current) {
+        snapshotsUserDefaultsStore.save(snapshots)
+        Diag.log(.scheduler, "sync: \(snapshots.count) rules; mirrored snapshots")
 
         var plans: [PlannedActivity] = []
-        for rule in rules {
+        for snapshot in snapshots {
             // A rule must be enabled, have days, and have apps to be monitored.
-            guard rule.isEnabled, !rule.days.isEmpty,
-                let selectionData = rule.appList?.selectionData
+            guard snapshot.isEnabled, !snapshot.days.isEmpty,
+                let selectionData = snapshot.selectionData
             else { continue }
 
-            switch rule.kind {
+            switch snapshot.kind {
             case .timeLimit:
                 // Self-dating per-day activities (block + opt-in warn): a stale
                 // cross-midnight flush carries a prior day key and is dropped.
                 plans.append(
                     contentsOf: dayPlans(
-                        for: rule, selectionData: selectionData, at: now, calendar: calendar))
+                        for: snapshot, selectionData: selectionData, at: now, calendar: calendar))
             case .openLimit:
                 // Open limits carry no usage events and have no stale-flush class;
                 // they keep the single always-on repeating activity.
-                plans.append(limitPlan(for: rule, selectionData: selectionData))
+                plans.append(limitPlan(for: snapshot, selectionData: selectionData))
             case .schedule:
-                plans.append(contentsOf: schedulePlans(for: rule))
+                plans.append(contentsOf: schedulePlans(for: snapshot))
             }
         }
 
         reconcile(plans)
-        reapStalePauseActivities(rules: rules)
+        reapStalePauseActivities(snapshots: snapshots)
     }
 
     /// Starts the one-shot re-arm that re-engages `ruleID`'s shield when its
@@ -155,8 +164,8 @@ final class RuleScheduler {
     /// (that would push its interval forward every refresh and it would never
     /// fire), and keeps re-arms for not-yet-cleared (still `pausedUntil`) rules
     /// so a natural expiry's background re-shield still fires.
-    private func reapStalePauseActivities(rules: [BlockingRule]) {
-        let pausedRuleIDs = Set(rules.filter { $0.pausedUntil != nil }.map(\.id))
+    private func reapStalePauseActivities(snapshots: [RuleSnapshotDTO]) {
+        let pausedRuleIDs = Set(snapshots.filter { $0.pausedUntil != nil }.map(\.id))
         let stale = monitor.monitoredNames.filter { name in
             guard let id = MonitoringPlan.ruleID(fromPauseActivityName: name) else { return false }
             return !pausedRuleIDs.contains(id)
@@ -171,11 +180,11 @@ final class RuleScheduler {
     /// events, so a restart has no accrual to lose; it is still fingerprinted
     /// on kind, budget, and selection to detect the configuration changes that
     /// should restart the activity (e.g. an app-list swap).
-    func limitPlan(for rule: BlockingRule, selectionData: Data) -> PlannedActivity {
-        let fingerprint = "\(rule.kindRaw)|\(rule.dailyLimitMinutes)|"
+    func limitPlan(for snapshot: RuleSnapshotDTO, selectionData: Data) -> PlannedActivity {
+        let fingerprint = "\(snapshot.kindRaw)|\(snapshot.dailyLimitMinutes)|"
             + Self.selectionFingerprint(selectionData)
         return PlannedActivity(
-            name: MonitoringPlan.dailyActivityName(for: rule.id),
+            name: MonitoringPlan.dailyActivityName(for: snapshot.id),
             fingerprint: fingerprint,
             payload: .daily(selectionData: selectionData, eventMinutes: [:]),
             resetsThresholdAccountingOnRestart: false)
@@ -188,31 +197,31 @@ final class RuleScheduler {
     /// it. The day after is armed solely by the monitor's midnight self-arm, not
     /// here.
     func dayPlans(
-        for rule: BlockingRule, selectionData: Data,
+        for snapshot: RuleSnapshotDTO, selectionData: Data,
         at now: Date, calendar: Calendar = .current
     ) -> [PlannedActivity] {
         let selectionFP = Self.selectionFingerprint(selectionData)
         let nudgeOn = NotificationPreferences(defaults: defaults).timeLimitEndingEnabled
-        let warnEvents = MonitoringPlan.warnEvent(forLimit: rule.dailyLimitMinutes)
+        let warnEvents = MonitoringPlan.warnEvent(forLimit: snapshot.dailyLimitMinutes)
         var plans: [PlannedActivity] = []
         for dayStart in ScheduledDayPlanner.upcomingScheduledDayStarts(
-            days: rule.days, from: now, count: Self.dayActivityHorizon, calendar: calendar)
+            days: snapshot.days, from: now, count: Self.dayActivityHorizon, calendar: calendar)
         {
             let dayKey = UsageLedger.dayKey(for: dayStart, calendar: calendar)
             let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
             plans.append(
                 PlannedActivity(
-                    name: MonitoringPlan.dailyActivityName(for: rule.id, dayKey: dayKey),
-                    fingerprint: "\(rule.kindRaw)|\(rule.dailyLimitMinutes)|\(selectionFP)",
+                    name: MonitoringPlan.dailyActivityName(for: snapshot.id, dayKey: dayKey),
+                    fingerprint: "\(snapshot.kindRaw)|\(snapshot.dailyLimitMinutes)|\(selectionFP)",
                     payload: .day(
                         from: dayStart, to: dayEnd, selectionData: selectionData,
-                        eventMinutes: MonitoringPlan.blockEvent(forLimit: rule.dailyLimitMinutes)),
+                        eventMinutes: MonitoringPlan.blockEvent(forLimit: snapshot.dailyLimitMinutes)),
                     resetsThresholdAccountingOnRestart: true))
             if nudgeOn, let warnEvents {
                 plans.append(
                     PlannedActivity(
-                        name: MonitoringPlan.warnActivityName(for: rule.id, dayKey: dayKey),
-                        fingerprint: "tlwarn|\(rule.dailyLimitMinutes)|\(selectionFP)",
+                        name: MonitoringPlan.warnActivityName(for: snapshot.id, dayKey: dayKey),
+                        fingerprint: "tlwarn|\(snapshot.dailyLimitMinutes)|\(selectionFP)",
                         payload: .day(
                             from: dayStart, to: dayEnd, selectionData: selectionData,
                             eventMinutes: warnEvents),
@@ -226,9 +235,9 @@ final class RuleScheduler {
     /// crossing). A window encodes only its interval — days, mode and apps are
     /// read fresh by reconcile() at each callback — so it is fingerprinted on
     /// start/end alone.
-    func schedulePlans(for rule: BlockingRule) -> [PlannedActivity] {
-        let fingerprint = "schedule|\(rule.startMinutes)|\(rule.endMinutes)"
-        return scheduleWindows(for: rule).map { window in
+    func schedulePlans(for snapshot: RuleSnapshotDTO) -> [PlannedActivity] {
+        let fingerprint = "schedule|\(snapshot.startMinutes)|\(snapshot.endMinutes)"
+        return scheduleWindows(for: snapshot).map { window in
             PlannedActivity(
                 name: window.name,
                 fingerprint: fingerprint,
@@ -351,12 +360,12 @@ final class RuleScheduler {
     /// map to one activity; midnight-crossing windows split into an evening half
     /// (to 23:59) and a morning half (from 00:00); a `start == end` window is
     /// treated as all-day.
-    private func scheduleWindows(for rule: BlockingRule) -> [(name: String, start: Int, end: Int)] {
-        let primary = MonitoringPlan.scheduleWindowName(for: rule.id)
-        let late = MonitoringPlan.scheduleWindowLateName(for: rule.id)
+    private func scheduleWindows(for snapshot: RuleSnapshotDTO) -> [(name: String, start: Int, end: Int)] {
+        let primary = MonitoringPlan.scheduleWindowName(for: snapshot.id)
+        let late = MonitoringPlan.scheduleWindowLateName(for: snapshot.id)
         let endOfDay = 24 * 60 - 1
-        let start = rule.startMinutes
-        let end = rule.endMinutes
+        let start = snapshot.startMinutes
+        let end = snapshot.endMinutes
 
         if start < end {
             return [(name: primary, start: start, end: end)]
@@ -379,7 +388,9 @@ final class RuleScheduler {
 
 /// Real DeviceActivity scheduling. Each daily activity repeats from midnight
 /// to 23:59 with usage-threshold events over the rule's selection.
-final class DeviceActivityCenterMonitor: ActivityMonitoring {
+/// `@unchecked Sendable`: wraps a single `DeviceActivityCenter`; its calls are
+/// serialized by the enforcement actor and are safe off the main thread.
+nonisolated final class DeviceActivityCenterMonitor: ActivityMonitoring, @unchecked Sendable {
     private let center = DeviceActivityCenter()
 
     var monitoredNames: [String] {
@@ -471,7 +482,8 @@ final class DeviceActivityCenterMonitor: ActivityMonitoring {
 }
 
 /// Records scheduling calls for tests.
-final class MockActivityMonitor: ActivityMonitoring {
+/// `@unchecked Sendable`: a test double; mutations are ordered behind the enforcer's `await`.
+nonisolated final class MockActivityMonitor: ActivityMonitoring, @unchecked Sendable {
     private(set) var startedEvents: [String: [String: Int]] = [:]
     private(set) var startedWindows: [String: (start: Int, end: Int)] = [:]
     private(set) var startedOneShots: [String: (start: Date, end: Date)] = [:]

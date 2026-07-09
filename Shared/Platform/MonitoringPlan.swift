@@ -8,7 +8,7 @@ import Foundation
 /// Naming conventions and event layouts shared by the app (which starts
 /// DeviceActivity monitoring) and the monitor extension (which decodes what
 /// fired).
-enum MonitoringPlan {
+nonisolated enum MonitoringPlan {
     private static let dailyPrefix = "rule-"
     private static let sessionPrefix = "open-session-"
     private static let minutePrefix = "minutes-"

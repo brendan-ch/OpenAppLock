@@ -72,7 +72,7 @@ struct RuleSchedulerPlanTests {
         let scheduler = makeScheduler()
         let rule = try limitRule(kind: .openLimit)
 
-        let plan = scheduler.limitPlan(for: rule, selectionData: Data([1]))
+        let plan = scheduler.limitPlan(for: rule.dto, selectionData: Data([1]))
 
         #expect(plan.resetsThresholdAccountingOnRestart == false)
         guard case let .daily(_, events) = plan.payload else {
@@ -94,16 +94,16 @@ struct RuleSchedulerPlanTests {
         // fingerprint format against the 002ac19 regression.
         rule.dailyLimitMinutes = 45
 
-        let fingerprint = scheduler.limitPlan(for: rule, selectionData: Data([1])).fingerprint
+        let fingerprint = scheduler.limitPlan(for: rule.dto, selectionData: Data([1])).fingerprint
         // Locked to the exact format so a per-process-unstable hash (the 002ac19
         // regression) cannot creep back in unnoticed.
         #expect(
             fingerprint == "\(rule.kindRaw)|45|" + RuleScheduler.selectionFingerprint(Data([1])))
         // Stable for an unchanged rule…
-        #expect(scheduler.limitPlan(for: rule, selectionData: Data([1])).fingerprint == fingerprint)
+        #expect(scheduler.limitPlan(for: rule.dto, selectionData: Data([1])).fingerprint == fingerprint)
         // …and different once the budget changes.
         rule.dailyLimitMinutes = 60
-        #expect(scheduler.limitPlan(for: rule, selectionData: Data([1])).fingerprint != fingerprint)
+        #expect(scheduler.limitPlan(for: rule.dto, selectionData: Data([1])).fingerprint != fingerprint)
     }
 
     // MARK: schedulePlans
@@ -113,7 +113,7 @@ struct RuleSchedulerPlanTests {
         let scheduler = makeScheduler()
         let rule = try scheduleRule(start: 9 * 60, end: 17 * 60)
 
-        let plans = scheduler.schedulePlans(for: rule)
+        let plans = scheduler.schedulePlans(for: rule.dto)
 
         #expect(plans.count == 1)
         let plan = try #require(plans.first)
@@ -133,7 +133,7 @@ struct RuleSchedulerPlanTests {
         let scheduler = makeScheduler()
         let rule = try scheduleRule(start: 22 * 60, end: 6 * 60)
 
-        let plans = scheduler.schedulePlans(for: rule)
+        let plans = scheduler.schedulePlans(for: rule.dto)
 
         #expect(plans.count == 2)
         let boundsByName = Dictionary(uniqueKeysWithValues: plans.map { ($0.name, $0.payload) })

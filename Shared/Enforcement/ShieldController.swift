@@ -9,7 +9,11 @@ import ManagedSettings
 
 /// Applies and clears app shields for rules. One implementation talks to
 /// ManagedSettings; the mock records calls for tests.
-protocol ShieldApplying: AnyObject {
+///
+/// `nonisolated` + `Sendable` so the app's enforcement can call it off the main
+/// thread (the shared `Shared/` code already runs nonisolated inside the
+/// extensions); see `RuleEnforcementEngine`.
+nonisolated protocol ShieldApplying: AnyObject, Sendable {
     func applyShield(ruleID: UUID, selectionData: Data?, mode: SelectionMode)
     /// Clears the shield of a single rule (used by the extensions for day
     /// resets and granted opens).
@@ -26,7 +30,7 @@ protocol ShieldApplying: AnyObject {
 /// Real shield enforcement via per-rule `ManagedSettingsStore`s. Store names
 /// are tracked in the shared app-group defaults (ManagedSettings cannot
 /// enumerate stores) so the app and extensions see one consistent set.
-final class ManagedSettingsShieldController: ShieldApplying {
+nonisolated final class ManagedSettingsShieldController: ShieldApplying, @unchecked Sendable {
     private static let trackedIDsKey = "shieldedRuleIDs"
     private let defaults: UserDefaults
 
@@ -110,8 +114,9 @@ final class ManagedSettingsShieldController: ShieldApplying {
 }
 
 /// Records shield operations without touching the system. Used by tests and
-/// UI-test launches.
-final class MockShieldController: ShieldApplying {
+/// UI-test launches. `@unchecked Sendable`: a test double whose mutations are
+/// ordered behind the `await` in `RuleEnforcer.refresh` before assertions read them.
+nonisolated final class MockShieldController: ShieldApplying, @unchecked Sendable {
     private(set) var shieldedRuleIDs: Set<UUID> = []
     private(set) var appliedModes: [UUID: SelectionMode] = [:]
     private(set) var appliedSelectionData: [UUID: Data?] = [:]
@@ -145,7 +150,7 @@ final class MockShieldController: ShieldApplying {
 }
 
 /// Encodes/decodes `FamilyActivitySelection` for persistence on the rule model.
-enum AppSelectionCodec {
+nonisolated enum AppSelectionCodec {
     static func encode(_ selection: FamilyActivitySelection) -> Data? {
         try? JSONEncoder().encode(selection)
     }

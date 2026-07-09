@@ -15,20 +15,20 @@ struct RuleEnforcerTests {
     let mondayEvening = date(2025, 1, 6, 19, 0)
 
     @Test("Active schedule rules are shielded; inactive ones are not")
-    func shieldsActiveRules() {
+    func shieldsActiveRules() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let active = BlockingRule(name: "Work Time")
         let weekendOnly = BlockingRule(name: "Weekend Zen", days: Weekday.weekends)
 
-        enforcer.refresh(rules: [active, weekendOnly], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [active, weekendOnly], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.shieldedRuleIDs == [active.id])
         #expect(enforcer.blockingRuleIDs == [active.id])
     }
 
     @Test("Refresh establishes today's confirmed day-start for a time-limit rule")
-    func refreshEstablishesConfirmedStart() {
+    func refreshEstablishesConfirmedStart() async {
         let shields = MockShieldController()
         let suite = "enforcer-daystart-\(UUID().uuidString)"
         let dayStarts = DayStartStore(defaults: UserDefaults(suiteName: suite)!)
@@ -38,97 +38,97 @@ struct RuleEnforcerTests {
             configuration: .timeLimit(TimeLimitConfig()), days: Weekday.everyDay)
 
         #expect(dayStarts.confirmedStart(for: rule.id) == nil)
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
         #expect(dayStarts.confirmedStart(for: rule.id) == utc.startOfDay(for: mondayDuringWork))
     }
 
     @Test("Disabled rules are never shielded")
-    func skipsDisabledRules() {
+    func skipsDisabledRules() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(name: "Work Time", isEnabled: false)
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.shieldedRuleIDs.isEmpty)
     }
 
     @Test("Paused rules are not shielded")
-    func skipsPausedRules() {
+    func skipsPausedRules() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(name: "Work Time")
         RulePolicy.pause(rule, at: mondayDuringWork, calendar: utc)
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.shieldedRuleIDs.isEmpty)
     }
 
     @Test("Time-limit rules are not schedule-shielded")
-    func skipsTimeLimitRules() {
+    func skipsTimeLimitRules() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(name: "Time Keeper", configuration: .timeLimit(TimeLimitConfig()))
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.shieldedRuleIDs.isEmpty)
     }
 
     @Test("Shields are cleared when a window ends")
-    func clearsShieldAfterWindow() {
+    func clearsShieldAfterWindow() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(name: "Work Time")
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
         #expect(shields.shieldedRuleIDs == [rule.id])
 
-        enforcer.refresh(rules: [rule], at: mondayEvening, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayEvening, calendar: utc)
         #expect(shields.shieldedRuleIDs.isEmpty)
         #expect(enforcer.blockingRuleIDs.isEmpty)
     }
 
     @Test("Shields are cleared when a rule is deleted")
-    func clearsShieldAfterDeletion() {
+    func clearsShieldAfterDeletion() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(name: "Work Time")
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
-        enforcer.refresh(rules: [], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.shieldedRuleIDs.isEmpty)
     }
 
     @Test("Expired pauses are cleaned up during refresh")
-    func clearsExpiredPause() {
+    func clearsExpiredPause() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(name: "Work Time")
         rule.pausedUntil = date(2025, 1, 6, 9, 30)
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
         #expect(rule.pausedUntil == nil)
         #expect(shields.shieldedRuleIDs == [rule.id])
     }
 
     @Test("The selection mode is forwarded to the shield layer")
-    func forwardsSelectionMode() {
+    func forwardsSelectionMode() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(
             name: "Focus", configuration: .schedule(ScheduleConfig(selectionMode: .allowOnly)))
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.appliedModes[rule.id] == .allowOnly)
     }
 
     @Test("Open-limit rules are proactively shielded while opens remain")
-    func proactivelyShieldsOpenLimit() {
+    func proactivelyShieldsOpenLimit() async {
         let shields = MockShieldController()
         let ledger = MockUsageLedger()
         let enforcer = RuleEnforcer(shields: shields, usage: ledger)
@@ -140,7 +140,7 @@ struct RuleEnforcerTests {
         // but its apps must still be gated so the next open can be counted.
         ledger.usageByRule[rule.id] = RuleUsageDTO(opensUsed: 2)
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.shieldedRuleIDs == [rule.id])
         #expect(shields.appliedModes[rule.id] == .block)
@@ -149,7 +149,7 @@ struct RuleEnforcerTests {
     }
 
     @Test("A granted open session is left un-shielded, not re-locked")
-    func respectsGrantedOpenSession() {
+    func respectsGrantedOpenSession() async {
         let shields = MockShieldController()
         let ledger = MockUsageLedger()
         let sessions = MockOpenSessionStore()
@@ -163,40 +163,40 @@ struct RuleEnforcerTests {
         // sanctioned ~15-minute session short.
         sessions.activeRuleIDs = [rule.id]
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.shieldedRuleIDs.isEmpty)
     }
 
     @Test("Pausing an active rule clears its shield and sets a 15-minute pause")
-    func pauseClearsShield() {
+    func pauseClearsShield() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(name: "Work Time")
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
         #expect(shields.shieldedRuleIDs == [rule.id])
 
-        let didPause = enforcer.pause(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
+        let didPause = await enforcer.pause(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
         #expect(didPause)
         #expect(rule.pausedUntil == date(2025, 1, 6, 10, 15))
         #expect(shields.shieldedRuleIDs.isEmpty)
     }
 
     @Test("Resuming re-applies the shield and clears the pause")
-    func resumeReshields() {
+    func resumeReshields() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
         let rule = BlockingRule(name: "Work Time")
-        enforcer.pause(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.pause(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
         #expect(shields.shieldedRuleIDs.isEmpty)
 
-        enforcer.resume(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.resume(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
         #expect(rule.pausedUntil == nil)
         #expect(shields.shieldedRuleIDs == [rule.id])
     }
 
     @Test("Pausing schedules a background re-arm; resuming cancels it")
-    func pauseAndResumeManageReArm() {
+    func pauseAndResumeManageReArm() async {
         let shields = MockShieldController()
         let monitor = MockActivityMonitor()
         let suite = "enforcer-pause-\(UUID().uuidString)"
@@ -207,10 +207,10 @@ struct RuleEnforcerTests {
         let rule = BlockingRule(name: "Work Time")
         let pauseName = MonitoringPlan.pauseActivityName(for: rule.id)
 
-        enforcer.pause(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.pause(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
         #expect(monitor.monitoredNames.contains(pauseName))
 
-        enforcer.resume(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.resume(rule, rules: [rule], at: mondayDuringWork, calendar: utc)
         #expect(!monitor.monitoredNames.contains(pauseName))
     }
 }
@@ -239,7 +239,7 @@ struct OverlappingRuleEnforcementTests {
     }
 
     @Test("Every rule that should block applies its own shield")
-    func eachRuleShieldsIndependently() {
+    func eachRuleShieldsIndependently() async {
         let shields = MockShieldController()
         let ledger = MockUsageLedger()
         let enforcer = RuleEnforcer(shields: shields, usage: ledger)
@@ -247,14 +247,14 @@ struct OverlappingRuleEnforcementTests {
         let timeLimit = timeLimitRule()
         ledger.usageByRule[timeLimit.id] = RuleUsageDTO(minutesUsed: 45)  // spent → blocking
 
-        enforcer.refresh(rules: [schedule, timeLimit], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [schedule, timeLimit], at: mondayDuringWork, calendar: utc)
 
         // Neither cancels the other: both carry their own shield.
         #expect(shields.shieldedRuleIDs == [schedule.id, timeLimit.id])
     }
 
     @Test("The first limit to be spent blocks, whatever the other's budget")
-    func firstSpentLimitBlocks() {
+    func firstSpentLimitBlocks() async {
         let shields = MockShieldController()
         let ledger = MockUsageLedger()
         let enforcer = RuleEnforcer(shields: shields, usage: ledger)
@@ -263,7 +263,7 @@ struct OverlappingRuleEnforcementTests {
         ledger.usageByRule[openLimit.id] = RuleUsageDTO(opensUsed: 1)    // opens remain
         ledger.usageByRule[timeLimit.id] = RuleUsageDTO(minutesUsed: 45)  // budget spent
 
-        enforcer.refresh(rules: [openLimit, timeLimit], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [openLimit, timeLimit], at: mondayDuringWork, calendar: utc)
 
         // Time-limit blocks (spent) while the open-limit still gates its turnstile.
         #expect(shields.shieldedRuleIDs == [openLimit.id, timeLimit.id])
@@ -272,7 +272,7 @@ struct OverlappingRuleEnforcementTests {
     }
 
     @Test("A time limit blocks even during an open-limit's granted session")
-    func timeLimitBlocksDuringGrantedOpen() {
+    func timeLimitBlocksDuringGrantedOpen() async {
         let shields = MockShieldController()
         let ledger = MockUsageLedger()
         let sessions = MockOpenSessionStore()
@@ -284,7 +284,7 @@ struct OverlappingRuleEnforcementTests {
         // The metered minutes during the open push the time limit over budget.
         ledger.usageByRule[timeLimit.id] = RuleUsageDTO(minutesUsed: 45)
 
-        enforcer.refresh(rules: [openLimit, timeLimit], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [openLimit, timeLimit], at: mondayDuringWork, calendar: utc)
 
         // The open-limit stays lifted (its session is sanctioned), but the time
         // limit shields the app anyway — strictest wins.
@@ -292,7 +292,7 @@ struct OverlappingRuleEnforcementTests {
     }
 
     @Test("Spent opens reset the next day: re-gated, not blocked")
-    func opensResetNextDay() {
+    func opensResetNextDay() async {
         let suite = "overlap-tests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defaults.removePersistentDomain(forName: suite)
@@ -307,11 +307,11 @@ struct OverlappingRuleEnforcementTests {
         }
 
         // Yesterday: budget exhausted → blocking.
-        enforcer.refresh(rules: [rule], at: yesterday, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: yesterday, calendar: utc)
         #expect(enforcer.blockingRuleIDs == [rule.id])
 
         // Today: fresh budget → not blocking, but the turnstile is back up.
-        enforcer.refresh(rules: [rule], at: today, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: today, calendar: utc)
         #expect(enforcer.blockingRuleIDs.isEmpty)
         #expect(shields.shieldedRuleIDs == [rule.id])
     }
@@ -330,54 +330,54 @@ struct UninstallProtectionEnforcementTests {
     }
 
     @Test("Disabled setting never denies app removal")
-    func disabledSettingNeverDenies() {
+    func disabledSettingNeverDenies() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(
             shields: shields, settings: MockAppSettings(uninstallProtectionEnabled: false))
 
-        enforcer.refresh(rules: [hardRule()], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [hardRule()], at: mondayDuringWork, calendar: utc)
 
         #expect(!shields.appRemovalDenied)
     }
 
     @Test("Enabled setting denies removal while a hard rule is blocking")
-    func deniesDuringHardBlock() {
+    func deniesDuringHardBlock() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(
             shields: shields, settings: MockAppSettings(uninstallProtectionEnabled: true))
 
-        enforcer.refresh(rules: [hardRule()], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [hardRule()], at: mondayDuringWork, calendar: utc)
 
         #expect(shields.appRemovalDenied)
     }
 
     @Test("A soft rule does not deny removal even with the setting on")
-    func softRuleDoesNotDeny() {
+    func softRuleDoesNotDeny() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(
             shields: shields, settings: MockAppSettings(uninstallProtectionEnabled: true))
 
-        enforcer.refresh(rules: [BlockingRule(name: "Work Time")], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [BlockingRule(name: "Work Time")], at: mondayDuringWork, calendar: utc)
 
         #expect(!shields.appRemovalDenied)
     }
 
     @Test("Denial lifts once the hard window ends")
-    func liftsWhenWindowEnds() {
+    func liftsWhenWindowEnds() async {
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(
             shields: shields, settings: MockAppSettings(uninstallProtectionEnabled: true))
         let rule = hardRule()
 
-        enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
         #expect(shields.appRemovalDenied)
 
-        enforcer.refresh(rules: [rule], at: mondayEvening, calendar: utc)
+        await enforcer.refresh(rules: [rule], at: mondayEvening, calendar: utc)
         #expect(!shields.appRemovalDenied)
     }
 
     @Test("clearShields(except:) does not disturb the app-removal denial")
-    func clearShieldsPreservesDenial() {
+    func clearShieldsPreservesDenial() async {
         let shields = MockShieldController()
         shields.setAppRemovalDenied(true)
         shields.clearShields(except: [])

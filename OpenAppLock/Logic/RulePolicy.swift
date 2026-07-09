@@ -17,7 +17,7 @@ import Foundation
 ///
 /// Limit rules block on spent usage rather than the clock, so their gates
 /// take the day's `RuleUsageDTO`; passing nil treats them as not blocking.
-enum RulePolicy {
+nonisolated enum RulePolicy {
     /// True while the rule is actively blocking with Hard Mode on.
     static func isHardLocked(
         _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
@@ -122,6 +122,7 @@ enum RulePolicy {
     /// back to active; the foreground and the background re-arm re-apply the
     /// shield).
     @discardableResult
+    @MainActor
     static func pause(
         _ rule: BlockingRule, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
@@ -133,6 +134,7 @@ enum RulePolicy {
     }
 
     /// Ends a temporary pause immediately so the block re-engages now.
+    @MainActor
     static func resume(_ rule: BlockingRule) {
         rule.pausedUntil = nil
     }

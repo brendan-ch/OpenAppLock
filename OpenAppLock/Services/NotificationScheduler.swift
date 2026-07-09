@@ -38,12 +38,11 @@ nonisolated struct UserNotificationScheduler: LocalNotificationScheduling {
             content.sound = .default
             let trigger = UNCalendarNotificationTrigger(
                 dateMatching: planned.dateComponents, repeats: true)
-            // Explicit completion handler selects the fire-and-forget overload
-            // (the bare `add(_:)` resolves to `async throws` in this async context).
-            center.add(
+            // Already inside the scheduler actor's async context (called
+            // fire-and-forget from RuleEnforcer), so await the async API directly.
+            try? await center.add(
                 UNNotificationRequest(
-                    identifier: planned.identifier, content: content, trigger: trigger),
-                withCompletionHandler: nil)
+                    identifier: planned.identifier, content: content, trigger: trigger))
         }
     }
 }

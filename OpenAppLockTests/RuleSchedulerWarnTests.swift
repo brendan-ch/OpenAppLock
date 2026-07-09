@@ -49,7 +49,7 @@ struct RuleSchedulerWarnTests {
         let rule = try timeLimitRule(limit: 60)
         let now = date(2025, 1, 6, 10, 0)
 
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
 
         let dayKey = UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc)
         let blockName = MonitoringPlan.dailyActivityName(for: rule.id, dayKey: dayKey)
@@ -69,7 +69,7 @@ struct RuleSchedulerWarnTests {
         let rule = try timeLimitRule(limit: 60)
         let now = date(2025, 1, 6, 10, 0)
 
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
 
         let dayKey = UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc)
         #expect(monitor.monitoredNames.contains(MonitoringPlan.dailyActivityName(for: rule.id, dayKey: dayKey)))
@@ -83,7 +83,7 @@ struct RuleSchedulerWarnTests {
         let rule = try timeLimitRule(limit: 5)
         let now = date(2025, 1, 6, 10, 0)
 
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
 
         let dayKey = UsageLedger.dayKey(for: date(2025, 1, 6), calendar: utc)
         #expect(!monitor.monitoredNames.contains(MonitoringPlan.warnActivityName(for: rule.id, dayKey: dayKey)))
@@ -99,8 +99,8 @@ struct RuleSchedulerWarnTests {
         let blockName = MonitoringPlan.dailyActivityName(for: rule.id, dayKey: dayKey)
         let warnName = MonitoringPlan.warnActivityName(for: rule.id, dayKey: dayKey)
 
-        // Nudge off: only today's single block activity starts.
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        // Nudge off: only today's single block activity starts (N=1).
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
         #expect(monitor.startCallCount == 1)
         #expect(!monitor.monitoredNames.contains(warnName))
 
@@ -108,7 +108,7 @@ struct RuleSchedulerWarnTests {
         // start); the block activity is NOT restarted.
         defaults.set(true, forKey: AppGroup.notificationsAuthorizedKey)
         defaults.set(true, forKey: AppGroup.notifyTimeLimitEndingKey)
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
         #expect(monitor.startCallCount == 2)
         #expect(monitor.monitoredNames.contains(blockName))
         #expect(monitor.monitoredNames.contains(warnName))
@@ -116,7 +116,7 @@ struct RuleSchedulerWarnTests {
         // Turn it back off: the warn activity is stopped, block still present and
         // never restarted (start count unchanged).
         defaults.set(false, forKey: AppGroup.notifyTimeLimitEndingKey)
-        scheduler.sync(rules: [rule], at: now, calendar: utc)
+        scheduler.sync(snapshots: [rule.dto], at: now, calendar: utc)
         #expect(monitor.startCallCount == 2)
         #expect(monitor.monitoredNames.contains(blockName))
         #expect(!monitor.monitoredNames.contains(warnName))

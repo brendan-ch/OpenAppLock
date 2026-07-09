@@ -56,7 +56,7 @@ struct NotificationSettingsView: View {
                 Button(CopyKey.notificationsAllowButton.resource) {
                     Task {
                         await authorization.request()
-                        enforcer.refresh(rules: rules)
+                        await enforcer.refresh(rules: rules)
                     }
                 }
                 .accessibilityIdentifier("allowNotificationsButton")
@@ -108,7 +108,7 @@ struct NotificationSettingsView: View {
             get: { settings[keyPath: keyPath] },
             set: { newValue in
                 settings[keyPath: keyPath] = newValue
-                enforcer.refresh(rules: rules)
+                Task { await enforcer.refresh(rules: rules) }
             })
     }
 }

@@ -8,7 +8,7 @@ import Foundation
 /// Persistence for the rule mirror in the shared app-group defaults. Stores
 /// `RuleSnapshotDTO`s written by the app and read back by the Screen Time
 /// extensions.
-final class RuleSnapshotUserDefaultsStore {
+nonisolated final class RuleSnapshotUserDefaultsStore: @unchecked Sendable {
     private static let key = "ruleSnapshots"
     private let defaults: UserDefaults
 

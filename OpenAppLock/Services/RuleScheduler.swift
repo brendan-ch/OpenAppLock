@@ -46,11 +46,16 @@ protocol ActivityMonitoring: AnyObject {
 final class RuleScheduler {
     private static let fingerprintsKey = "monitoringFingerprints"
 
-    /// How many upcoming scheduled days a time-limit rule arms ahead (today/next
-    /// scheduled day + the one after), so the next day is registered before its
-    /// midnight even without a monitor self-arm. See the day-keyed enforcement
-    /// spec §5.
-    static let dayActivityHorizon = 2
+    /// How many upcoming scheduled days a time-limit rule arms ahead. **N = 1**:
+    /// only the current-or-next scheduled day is armed in the foreground; the day
+    /// after is armed solely by the monitor's midnight self-arm
+    /// (`DeviceActivityMonitorExtension.reArmNextScheduledDay`). This is a
+    /// deliberate device trial of that unverified self-arm — dropping the old
+    /// N = 2 foreground buffer both halves the per-rule activity cost (so the
+    /// 10-rule `RuleCreationPolicy` cap fits Apple's ~20 ceiling) and makes the
+    /// self-arm's real-device reliability observable. See the day-keyed
+    /// enforcement spec §5 and `RULE_HARD_CAP_AND_N1_ARMING.md`.
+    static let dayActivityHorizon = 1
 
     private let monitor: ActivityMonitoring
     private let snapshotsUserDefaultsStore: RuleSnapshotUserDefaultsStore
@@ -177,11 +182,11 @@ final class RuleScheduler {
     }
 
     /// The per-day block (and, when opted in, warn) activities for a time-limit
-    /// rule across the next `dayActivityHorizon` scheduled days. Each is a
+    /// rule across the current-or-next scheduled day (N = 1). Each is a
     /// non-repeating `.day` window spanning that day; the day key in the activity
     /// name makes a cross-midnight stale flush self-identify so the monitor drops
-    /// it. The next day is armed before its midnight, preserving full-day capture
-    /// without a monitor self-arm.
+    /// it. The day after is armed solely by the monitor's midnight self-arm, not
+    /// here.
     func dayPlans(
         for rule: BlockingRule, selectionData: Data,
         at now: Date, calendar: Calendar = .current

@@ -99,25 +99,25 @@ struct RuleSchedulerWarnTests {
         let blockName = MonitoringPlan.dailyActivityName(for: rule.id, dayKey: dayKey)
         let warnName = MonitoringPlan.warnActivityName(for: rule.id, dayKey: dayKey)
 
-        // Nudge off: only the two block activities (today + tomorrow) start.
+        // Nudge off: only today's single block activity starts.
         scheduler.sync(rules: [rule], at: now, calendar: utc)
-        #expect(monitor.startCallCount == 2)
+        #expect(monitor.startCallCount == 1)
         #expect(!monitor.monitoredNames.contains(warnName))
 
-        // Turn the nudge on and re-sync: two warn activities are added (two more
-        // starts); the block activities are NOT restarted.
+        // Turn the nudge on and re-sync: one warn activity is added (one more
+        // start); the block activity is NOT restarted.
         defaults.set(true, forKey: AppGroup.notificationsAuthorizedKey)
         defaults.set(true, forKey: AppGroup.notifyTimeLimitEndingKey)
         scheduler.sync(rules: [rule], at: now, calendar: utc)
-        #expect(monitor.startCallCount == 4)
+        #expect(monitor.startCallCount == 2)
         #expect(monitor.monitoredNames.contains(blockName))
         #expect(monitor.monitoredNames.contains(warnName))
 
-        // Turn it back off: warn activities are stopped, block still present and
+        // Turn it back off: the warn activity is stopped, block still present and
         // never restarted (start count unchanged).
         defaults.set(false, forKey: AppGroup.notifyTimeLimitEndingKey)
         scheduler.sync(rules: [rule], at: now, calendar: utc)
-        #expect(monitor.startCallCount == 4)
+        #expect(monitor.startCallCount == 2)
         #expect(monitor.monitoredNames.contains(blockName))
         #expect(!monitor.monitoredNames.contains(warnName))
     }

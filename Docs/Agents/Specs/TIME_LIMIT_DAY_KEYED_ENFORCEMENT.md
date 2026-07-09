@@ -150,20 +150,23 @@ Two arming paths, both idempotent (fingerprinted per day-name, so the 30s loop
 never thrashes a live activity):
 
 - **Foreground net — `RuleScheduler.sync`.** For each enabled time-limit rule,
-  emit per-day plans for the next **N = 2** scheduled occurrences (the current or
-  next scheduled day, plus the one after): the block plan always, and the warn
-  plan when the nudge is on. One shared `dayPlan` builder produces both. Arming
-  the *next* scheduled day a day ahead means it is registered **before its
-  midnight**, preserving full-day capture (§9) even if the monitor cannot
-  self-arm, and reduces reliance on the unverified monitor-start. The declarative
-  reconcile reaps past-day activities for free (see below).
+  emit per-day plans for the current-or-next scheduled occurrence only (**N = 1**):
+  the block plan always, and the warn plan when the nudge is on. One shared
+  `dayPlan` builder produces both. As of `RULE_HARD_CAP_AND_N1_ARMING.md`, the
+  foreground net **no longer** arms the day after — that day is armed solely by
+  the monitor self-arm, a deliberate device trial of that previously-unverified
+  path (dropping the old N = 2 buffer also halves the per-rule activity cost so
+  the 10-rule cap fits Apple's ~20 ceiling). The declarative reconcile reaps
+  past-day activities for free (see below).
 - **Background chain — monitor `intervalDidEnd` of a block or warn activity.** Arm
   the next scheduled occurrence of that activity and stop the ended one. This is
-  the only path that sustains background enforcement with the app closed
-  indefinitely. **It requires the monitor extension to call `startMonitoring`,
-  which it currently never does (it only ever `stopMonitoring`s)** — a
-  device-verification item (§11). The foreground net (N = 2) is what de-risks it.
-  The self-arm and the foreground reconcile share no fingerprint state, so each
+  now the **only** path that arms the day after today, and the only path that
+  sustains background enforcement with the app closed indefinitely. **It requires
+  the monitor extension to call `startMonitoring`, which it currently never does
+  (it only ever `stopMonitoring`s)** — a device-verification item (§11), and one
+  the N = 1 trial is designed to force observable: with no foreground buffer left,
+  a failed self-arm now shows up directly as a lapsed next day (§13). The self-arm
+  and the foreground reconcile share no fingerprint state, so each
   must avoid tearing down the other's live activity (a needless restart, EC7):
   the self-arm **skips** a target already in `DeviceActivityCenter().activities`,
   and the foreground reconcile **adopts** a monitored activity that carries no
@@ -255,25 +258,27 @@ A `DeviceActivityEvent` threshold counts usage **from when monitoring began**, n
 from the schedule's nominal `intervalStart`. So a per-day activity must be armed
 *at or before* its day's `00:00` to capture the whole day.
 
-- **Primary path** (monitor `intervalDidEnd` at the prior midnight, or foreground
-  arming the next day a day ahead, N = 2) registers the activity before its
-  midnight → full capture.
+- **Primary path** (monitor `intervalDidEnd` at the prior midnight) registers the
+  next day's activity before its midnight → full capture. With N = 1, this is now
+  the *only* path that arms a day before it starts — the foreground net no longer
+  arms ahead (see §5, §13).
 - **Safety-net mid-day arming** (monitor self-arm failed *and* the app is first
   opened mid-day) counts only from the arming instant → undercounts that morning.
   This is the same class as today's mid-day rule creation, is bounded, and is
-  re-derived by the foreground report if/when Part B is finished. N = 2 arming
-  specifically prevents it for the *next* day. (The warn is unaffected in
-  practice — a late-armed warn just fires its notification slightly late or not at
-  all, never mis-blocks.)
+  re-derived by the foreground report if/when Part B is finished. Under N = 1 this
+  case is reached whenever the self-arm fails, not only on the very first day —
+  the trial this change is running. (The warn is unaffected in practice — a
+  late-armed warn just fires its notification slightly late or not at all, never
+  mis-blocks.)
 
 ## 10. Activity-count budget
 
-Per time-limit rule: up to 2 day-keyed block activities (today + next) and, when
-the nudge is on, up to 2 day-keyed warn activities — **≈ 4**, versus the prior 2
-(block + warn, each single repeating). Without the nudge it is 2. Against
-DeviceActivity's documented ceiling (~20 concurrent activities — confirm on
-device) that is ~5 nudge-enabled time-limit rules before crowding. Mitigation if
-it bites: drop to N = 1 (today only, leaning on the monitor chain).
+Per time-limit rule (N = 1, see `RULE_HARD_CAP_AND_N1_ARMING.md`): 1 day-keyed
+block activity (today) and, when the nudge is on, 1 day-keyed warn activity —
+**≈ 2** per nudge-enabled rule, down from the prior N = 2 design's ≈ 4. Without
+the nudge it is 1. Against DeviceActivity's documented ceiling (~20 concurrent
+activities — confirm on device) that is ~10 nudge-enabled time-limit rules before
+crowding — which is exactly why `RuleCreationPolicy` caps total rules at 10.
 
 ## 11. Testing strategy (red/green TDD)
 
@@ -322,10 +327,17 @@ Build and test via the Xcode MCP on the simulator (no raw `xcodebuild`).
 
 ## 13. Risks
 
-- **Monitor-initiated `startMonitoring` is unverified.** Mitigated by foreground
-  N = 2 arming, which keeps the next scheduled day covered without it.
-- **Activity ceiling** (§10) — verify on device; N = 1 fallback.
-- **Mid-day arming undercount** (§9) — bounded; corrected by the report.
+- **Monitor-initiated `startMonitoring` is unverified.** As of
+  `RULE_HARD_CAP_AND_N1_ARMING.md`, the old foreground N = 2 mitigation is
+  deliberately removed: N = 1 makes the self-arm's real-device reliability
+  load-bearing and observable, rather than papered over by a foreground buffer.
+  If the self-arm does not fire, the next scheduled day simply goes unarmed until
+  the app is next opened (§14).
+- **Activity ceiling** (§10) — verify on device; N = 1 is itself the mitigation
+  the old spec proposed here, now adopted (see `RULE_HARD_CAP_AND_N1_ARMING.md`).
+- **Mid-day arming undercount** (§9) — bounded; corrected by the report. More
+  frequent under N = 1 since it is reached by any single failed self-arm, not
+  only exhaustion of a multi-day buffer.
 - **Timezone / clock change.** The drop compares the activity's baked-in day key
   against a *live* `UsageLedger.dayKey(for: now)`. If the device timezone or clock
   moves the local calendar date away from the active activity's armed day (e.g.
@@ -337,17 +349,25 @@ Build and test via the Xcode MCP on the simulator (no raw `xcodebuild`).
   forward already grants a fresh budget under any design — a pre-existing Screen
   Time weakness). Accepted for now; a future hardening would derive "today" from
   the firing schedule's own interval rather than live `now`.
-- **Multi-day app-closed weakens Hard Mode / Uninstall Protection.** Background
-  coverage lapses once the N = 2 armed window is exhausted and the monitor cannot
-  self-arm; the app re-arms on next open. This trades a slice of the old always-on
-  activity's indefinite coverage for the staleness fix, consistent with "the app
-  is the source of truth whenever it runs." For a **Hard Mode** time-limit rule
-  the same lapse reduces the "can't be bypassed" guarantee in the background (≈2
-  closed days), and Uninstall Protection — which keys off ledger usage — lifts
-  with it. The old design covered these indefinitely; restoring that depends on
-  the monitor self-arm being verified on device.
+- **Multi-day app-closed weakens Hard Mode / Uninstall Protection, now starting
+  after a single closed day.** Under N = 1 the foreground-armed window is just
+  today; background coverage lapses as soon as the monitor fails to self-arm the
+  next day, and the app re-arms on next open. This trades the old N = 2 design's
+  one-day grace period (and the prior always-on activity's indefinite coverage)
+  for the staleness fix and the device trial, consistent with "the app is the
+  source of truth whenever it runs." For a **Hard Mode** time-limit rule the same
+  lapse reduces the "can't be bypassed" guarantee in the background to a single
+  closed day (down from ≈2), and Uninstall Protection — which keys off ledger
+  usage — lifts with it. Restoring longer unattended coverage depends on the
+  monitor self-arm being verified on device (see `RULE_HARD_CAP_AND_N1_ARMING.md`).
 
 ## 14. On-device verification checklist (deferred)
+
+**N = 1 (`RULE_HARD_CAP_AND_N1_ARMING.md`) makes the monitor self-arm
+load-bearing:** with no foreground buffer, the items below now depend on
+`DeviceActivityMonitorExtension.reArmNextScheduledDay` actually calling
+`startMonitoring` at `intervalDidEnd` — the very capability this trial exists to
+observe.
 
 - A maxed-out day does **not** re-block unused apps the next morning (the
   2026-06-29 incident) — the next day's fire is dropped as a stale-dayKey flush.
@@ -355,6 +375,8 @@ Build and test via the Xcode MCP on the simulator (no raw `xcodebuild`).
   cross-midnight warn flush.
 - A genuinely-scheduled day still blocks at the budget, with full-day capture (no
   morning undercount when armed at midnight), and the warn still fires ~5 min out.
+  Under N = 1 this specifically verifies the self-arm fired before that midnight —
+  see `RULE_HARD_CAP_AND_N1_ARMING.md`.
 - Deleting / disabling / editing a time-limit rule, and toggling the nudge, stop or
   restart the correct day-keyed activities with no orphans (inspect
   `center.activities`); toggling the nudge never resets the block's count.

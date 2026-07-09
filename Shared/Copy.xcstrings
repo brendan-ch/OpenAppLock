@@ -1849,6 +1849,28 @@
         }
       }
     },
+    "rulesList.ruleLimitAlertMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can have up to %lld rules. Delete one to add another."
+          }
+        }
+      }
+    },
+    "rulesList.ruleLimitAlertTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rule limit reached"
+          }
+        }
+      }
+    },
     "selectionMode.allowOnly" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import SwiftData
 import Testing
 
 @testable import OpenAppLock
@@ -121,5 +122,12 @@ struct SampleRulesTests {
         await auth.request()
         #expect(auth.status == .denied)
         #expect(auth.lastRequestFailed)
+    }
+
+    @Test func atRuleCapSeedsExactlyTheCapCount() throws {
+        let context = try makeInMemoryContext()
+        SampleRules.seed(.atRuleCap, into: context)
+        let rules = try context.fetch(FetchDescriptor<BlockingRule>())
+        #expect(rules.count == RuleCreationPolicy.maxRuleCount)  // 10
     }
 }

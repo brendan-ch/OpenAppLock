@@ -80,7 +80,9 @@ struct OpenAppLockApp: App {
         let authProvider: AuthorizationProviding =
             config.isUITesting
             ? MockAuthorizationProvider(
-                status: config.onboardingCompleted == false ? .notDetermined : .approved
+                status: config.onboardingCompleted == false
+                    ? .notDetermined
+                    : (config.screenTimeAccessRevoked ? .denied : .approved)
             )
             : FamilyControlsAuthorizationProvider()
         _authorization = State(initialValue: ScreenTimeAuthorization(provider: authProvider))

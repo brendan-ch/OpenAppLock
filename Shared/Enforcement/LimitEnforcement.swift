@@ -22,11 +22,11 @@ struct LimitEnforcement {
     /// proactively shielded on enabled days so the shield can count opens;
     /// time-limit rules start the day unshielded.
     func handleDayStart(ruleID: UUID, now: Date = .now, calendar: Calendar = .current) {
-        let rid = ruleID.uuidString.prefix(8)
+        let ruleTag = ruleID.logTag
         guard let snapshot = snapshots.snapshot(for: ruleID), snapshot.isEnabled,
               !snapshot.isPaused(at: now)
         else {
-            Diag.log(.dayStart, "dayStart rule-\(rid): skipped (missing/disabled/paused)")
+            Diag.log(.dayStart, "dayStart rule-\(ruleTag): skipped (missing/disabled/paused)")
             return
         }
         confirmDayStart(ruleID: ruleID, kind: snapshot.kind, now: now, calendar: calendar)
@@ -37,18 +37,18 @@ struct LimitEnforcement {
             break
         case .openLimit:
             if scheduledToday {
-                Diag.log(.dayStart, .event, "dayStart rule-\(rid) openLimit: shield (proactive gate, scheduled today)")
+                Diag.log(.dayStart, .event, "dayStart rule-\(ruleTag) openLimit: shield (proactive gate, scheduled today)")
                 shield(snapshot)
             } else {
-                Diag.log(.dayStart, "dayStart rule-\(rid) openLimit: clear (not scheduled today)")
+                Diag.log(.dayStart, "dayStart rule-\(ruleTag) openLimit: clear (not scheduled today)")
                 shields.clearShield(ruleID: ruleID)
             }
         case .timeLimit:
             if snapshot.limitReached(given: usage, at: now), scheduledToday {
-                Diag.log(.dayStart, .event, "dayStart rule-\(rid) timeLimit: shield (limit already reached, used=\(usage.minutesUsed)/\(snapshot.dailyLimitMinutes))")
+                Diag.log(.dayStart, .event, "dayStart rule-\(ruleTag) timeLimit: shield (limit already reached, used=\(usage.minutesUsed)/\(snapshot.dailyLimitMinutes))")
                 shield(snapshot)
             } else {
-                Diag.log(.dayStart, "dayStart rule-\(rid) timeLimit: clear (used=\(usage.minutesUsed)/\(snapshot.dailyLimitMinutes) scheduledToday=\(scheduledToday))")
+                Diag.log(.dayStart, "dayStart rule-\(ruleTag) timeLimit: clear (used=\(usage.minutesUsed)/\(snapshot.dailyLimitMinutes) scheduledToday=\(scheduledToday))")
                 shields.clearShield(ruleID: ruleID)
             }
         }
@@ -67,13 +67,13 @@ struct LimitEnforcement {
             // was correctly skipped (vs the new-day zero below).
             Diag.log(
                 .dayStart,
-                "confirm rule-\(ruleID.uuidString.prefix(8)): skipped (same-day re-fire, start already \(LogTimestamp.string(from: today)))")
+                "confirm rule-\(ruleID.logTag): skipped (same-day re-fire, start already \(LogTimestamp.string(from: today)))")
             return
         }
         dayStarts.setConfirmedStart(today, for: ruleID)
         Diag.log(
             .dayStart, .event,
-            "confirm rule-\(ruleID.uuidString.prefix(8)) start=\(LogTimestamp.string(from: today))"
+            "confirm rule-\(ruleID.logTag) start=\(LogTimestamp.string(from: today))"
                 + (kind == .timeLimit ? " (zeroed today's ledger)" : ""))
         if kind == .timeLimit {
             ledger.setUsage(RuleUsageDTO(), for: ruleID, onDayContaining: now, calendar: calendar)
@@ -91,12 +91,12 @@ struct LimitEnforcement {
         _ minutes: Int, ruleID: UUID, activityDayKey: String? = nil,
         now: Date = .now, calendar: Calendar = .current
     ) {
-        let rid = ruleID.uuidString.prefix(8)
+        let ruleTag = ruleID.logTag
         let today = UsageLedger.dayKey(for: now, calendar: calendar)
         if let activityDayKey, activityDayKey != today {
             Diag.log(
                 .usage,
-                "drop rule-\(rid): stale day-keyed flush (activity=\(activityDayKey) today=\(today))")
+                "drop rule-\(ruleTag): stale day-keyed flush (activity=\(activityDayKey) today=\(today))")
             return
         }
         // A `minutes-k` checkpoint reports k minutes of *today's* usage, which
@@ -110,31 +110,29 @@ struct LimitEnforcement {
             now.timeIntervalSince(calendar.startOfDay(for: now)) / 60)
         Diag.log(
             .usage, .event,
-            "usageEvent rule-\(rid) minutes=\(minutes) sinceMidnight=\(minutesSinceMidnight)")
+            "usageEvent rule-\(ruleTag) minutes=\(minutes) sinceMidnight=\(minutesSinceMidnight)")
         guard minutes <= minutesSinceMidnight else {
             Diag.log(
                 .usage,
-                "drop rule-\(rid): stale checkpoint minutes=\(minutes) > sinceMidnight=\(minutesSinceMidnight) (late cross-midnight flush)")
+                "drop rule-\(ruleTag): stale checkpoint minutes=\(minutes) > sinceMidnight=\(minutesSinceMidnight) (late cross-midnight flush)")
             return
         }
         // Reject events that arrive before today's interval boundary has been
         // observed — yesterday's batched checkpoints flushed late across midnight.
         guard dayStarts.hasConfirmedStart(for: ruleID, onDayContaining: now, calendar: calendar)
         else {
-            Diag.log(.usage, "drop rule-\(rid): no confirmed day-start yet (pre-boundary flush)")
+            Diag.log(.usage, "drop rule-\(ruleTag): no confirmed day-start yet (pre-boundary flush)")
             return
         }
 
         // Record only for a rule that can actually be active today, so a stale or
         // irrelevant event can't corrupt today's ledger for a rule that isn't.
-        guard let snapshot = snapshots.snapshot(for: ruleID), snapshot.isEnabled,
-              snapshot.kind == .timeLimit,
-              !snapshot.isPaused(at: now),
-              snapshot.isScheduledToday(at: now, calendar: calendar)
+        guard let snapshot = snapshots.snapshot(for: ruleID),
+              snapshot.isEligible(kind: .timeLimit, at: now, calendar: calendar)
         else {
             Diag.log(
                 .usage,
-                "drop rule-\(rid): not eligible today (enabled/timeLimit/unpaused/scheduledToday check failed)")
+                "drop rule-\(ruleTag): not eligible today (enabled/timeLimit/unpaused/scheduledToday check failed)")
             return
         }
         ledger.recordMinutesUsed(minutes, for: ruleID, onDayContaining: now, calendar: calendar)
@@ -142,7 +140,7 @@ struct LimitEnforcement {
         let reached = snapshot.limitReached(given: usage, at: now)
         Diag.log(
             .usage, .event,
-            "record rule-\(rid) used=\(usage.minutesUsed)/\(snapshot.dailyLimitMinutes) limitReached=\(reached)")
+            "record rule-\(ruleTag) used=\(usage.minutesUsed)/\(snapshot.dailyLimitMinutes) limitReached=\(reached)")
         if reached {
             shield(snapshot)
         }
@@ -154,17 +152,15 @@ struct LimitEnforcement {
         ruleID: UUID, now: Date = .now, calendar: Calendar = .current
     ) {
         sessions.endSession(for: ruleID)
-        guard let snapshot = snapshots.snapshot(for: ruleID), snapshot.isEnabled,
-              snapshot.kind == .openLimit,
-              !snapshot.isPaused(at: now),
-              snapshot.isScheduledToday(at: now, calendar: calendar)
+        guard let snapshot = snapshots.snapshot(for: ruleID),
+              snapshot.isEligible(kind: .openLimit, at: now, calendar: calendar)
         else {
             Diag.log(
                 .session,
-                "openSessionEnded rule-\(ruleID.uuidString.prefix(8)): no re-shield (ineligible)")
+                "openSessionEnded rule-\(ruleID.logTag): no re-shield (ineligible)")
             return
         }
-        Diag.log(.session, .event, "openSessionEnded rule-\(ruleID.uuidString.prefix(8)): re-shield")
+        Diag.log(.session, .event, "openSessionEnded rule-\(ruleID.logTag): re-shield")
         shield(snapshot)
     }
 
@@ -176,18 +172,17 @@ struct LimitEnforcement {
     func handlePauseEnded(
         ruleID: UUID, now: Date = .now, calendar: Calendar = .current
     ) {
-        let rid = ruleID.uuidString.prefix(8)
-        guard let snapshot = snapshots.snapshot(for: ruleID), snapshot.isEnabled,
-              snapshot.kind == .timeLimit, !snapshot.isPaused(at: now),
-              snapshot.isScheduledToday(at: now, calendar: calendar),
+        let ruleTag = ruleID.logTag
+        guard let snapshot = snapshots.snapshot(for: ruleID),
+              snapshot.isEligible(kind: .timeLimit, at: now, calendar: calendar),
               snapshot.limitReached(
                 given: ledger.usage(for: ruleID, onDayContaining: now, calendar: calendar), at: now)
         else {
-            Diag.log(.scheduler, "pauseEnded rule-\(rid): clear (ineligible/under budget/still paused)")
+            Diag.log(.scheduler, "pauseEnded rule-\(ruleTag): clear (ineligible/under budget/still paused)")
             shields.clearShield(ruleID: ruleID)
             return
         }
-        Diag.log(.scheduler, .event, "pauseEnded rule-\(rid): re-shield (budget spent)")
+        Diag.log(.scheduler, .event, "pauseEnded rule-\(ruleTag): re-shield (budget spent)")
         shield(snapshot)
     }
 
@@ -197,19 +192,19 @@ struct LimitEnforcement {
     func handleOpenRequest(
         ruleID: UUID, now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
-        let rid = ruleID.uuidString.prefix(8)
+        let ruleTag = ruleID.logTag
         guard let snapshot = snapshots.snapshot(for: ruleID), snapshot.isEnabled,
               snapshot.kind == .openLimit,
               !snapshot.isPaused(at: now)
         else {
-            Diag.log(.session, "openRequest rule-\(rid): denied (ineligible)")
+            Diag.log(.session, "openRequest rule-\(ruleTag): denied (ineligible)")
             return false
         }
         let usage = ledger.usage(for: ruleID, onDayContaining: now, calendar: calendar)
         guard !snapshot.limitReached(given: usage, at: now) else {
             Diag.log(
                 .session, .event,
-                "openRequest rule-\(rid): denied (opens spent \(usage.opensUsed)/\(snapshot.maxOpens))")
+                "openRequest rule-\(ruleTag): denied (opens spent \(usage.opensUsed)/\(snapshot.maxOpens))")
             return false
         }
         let updated = ledger.recordOpen(for: ruleID, onDayContaining: now, calendar: calendar)
@@ -223,7 +218,7 @@ struct LimitEnforcement {
         }
         Diag.log(
             .session, .event,
-            "openRequest rule-\(rid): granted (open \(updated.opensUsed)/\(snapshot.maxOpens), ~\(MonitoringPlan.openSessionMinutes)m session)")
+            "openRequest rule-\(ruleTag): granted (open \(updated.opensUsed)/\(snapshot.maxOpens), ~\(MonitoringPlan.openSessionMinutes)m session)")
         return true
     }
 

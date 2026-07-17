@@ -73,7 +73,7 @@ struct DiagnosticLogTests {
     @Test("Timestamp prefix of a line equals the rendered timestamp")
     func timestampPrefix() {
         let entry = LogEntry(
-            date: fixedDate, level: .debug, source: .report, category: .report, message: "x",
+            date: fixedDate, level: .debug, source: .report, category: .monitor, message: "x",
             file: "Report.swift", line: 1, function: "f()")
         #expect(LogTimestamp.prefix(ofLine: entry.formatted) == "2026-06-22T14:03:11.482Z")
     }

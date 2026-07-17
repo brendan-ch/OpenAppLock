@@ -400,26 +400,13 @@ nonisolated final class DeviceActivityCenterMonitor: ActivityMonitoring, @unchec
     func startDailyMonitoring(
         name: String, selectionData: Data?, eventMinutes: [String: Int]
     ) throws {
-        let selection = AppSelectionCodec.decode(selectionData)
         let schedule = DeviceActivitySchedule(
             intervalStart: DateComponents(hour: 0, minute: 0),
             intervalEnd: DateComponents(hour: 23, minute: 59),
             repeats: true
         )
-        let events = Dictionary(
-            uniqueKeysWithValues: eventMinutes.map { eventName, minutes in
-                (
-                    DeviceActivityEvent.Name(eventName),
-                    DeviceActivityEvent(
-                        applications: selection.applicationTokens,
-                        categories: selection.categoryTokens,
-                        webDomains: selection.webDomainTokens,
-                        threshold: DateComponents(minute: minutes),
-                        includesPastActivity: true
-                    )
-                )
-            }
-        )
+        let events = DeviceActivityFactory.thresholdEvents(
+            selectionData: selectionData, eventMinutes: eventMinutes)
         try center.startMonitoring(DeviceActivityName(name), during: schedule, events: events)
     }
 
@@ -437,13 +424,7 @@ nonisolated final class DeviceActivityCenterMonitor: ActivityMonitoring, @unchec
     }
 
     func startOneShotMonitoring(name: String, from start: Date, to end: Date) throws {
-        let calendar = Calendar.current
-        let components: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
-        let schedule = DeviceActivitySchedule(
-            intervalStart: calendar.dateComponents(components, from: start),
-            intervalEnd: calendar.dateComponents(components, from: end),
-            repeats: false
-        )
+        let schedule = DeviceActivityFactory.nonRepeatingSchedule(from: start, to: end)
         try center.startMonitoring(DeviceActivityName(name), during: schedule)
     }
 
@@ -451,28 +432,9 @@ nonisolated final class DeviceActivityCenterMonitor: ActivityMonitoring, @unchec
         name: String, from start: Date, to end: Date,
         selectionData: Data?, eventMinutes: [String: Int]
     ) throws {
-        let calendar = Calendar.current
-        let components: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
-        let schedule = DeviceActivitySchedule(
-            intervalStart: calendar.dateComponents(components, from: start),
-            intervalEnd: calendar.dateComponents(components, from: end),
-            repeats: false
-        )
-        let selection = AppSelectionCodec.decode(selectionData)
-        let events = Dictionary(
-            uniqueKeysWithValues: eventMinutes.map { eventName, minutes in
-                (
-                    DeviceActivityEvent.Name(eventName),
-                    DeviceActivityEvent(
-                        applications: selection.applicationTokens,
-                        categories: selection.categoryTokens,
-                        webDomains: selection.webDomainTokens,
-                        threshold: DateComponents(minute: minutes),
-                        includesPastActivity: true
-                    )
-                )
-            }
-        )
+        let schedule = DeviceActivityFactory.nonRepeatingSchedule(from: start, to: end)
+        let events = DeviceActivityFactory.thresholdEvents(
+            selectionData: selectionData, eventMinutes: eventMinutes)
         try center.startMonitoring(DeviceActivityName(name), during: schedule, events: events)
     }
 

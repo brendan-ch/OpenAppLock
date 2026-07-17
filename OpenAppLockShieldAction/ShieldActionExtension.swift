@@ -63,7 +63,7 @@ final class ShieldActionExtension: ShieldActionDelegate {
     }
 
     private func grantOpen(ruleID: UUID) -> ShieldActionResponse {
-        Diag.log(.session, .event, "shieldAction Open pressed rule-\(ruleID.uuidString.prefix(8))")
+        Diag.log(.session, .event, "shieldAction Open pressed rule-\(ruleID.logTag)")
         let enforcement = LimitEnforcement(
             snapshots: RuleSnapshotUserDefaultsStore(),
             ledger: UsageLedger(),
@@ -94,12 +94,7 @@ final class ShieldActionExtension: ShieldActionDelegate {
             let end = calendar.date(
                 byAdding: .minute, value: MonitoringPlan.openSessionMinutes + 1, to: now)
         else { return }
-        let components: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
-        let schedule = DeviceActivitySchedule(
-            intervalStart: calendar.dateComponents(components, from: now),
-            intervalEnd: calendar.dateComponents(components, from: end),
-            repeats: false
-        )
+        let schedule = DeviceActivityFactory.nonRepeatingSchedule(from: now, to: end, calendar: calendar)
         try? DeviceActivityCenter().startMonitoring(
             DeviceActivityName(MonitoringPlan.sessionActivityName(for: ruleID)),
             during: schedule

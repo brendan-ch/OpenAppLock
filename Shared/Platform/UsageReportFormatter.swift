@@ -53,11 +53,7 @@ nonisolated enum UsageReportFormatter {
         let rows = secondsByName
             .filter { $0.value > 0 }
             .map { AppUsageRow(name: $0.key, seconds: $0.value) }
-            .sorted { lhs, rhs in
-                lhs.seconds != rhs.seconds
-                    ? lhs.seconds > rhs.seconds   // heaviest app first
-                    : lhs.name < rhs.name         // stable tiebreak
-            }
+            .sorted(by: AppUsageRow.heaviestUsageFirst)
         return RuleUsageReportData(total: total, apps: rows)
     }
 }
@@ -77,4 +73,8 @@ nonisolated struct AppUsageRow: Identifiable, Equatable {
     let name: String
     let seconds: Double
     var durationLabel: String { UsageReportFormatter.durationLabel(seconds: seconds) }
+
+    static func heaviestUsageFirst(_ lhs: AppUsageRow, _ rhs: AppUsageRow) -> Bool {
+        lhs.seconds != rhs.seconds ? lhs.seconds > rhs.seconds : lhs.name < rhs.name
+    }
 }

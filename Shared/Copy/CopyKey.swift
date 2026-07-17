@@ -287,6 +287,11 @@ nonisolated enum CopyKey: String, CaseIterable {
     case appListsDeleteConfirmationTitle = "appLists.deleteConfirmationTitle"
     case appListsDeleteConfirmationMessage = "appLists.deleteConfirmationMessage"
 
+    // MARK: - ScreenTimeAccessRequiredView
+    case screenTimeAccessTitle = "screenTimeAccess.title"
+    case screenTimeAccessDescription = "screenTimeAccess.description"
+    case screenTimeAccessOpenSettingsButton = "screenTimeAccess.openSettingsButton"
+
     /// Localized resource — the dedicated `Copy` table (`Shared/Copy.xcstrings`),
     /// `.main` bundle. A non-default table keeps our hand-authored symbolic keys
     /// isolated from Xcode's build-time string extraction, which only ever writes

@@ -1871,6 +1871,39 @@
         }
       }
     },
+    "screenTimeAccess.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAppLock can't block anything without Screen Time access. Turn it back on in Settings to keep your rules working."
+          }
+        }
+      }
+    },
+    "screenTimeAccess.openSettingsButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        }
+      }
+    },
+    "screenTimeAccess.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screen Time Access Needed"
+          }
+        }
+      }
+    },
     "selectionMode.allowOnly" : {
       "extractionState" : "manual",
       "localizations" : {

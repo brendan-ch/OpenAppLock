@@ -17,7 +17,8 @@ extension XCUIApplication {
         seedScenario: String? = nil,
         gitHubURL: String? = nil,
         websiteURL: String? = nil,
-        notificationsAuthorized: Bool = false
+        notificationsAuthorized: Bool = false,
+        screenTimeAccessRevoked: Bool = false
     ) -> XCUIApplication {
         let app = XCUIApplication()
         var arguments = ["-ui-testing"]
@@ -33,6 +34,9 @@ extension XCUIApplication {
         }
         if notificationsAuthorized {
             arguments.append("-notifications-authorized")
+        }
+        if screenTimeAccessRevoked {
+            arguments.append("-screen-time-access-revoked")
         }
         app.launchArguments = arguments
         app.launch()

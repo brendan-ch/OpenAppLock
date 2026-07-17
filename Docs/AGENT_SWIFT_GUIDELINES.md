@@ -38,6 +38,19 @@ Follow the [Apple API Design Guidelines](https://www.swift.org/documentation/api
 - Name methods and properties for their roles, not their types.
 - Use `static let` for constants over global constants.
 
+**Prefer descriptive names over comments.** Comments should be a relative
+rarity in this codebase — before writing one, try renaming instead. Naming
+must be unambiguous enough that an agent reading only the identifiers, with no
+surrounding comments, can correctly infer behavior. If a name needs a comment
+to not be confusing, rename it rather than annotate it.
+
+> **Project note:** this does not apply to the feature-spec doc comments
+> indexed by AGENTS.md → "Rules feature map" — those `///` comments *are* the
+> behavior spec, not restatements of what the code already says, and remain
+> required (kept in sync with the code in the same commit, per the Workflow
+> expectations in AGENTS.md). The rarity guidance targets ordinary inline/
+> implementation comments, not that spec layer.
+
 ### Error handling
 
 Use typed throws (Swift 6+) and pattern matching:

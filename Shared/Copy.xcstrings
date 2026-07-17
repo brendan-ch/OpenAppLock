@@ -1877,7 +1877,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OpenAppLock can't block anything without Screen Time access. Turn it back on in Settings to keep your rules working."
+            "value" : "OpenAppLock can’t block anything without Screen Time access. Turn it back on in Settings to keep your rules working."
           }
         }
       }

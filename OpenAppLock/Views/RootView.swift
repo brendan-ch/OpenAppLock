@@ -5,8 +5,11 @@
 
 import SwiftUI
 
-/// Gates the app on onboarding: until the user has walked through the welcome
-/// and Screen Time permission steps, nothing else is reachable.
+/// Gates the app on onboarding and on Screen Time authorization: until the
+/// user has walked through the welcome and permission steps, nothing else is
+/// reachable, and if access is later revoked from system Settings,
+/// `MainView` is replaced by `ScreenTimeAccessRequiredView` until access is
+/// restored. See `RootDestination.resolve` for the exact rule.
 struct RootView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Environment(ScreenTimeAuthorization.self) private var authorization
@@ -15,12 +18,24 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if hasCompletedOnboarding {
-                MainView()
-            } else {
+            switch RootDestination.resolve(
+                hasCompletedOnboarding: hasCompletedOnboarding,
+                authorizationStatus: authorization.status
+            ) {
+            case .onboarding:
                 OnboardingView {
                     hasCompletedOnboarding = true
                 }
+            case .screenTimeAccessRequired:
+                ScreenTimeAccessRequiredView()
+                    .onAppear {
+                        Diag.log(
+                            .lifecycle,
+                            "screen time authorization not approved — showing access-required overlay"
+                        )
+                    }
+            case .main:
+                MainView()
             }
         }
         // Keep authorization state current app-wide: refresh at launch and on

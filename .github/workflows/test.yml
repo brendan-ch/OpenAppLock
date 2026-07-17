@@ -9,7 +9,7 @@ jobs:
   test:
     name: Test on ${{ matrix.device }}
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     strategy:
       # Run every device leg to completion: an iPad failure shouldn't hide the

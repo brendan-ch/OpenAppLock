@@ -1,6 +1,6 @@
 # Screen Time Access Required Overlay Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. **The controlling session, not the implementer subagent, runs builds/tests via the Xcode MCP tools** (`BuildProject`, `RunSomeTests`, `RunAllTests`) between tasks — subagents cannot reach the Xcode MCP. Each task also gets an opus `code-reviewer` + `security-reviewer` pass (dispatched in parallel) before moving to the next task.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. **Build/test each step yourself** — prefer the Xcode MCP tools (`BuildProject`, `RunSomeTests`, `RunAllTests`) if connected in your session, otherwise fall back to `xcodebuild` on the command line (exact scheme/destination pattern and simulator-selection rule in `AGENTS.md`'s "Build & test" section — pick a simulator that isn't already booted, per the global mobile-simulators rule, before running). Implementer subagents will not have the Xcode MCP connected (it's controller-only), so they should go straight to `xcodebuild` rather than asking the controller to run it for them. Each task also gets an opus `code-reviewer` + `security-reviewer` pass (dispatched in parallel) before moving to the next task.
 
 **Goal:** Show a full-screen block with a link to system Settings whenever Screen Time access was granted during onboarding but is later revoked, instead of the app silently doing nothing.
 
@@ -87,7 +87,9 @@ struct RootDestinationTests {
 
 - [ ] **Step 2: Run the test to verify it fails**
 
-Run via the Xcode MCP `RunSomeTests` tool, targeting `OpenAppLockTests/RootDestinationTests`.
+Run via Xcode MCP `RunSomeTests` if connected, otherwise:
+`xcodebuild test -project OpenAppLock.xcodeproj -scheme OpenAppLock -destination 'platform=iOS Simulator,id=<UDID>' -only-testing:OpenAppLockTests/RootDestinationTests`
+(pick `<UDID>` per AGENTS.md's Build & test simulator-selection rule).
 Expected: FAIL — compile error, `RootDestination` does not exist.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -124,7 +126,9 @@ enum RootDestination: Equatable {
 
 - [ ] **Step 4: Run the test to verify it passes**
 
-Run via the Xcode MCP `RunSomeTests` tool, targeting `OpenAppLockTests/RootDestinationTests`.
+Run via Xcode MCP `RunSomeTests` if connected, otherwise:
+`xcodebuild test -project OpenAppLock.xcodeproj -scheme OpenAppLock -destination 'platform=iOS Simulator,id=<UDID>' -only-testing:OpenAppLockTests/RootDestinationTests`
+(pick `<UDID>` per AGENTS.md's Build & test simulator-selection rule).
 Expected: PASS, all 6 cases.
 
 - [ ] **Step 5: Commit**
@@ -283,7 +287,9 @@ struct ScreenTimeAccessRequiredView: View {
 
 - [ ] **Step 4: Build to verify it compiles**
 
-Run via the Xcode MCP `BuildProject` tool (simulator destination).
+Run via Xcode MCP `BuildProject` if connected, otherwise:
+`xcodebuild build -project OpenAppLock.xcodeproj -scheme OpenAppLock -destination 'platform=iOS Simulator,id=<UDID>'`
+(see AGENTS.md's Build & test section).
 Expected: build succeeds, no errors/warnings from the new file.
 
 - [ ] **Step 5: Commit**
@@ -369,12 +375,16 @@ struct RootView: View {
 
 - [ ] **Step 2: Build to verify it compiles**
 
-Run via the Xcode MCP `BuildProject` tool (simulator destination).
+Run via Xcode MCP `BuildProject` if connected, otherwise:
+`xcodebuild build -project OpenAppLock.xcodeproj -scheme OpenAppLock -destination 'platform=iOS Simulator,id=<UDID>'`
+(see AGENTS.md's Build & test section).
 Expected: build succeeds.
 
 - [ ] **Step 3: Run the full unit test suite**
 
-Run via the Xcode MCP `RunAllTests` tool (unit test target only, or full suite — implementer's call given time budget, but at minimum `OpenAppLockTests`).
+Run via Xcode MCP `RunAllTests` if connected, otherwise:
+`xcodebuild test -project OpenAppLock.xcodeproj -scheme OpenAppLock -destination 'platform=iOS Simulator,id=<UDID>' -only-testing:OpenAppLockTests`
+(unit test target; full suite optional given time budget).
 Expected: PASS, no regressions.
 
 - [ ] **Step 4: Commit**
@@ -531,12 +541,14 @@ final class ScreenTimeAccessRequiredUITests: XCTestCase {
 
 - [ ] **Step 5: Run the new UI tests**
 
-Run via the Xcode MCP `RunSomeTests` tool, targeting `OpenAppLockUITests/ScreenTimeAccessRequiredUITests`, on an iOS simulator destination.
+Run via Xcode MCP `RunSomeTests` if connected, otherwise:
+`xcodebuild test -project OpenAppLock.xcodeproj -scheme OpenAppLock -destination 'platform=iOS Simulator,id=<UDID>' -only-testing:OpenAppLockUITests/ScreenTimeAccessRequiredUITests`
 Expected: both tests PASS.
 
 - [ ] **Step 6: Run the full test suite**
 
-Run via the Xcode MCP `RunAllTests` tool.
+Run via Xcode MCP `RunAllTests` if connected, otherwise:
+`xcodebuild test -project OpenAppLock.xcodeproj -scheme OpenAppLock -destination 'platform=iOS Simulator,id=<UDID>'`
 Expected: PASS, no regressions (watch in particular for the flaky suites noted in project memory — `RuleSchedulerTests`/`NotificationSettingsUITests` — re-run once before treating a failure there as real).
 
 - [ ] **Step 7: Manual on-device/simulator validation**

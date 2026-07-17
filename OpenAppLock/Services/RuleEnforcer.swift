@@ -149,8 +149,8 @@ final class RuleEnforcer {
     private func expireStalePauseIfNeeded(_ rule: BlockingRule, at now: Date) {
         guard let pausedUntil = rule.pausedUntil, pausedUntil <= now else { return }
         rule.pausedUntil = nil
-        let rid = rule.id.uuidString.prefix(8)
-        Diag.log(.enforcer, "rule-\(rid): pause expired, re-armed")
+        let ruleTag = rule.id.logTag
+        Diag.log(.enforcer, "rule-\(ruleTag): pause expired, re-armed")
     }
 
     /// 4c safety net: a skipped monitor `intervalDidStart` would block usage
@@ -163,8 +163,8 @@ final class RuleEnforcer {
             dayStarts.confirmedStart(for: rule.id) != calendar.startOfDay(for: now)
         else { return }
         dayStarts.setConfirmedStart(calendar.startOfDay(for: now), for: rule.id)
-        let rid = rule.id.uuidString.prefix(8)
-        Diag.log(.dayStart, "rule-\(rid): foreground confirmed today's start (safety net)")
+        let ruleTag = rule.id.logTag
+        Diag.log(.dayStart, "rule-\(ruleTag): foreground confirmed today's start (safety net)")
     }
 
     /// Publishes the new actively-blocking set and logs when it changes. "Blocked
@@ -277,10 +277,10 @@ actor RuleEnforcementEngine {
         let isBlocking = status.isActive
         logTimeLimitDecision(snapshot, usage: usage, isBlocking: isBlocking, at: now)
         guard isBlocking || shouldGateOpenLimit(snapshot, at: now, calendar: calendar) else {
-            let rid = snapshot.id.uuidString.prefix(8)
+            let ruleTag = snapshot.id.logTag
             Diag.log(
                 .enforcer,
-                "rule-\(rid) \(snapshot.kindRaw): not shielded (status=\(status) enabled=\(snapshot.isEnabled))")
+                "rule-\(ruleTag) \(snapshot.kindRaw): not shielded (status=\(status) enabled=\(snapshot.isEnabled))")
             return (isBlocking, false)
         }
         applyShield(for: snapshot, status: status, usage: usage, isBlocking: isBlocking)
@@ -292,10 +292,10 @@ actor RuleEnforcementEngine {
         _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO?, isBlocking: Bool, at now: Date
     ) {
         guard snapshot.kind == .timeLimit, let usage else { return }
-        let rid = snapshot.id.uuidString.prefix(8)
+        let ruleTag = snapshot.id.logTag
         Diag.log(
             .usage,
-            "timeLimit rule-\(rid) used=\(usage.minutesUsed)/\(snapshot.dailyLimitMinutes) blocking=\(isBlocking)")
+            "timeLimit rule-\(ruleTag) used=\(usage.minutesUsed)/\(snapshot.dailyLimitMinutes) blocking=\(isBlocking)")
     }
 
     /// Records the rule's shield and writes it. Allow Only is a Schedule-only
@@ -304,10 +304,10 @@ actor RuleEnforcementEngine {
     private func applyShield(
         for snapshot: RuleSnapshotDTO, status: RuleStatus, usage: RuleUsageDTO?, isBlocking: Bool
     ) {
-        let rid = snapshot.id.uuidString.prefix(8)
+        let ruleTag = snapshot.id.logTag
         Diag.log(
             .enforcer, .event,
-            "rule-\(rid) \(snapshot.kindRaw): shield (\(isBlocking ? "active status=\(status)" : "open-limit gate")\(usage.map { ", used=\($0.minutesUsed)/opens=\($0.opensUsed)" } ?? ""))")
+            "rule-\(ruleTag) \(snapshot.kindRaw): shield (\(isBlocking ? "active status=\(status)" : "open-limit gate")\(usage.map { ", used=\($0.minutesUsed)/opens=\($0.opensUsed)" } ?? ""))")
         shields.applyShield(
             ruleID: snapshot.id,
             selectionData: snapshot.selectionData,

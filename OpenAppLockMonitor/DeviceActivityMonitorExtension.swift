@@ -99,9 +99,10 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
     /// A per-day block or warn activity ended at midnight: register the same
     /// activity kind for the rule's next scheduled day, so background enforcement
-    /// continues without a foreground sync. Best-effort — the foreground N=2
-    /// arming (`RuleScheduler.dayPlans`) is the safety net. See the day-keyed
-    /// enforcement spec §5. Device-only: the simulator delivers no callbacks.
+    /// continues without a foreground sync. Best-effort; `RuleScheduler.dayPlans`
+    /// only arms the current-or-next scheduled day (N = 1), so this self-arm is
+    /// what covers the day after. See the day-keyed enforcement spec §5.
+    /// Device-only: the simulator delivers no callbacks.
     private func reArmNextScheduledDay(endedActivity name: String) {
         let isWarn = MonitoringPlan.ruleID(fromWarnActivityName: name) != nil
         guard
@@ -133,7 +134,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         else {
             Diag.log(
                 .scheduler,
-                "self-arm rule-\(ruleID.uuidString.prefix(8)): no next scheduled day after \(endedKey)")
+                "self-arm rule-\(ruleID.logTag): no next scheduled day after \(endedKey)")
             return
         }
 
@@ -143,7 +144,7 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             ? MonitoringPlan.warnActivityName(for: ruleID, dayKey: nextKey)
             : MonitoringPlan.dailyActivityName(for: ruleID, dayKey: nextKey)
         let center = DeviceActivityCenter()
-        // The foreground net (N=2) may already have armed the next scheduled day
+        // RuleScheduler.dayPlans (N = 1) may already have armed the next scheduled day
         // from its own midnight; restarting it here is a needless duplicate
         // start (EC7: `includesPastActivity` would backfill any midnight-to-now
         // gap anyway, since `nextStart` is a round hour). Only arm when it isn't
@@ -152,25 +153,10 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             Diag.log(.scheduler, "self-arm \(nextName): already armed, skipping")
             return
         }
-        let components: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
-        let schedule = DeviceActivitySchedule(
-            intervalStart: calendar.dateComponents(components, from: nextStart),
-            intervalEnd: calendar.dateComponents(components, from: nextEnd),
-            repeats: false)
-        let selection = AppSelectionCodec.decode(snapshot.selectionData)
-        let deviceEvents = Dictionary(
-            uniqueKeysWithValues: events.map { eventName, minutes in
-                (
-                    DeviceActivityEvent.Name(eventName),
-                    DeviceActivityEvent(
-                        applications: selection.applicationTokens,
-                        categories: selection.categoryTokens,
-                        webDomains: selection.webDomainTokens,
-                        threshold: DateComponents(minute: minutes),
-                        includesPastActivity: true
-                    )
-                )
-            })
+        let schedule = DeviceActivityFactory.nonRepeatingSchedule(
+            from: nextStart, to: nextEnd, calendar: calendar)
+        let deviceEvents = DeviceActivityFactory.thresholdEvents(
+            selectionData: snapshot.selectionData, eventMinutes: events)
         do {
             try center.startMonitoring(
                 DeviceActivityName(nextName), during: schedule, events: deviceEvents)

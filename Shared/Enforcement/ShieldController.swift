@@ -61,11 +61,11 @@ nonisolated final class ManagedSettingsShieldController: ShieldApplying, @unchec
         track(ruleID: ruleID)
         Diag.log(
             .shield, .event,
-            "apply rule-\(ruleID.uuidString.prefix(8)) mode=\(mode) apps=\(selection.applicationTokens.count) cats=\(selection.categoryTokens.count) web=\(selection.webDomainTokens.count)")
+            "apply rule-\(ruleID.logTag) mode=\(mode) apps=\(selection.applicationTokens.count) cats=\(selection.categoryTokens.count) web=\(selection.webDomainTokens.count)")
     }
 
     func clearShield(ruleID: UUID) {
-        Diag.log(.shield, .event, "clear rule-\(ruleID.uuidString.prefix(8))")
+        Diag.log(.shield, .event, "clear rule-\(ruleID.logTag)")
         store(for: ruleID).clearAllSettings()
         untrack(ruleID: ruleID)
     }

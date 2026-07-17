@@ -41,21 +41,20 @@ nonisolated extension RuleSnapshotDTO {
     ) -> RuleActivation {
         guard isEnabled else { return .inactive(nextStart: nil) }
 
-        // When would this rule's current block end, if it is blocking now?
-        let blockEnd: Date?
+        let currentBlockEnd: Date?
         switch kind {
         case .schedule:
-            blockEnd = schedule.activeWindow(containing: now, calendar: calendar)?.end
+            currentBlockEnd = schedule.activeWindow(containing: now, calendar: calendar)?.end
         case .timeLimit, .openLimit:
             if let usage, isScheduledToday(at: now, calendar: calendar),
                limitReached(given: usage, at: now) {
-                blockEnd = calendar.nextMidnight(after: now)
+                currentBlockEnd = calendar.nextMidnight(after: now)
             } else {
-                blockEnd = nil
+                currentBlockEnd = nil
             }
         }
 
-        guard let end = blockEnd else {
+        guard let end = currentBlockEnd else {
             return .inactive(nextStart: schedule.nextStart(after: now, calendar: calendar))
         }
         // A pause only surfaces when the rule would otherwise be blocking, and

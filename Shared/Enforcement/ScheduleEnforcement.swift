@@ -22,10 +22,10 @@ struct ScheduleEnforcement {
         guard let snapshot = snapshots.snapshot(for: ruleID), snapshot.kind == .schedule else {
             return
         }
-        let rid = ruleID.uuidString.prefix(8)
+        let ruleTag = ruleID.logTag
         if snapshot.isEnabled, !snapshot.isPaused(at: now),
            snapshot.schedule.isActive(at: now, calendar: calendar) {
-            Diag.log(.scheduler, .event, "schedule rule-\(rid): window active -> shield")
+            Diag.log(.scheduler, .event, "schedule rule-\(ruleTag): window active -> shield")
             shields.applyShield(
                 ruleID: snapshot.id,
                 selectionData: snapshot.selectionData,
@@ -34,7 +34,7 @@ struct ScheduleEnforcement {
         } else {
             Diag.log(
                 .scheduler,
-                "schedule rule-\(rid): window inactive -> clear (enabled=\(snapshot.isEnabled) paused=\(snapshot.isPaused(at: now)))")
+                "schedule rule-\(ruleTag): window inactive -> clear (enabled=\(snapshot.isEnabled) paused=\(snapshot.isPaused(at: now)))")
             shields.clearShield(ruleID: snapshot.id)
         }
     }

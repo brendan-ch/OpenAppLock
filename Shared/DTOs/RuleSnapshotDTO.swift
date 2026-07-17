@@ -61,6 +61,15 @@ nonisolated struct RuleSnapshotDTO: Codable, Equatable {
         guard let pausedUntil else { return false }
         return pausedUntil > now
     }
+
+    /// Whether this rule is currently eligible to react to an event of the given
+    /// kind: enabled, matching kind, not paused, and scheduled today. Shared by
+    /// `LimitEnforcement`'s per-event handlers so the four-part check can't drift
+    /// between them.
+    func isEligible(kind: RuleKind, at now: Date, calendar: Calendar) -> Bool {
+        isEnabled && self.kind == kind && !isPaused(at: now)
+            && isScheduledToday(at: now, calendar: calendar)
+    }
 }
 
 nonisolated extension RuleSnapshotDTO {

@@ -23,7 +23,7 @@ nonisolated enum RulePolicy {
         _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
-        snapshot.hardMode && snapshot.activation(usage: usage, at: now, calendar: calendar).isBlocking
+        UninstallProtectionPolicy.isHardLocked(snapshot, usage: usage, at: now, calendar: calendar)
     }
 
     static func canEdit(
@@ -78,9 +78,8 @@ nonisolated enum RulePolicy {
         snapshots: [RuleSnapshotDTO], usageFor: (RuleSnapshotDTO) -> RuleUsageDTO? = { _ in nil },
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
-        snapshots.contains {
-            isHardLocked($0, usage: usageFor($0), at: now, calendar: calendar)
-        }
+        UninstallProtectionPolicy.isAnyHardLocked(
+            snapshots: snapshots, usageFor: usageFor, at: now, calendar: calendar)
     }
 
     /// App lists feed active shields, so while any hard-mode rule is actively
@@ -113,7 +112,8 @@ nonisolated enum RulePolicy {
         usageFor: (RuleSnapshotDTO) -> RuleUsageDTO? = { _ in nil },
         at now: Date = .now, calendar: Calendar = .current
     ) -> Bool {
-        enabled && isAnyHardLocked(snapshots: snapshots, usageFor: usageFor, at: now, calendar: calendar)
+        UninstallProtectionPolicy.shouldDenyAppRemoval(
+            snapshots: snapshots, enabled: enabled, usageFor: usageFor, at: now, calendar: calendar)
     }
 
     /// Temporarily pauses the rule's current block for `temporaryPauseMinutes`.

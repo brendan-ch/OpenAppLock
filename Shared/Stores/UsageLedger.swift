@@ -60,7 +60,7 @@ nonisolated final class UsageLedger: UsageReading, @unchecked Sendable {
         setUsage(usage, for: ruleID, onDayContaining: date, calendar: calendar)
         Diag.log(
             .usage,
-            "ledger.minutes rule-\(ruleID.uuidString.prefix(8)) \(prior)->\(usage.minutesUsed) (event=\(minutes))")
+            "ledger.minutes rule-\(ruleID.logTag) \(prior)->\(usage.minutesUsed) (event=\(minutes))")
     }
 
     @discardableResult
@@ -71,7 +71,7 @@ nonisolated final class UsageLedger: UsageReading, @unchecked Sendable {
         usage.opensUsed += 1
         setUsage(usage, for: ruleID, onDayContaining: date, calendar: calendar)
         Diag.log(
-            .session, "ledger.open rule-\(ruleID.uuidString.prefix(8)) opens=\(usage.opensUsed)")
+            .session, "ledger.open rule-\(ruleID.logTag) opens=\(usage.opensUsed)")
         return usage
     }
 

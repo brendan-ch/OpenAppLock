@@ -5,6 +5,12 @@
 
 import Foundation
 
+/// Short, human-scannable UUID form used to tag log lines (e.g. "rule-a1b2c3d4").
+/// Not for identity — only for grepping/correlating a rule's log lines together.
+nonisolated extension UUID {
+    var logTag: String { String(uuidString.prefix(8)) }
+}
+
 /// Severity of a diagnostic entry. `event` flags the load-bearing
 /// "a block/threshold actually fired" lines for easy grepping; it maps to the
 /// unified log's `.default` (notice) level.
@@ -17,8 +23,8 @@ nonisolated enum LogLevel: String, Sendable, CaseIterable {
 /// The area a log entry belongs to — both the `os.Logger` category (for Console
 /// filtering) and the in-line `[source/category]` tag.
 nonisolated enum LogCategory: String, Sendable {
-    case enforcer, scheduler, shield, monitor, report
-    case usage, dayStart, session, appList, rule, auth, lifecycle
+    case enforcer, scheduler, shield, monitor
+    case usage, dayStart, session, appList, rule, lifecycle
 }
 
 /// Which process wrote an entry, inferred from the running bundle so no
@@ -64,6 +70,8 @@ nonisolated enum LogTimestamp {
 /// Builds and parses per-process daily log filenames: `<source>-<YYYY-MM-DD>.log`.
 enum LogFilename {
     static let fileExtension = "log"
+    static let dayKeyLength = 10
+    static let dayKeySuffixLength = dayKeyLength + 1
 
     static func make(source: String, day: String) -> String {
         "\(source)-\(day).\(fileExtension)"
@@ -76,10 +84,10 @@ enum LogFilename {
         let suffix = ".\(fileExtension)"
         guard filename.hasSuffix(suffix) else { return nil }
         let stem = String(filename.dropLast(suffix.count))
-        guard stem.count > 11 else { return nil }  // "x-YYYY-MM-DD" is 12+
-        let day = String(stem.suffix(10))
+        guard stem.count > dayKeySuffixLength else { return nil }
+        let day = String(stem.suffix(dayKeyLength))
         guard isDayKey(day) else { return nil }
-        let source = String(stem.dropLast(11))  // drop "-YYYY-MM-DD"
+        let source = String(stem.dropLast(dayKeySuffixLength))
         guard !source.isEmpty else { return nil }
         return (source, day)
     }

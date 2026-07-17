@@ -35,6 +35,10 @@ struct LaunchConfiguration: Equatable {
     /// can exercise the authorized state directly. Absent → `.notDetermined`, so
     /// the grant transition is the default path under test.
     var notificationsAuthorized = false
+    /// Forces the mock Screen Time authorization to `.denied` even when onboarding
+    /// is completed, so a UI test can exercise the post-onboarding
+    /// access-required screen. Absent → the existing `.approved` default.
+    var screenTimeAccessRevoked = false
     /// Seeds a few deterministic diagnostic-log entries at launch (UI tests), so
     /// the Settings → Logs export flow has known content to assert against.
     var seedLogs = false
@@ -46,6 +50,7 @@ struct LaunchConfiguration: Equatable {
     static let gitHubURLPrefix = "-github-url="
     static let websiteURLPrefix = "-website-url="
     static let notificationsAuthorizedFlag = "-notifications-authorized"
+    static let screenTimeAccessRevokedFlag = "-screen-time-access-revoked"
     static let seedLogsFlag = "-seed-logs"
 
     static func parse(arguments: [String]) -> LaunchConfiguration {
@@ -64,6 +69,7 @@ struct LaunchConfiguration: Equatable {
         config.gitHubURLOverride = value(in: arguments, prefix: gitHubURLPrefix)
         config.websiteURLOverride = value(in: arguments, prefix: websiteURLPrefix)
         config.notificationsAuthorized = arguments.contains(notificationsAuthorizedFlag)
+        config.screenTimeAccessRevoked = arguments.contains(screenTimeAccessRevokedFlag)
         config.seedLogs = arguments.contains(seedLogsFlag)
         return config
     }

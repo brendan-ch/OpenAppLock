@@ -18,6 +18,10 @@
 DEVELOPMENT_TEAM =
 CODE_SIGN_STYLE = Automatic
 
+// App does not use non-exempt encryption, so skip App Store Connect's export
+// compliance prompt on every upload.
+INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
+
 // --- App metadata links ------------------------------------------------------
 // Outbound URLs surfaced on the Settings screen (GitHub repo + marketing site).
 // They are user-defined build settings so the destinations are configurable

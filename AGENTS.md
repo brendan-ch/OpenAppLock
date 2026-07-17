@@ -166,11 +166,33 @@ cards, photo preset gallery) is recoverable from git history
 
 ## Build & test
 
-- Open `OpenAppLock.xcodeproj` in Xcode; build/test through the **Xcode MCP**
-  tools (`BuildProject`, `RunAllTests`, `RunSomeTests` — get the tab id from
-  `XcodeListWindows`). Make sure the scheme destination is an iOS
-  **simulator**; a physical-device destination makes test runs hang or get
-  cancelled.
+- **Prefer the Xcode MCP** tools (`BuildProject`, `RunAllTests`, `RunSomeTests`
+  — get the tab id from `XcodeListWindows`) when they're connected in the
+  session — they're the richer option (structured results, build-log
+  severity filtering). **The Xcode MCP is not required, though**: if it isn't
+  active in the session (it's session-scoped and never reachable from
+  subagents dispatched via the Agent tool), fall back to `xcodebuild` on the
+  command line instead of skipping validation. Either way, make sure the
+  destination is an iOS **simulator**; a physical-device destination makes
+  test runs hang or get cancelled.
+  - Scheme: `OpenAppLock` (project: `OpenAppLock.xcodeproj`). Example:
+    `xcodebuild test -project OpenAppLock.xcodeproj -scheme OpenAppLock -destination 'platform=iOS Simulator,id=<UDID>' -only-testing:OpenAppLockTests/<SuiteName>`
+    (drop `-only-testing:` for a full run; use `build` instead of `test` for a
+    compile-only check).
+  - Before picking a destination, follow the global mobile-simulators rule:
+    query what's already booted (`xcrun simctl list devices booted`) and
+    target a simulator that **isn't** in that list — either boot a fresh one
+    or reuse one you know is free — so concurrent agents/worktrees never
+    collide on the same instance (a shared booted simulator under concurrent
+    test runs corrupts the result bundle). `xcodebuild test -destination
+    'platform=iOS Simulator,name=<device>,OS=<version>'` will auto-boot a
+    matching simulator if none is running yet.
+  - `xcodebuild test`/`build` never opens the Simulator GUI on its own (same
+    as `fastlane scan`/`snapshot`), so this is headless by default — no
+    extra flag needed. Don't `open -a Simulator` as part of validation.
+  - Command-line `xcodebuild` writes to `~/Library/Developer/Xcode/DerivedData`,
+    which sits outside the sandbox's writable paths — expect to need
+    `dangerouslyDisableSandbox` for the build/test command itself.
 - The project uses Xcode file-system-synchronized groups: adding/removing
   `.swift` files on disk is enough, no pbxproj editing.
 - Family Controls entitlement is configured (`OpenAppLock/OpenAppLock.entitlements`).

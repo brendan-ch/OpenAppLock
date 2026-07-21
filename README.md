@@ -2,7 +2,7 @@
 
 OpenAppLock is a free, open source app blocker for iOS using Apple's Family Controls API. At this time, it has been created primarily with Claude Code.
 
-Join the [TestFlight](https://testflight.apple.com/join/5ymbrmns) beta! The App Store link will come...soon.
+[Download on the App Store](https://apps.apple.com/us/app/openapplock/id6780259647), or join the [TestFlight](https://testflight.apple.com/join/5ymbrmns) beta!
 
 ## Features
 

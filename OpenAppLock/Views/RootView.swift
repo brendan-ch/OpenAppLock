@@ -20,15 +20,12 @@ struct RootView: View {
         Group {
             switch RootDestination.resolve(
                 hasCompletedOnboarding: hasCompletedOnboarding,
-                authorizationStatus: authorization.status,
-                hasResolvedAuthorization: authorization.hasResolvedStatus
+                authorizationStatus: authorization.status
             ) {
             case .onboarding:
                 OnboardingView {
                     hasCompletedOnboarding = true
                 }
-            case .resolvingAuthorization:
-                LaunchResolvingView()
             case .screenTimeAccessRequired:
                 ScreenTimeAccessRequiredView()
                     .onAppear {
@@ -48,12 +45,9 @@ struct RootView: View {
         // status is also mirrored into the app group here, so the scheduler keeps
         // the time-limit warn activity registered without a Settings visit.
         //
-        // Screen Time authorization resolves through `resolveAtLaunch()` rather
-        // than a plain `refresh()`: FamilyControls loads asynchronously and
-        // reports a stale `.notDetermined` right after a cold launch, so this
-        // waits briefly for the real value to settle before the root screen
-        // commits to it — preventing the access-required screen from flashing
-        // when access is actually granted.
+        // `resolveAtLaunch()` polls past the stale `.notDetermined`
+        // FamilyControls reports right after a cold launch so a revoked user's
+        // `.denied` settles promptly (see `RootDestination`).
         .task {
             await authorization.resolveAtLaunch()
             await notificationAuthorization.refresh()

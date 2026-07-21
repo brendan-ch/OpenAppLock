@@ -33,46 +33,38 @@ private final class DelayedSettleAuthorizationProvider: AuthorizationProviding {
 @MainActor
 @Suite("Screen Time authorization launch resolution")
 struct ScreenTimeAuthorizationTests {
-    @Test("A definitive status is resolved immediately at init, without waiting")
-    func definitiveStatusResolvesAtInit() {
+    @Test("A definitive status is available immediately at init")
+    func definitiveStatusAtInit() {
         let approved = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .approved))
-        #expect(approved.hasResolvedStatus)
+        #expect(approved.status == .approved)
 
         let denied = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .denied))
-        #expect(denied.hasResolvedStatus)
-    }
-
-    @Test("A .notDetermined status at init is not yet resolved")
-    func notDeterminedIsUnresolvedAtInit() {
-        let auth = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .notDetermined))
-        #expect(!auth.hasResolvedStatus)
+        #expect(denied.status == .denied)
     }
 
     @Test(
         """
-        resolveAtLaunch waits for the async-settling status to become approved, \
-        so the stale launch-time .notDetermined never routes to access-required
+        resolveAtLaunch settles past the stale launch-time .notDetermined to a \
+        revoked user's real .denied, so the access-required screen can surface \
+        without waiting for the next foreground
         """
     )
-    func resolveAtLaunchWaitsForApproved() async {
-        let provider = DelayedSettleAuthorizationProvider(settledStatus: .approved, settlesAfterReads: 2)
+    func resolveAtLaunchSettlesToDenied() async {
+        let provider = DelayedSettleAuthorizationProvider(settledStatus: .denied, settlesAfterReads: 2)
         let auth = ScreenTimeAuthorization(provider: provider)
         #expect(auth.status == .notDetermined)
-        #expect(!auth.hasResolvedStatus)
 
         await auth.resolveAtLaunch()
 
-        #expect(auth.status == .approved)
-        #expect(auth.hasResolvedStatus)
+        #expect(auth.status == .denied)
     }
 
-    @Test("resolveAtLaunch gives up and marks resolved when the status never settles")
+    @Test("resolveAtLaunch gives up gracefully when the status never settles")
     func resolveAtLaunchGivesUpWhenNeverSettles() async {
         let auth = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .notDetermined))
 
         await auth.resolveAtLaunch()
 
         #expect(auth.status == .notDetermined)
-        #expect(auth.hasResolvedStatus)
     }
 }

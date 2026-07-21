@@ -19,31 +19,63 @@ struct RootDestinationTests {
         ]
     )
     func onboardingIncomplete(status: ScreenTimeAuthorizationStatus) {
-        let destination = RootDestination.resolve(
-            hasCompletedOnboarding: false, authorizationStatus: status
-        )
-        #expect(destination == .onboarding)
-    }
-
-    @Test("Onboarding complete with approved authorization routes to main")
-    func onboardingCompleteApproved() {
-        let destination = RootDestination.resolve(
-            hasCompletedOnboarding: true, authorizationStatus: .approved
-        )
-        #expect(destination == .main)
+        for hasResolvedAuthorization in [true, false] {
+            let destination = RootDestination.resolve(
+                hasCompletedOnboarding: false,
+                authorizationStatus: status,
+                hasResolvedAuthorization: hasResolvedAuthorization
+            )
+            #expect(destination == .onboarding)
+        }
     }
 
     @Test(
-        "Onboarding complete without approval routes to the access-required screen",
+        "Onboarding complete with approved authorization routes to main, even before it resolves"
+    )
+    func onboardingCompleteApproved() {
+        for hasResolvedAuthorization in [true, false] {
+            let destination = RootDestination.resolve(
+                hasCompletedOnboarding: true,
+                authorizationStatus: .approved,
+                hasResolvedAuthorization: hasResolvedAuthorization
+            )
+            #expect(destination == .main)
+        }
+    }
+
+    @Test(
+        "Onboarding complete without approval, once resolved, routes to the access-required screen",
         arguments: [
             ScreenTimeAuthorizationStatus.notDetermined,
             .denied,
         ]
     )
-    func onboardingCompleteNotApproved(status: ScreenTimeAuthorizationStatus) {
+    func onboardingCompleteNotApprovedResolved(status: ScreenTimeAuthorizationStatus) {
         let destination = RootDestination.resolve(
-            hasCompletedOnboarding: true, authorizationStatus: status
+            hasCompletedOnboarding: true,
+            authorizationStatus: status,
+            hasResolvedAuthorization: true
         )
         #expect(destination == .screenTimeAccessRequired)
+    }
+
+    @Test(
+        """
+        Onboarding complete without approval and not yet resolved routes to the \
+        resolving screen, so the stale launch-time status can't flash the \
+        access-required screen before the real value settles
+        """,
+        arguments: [
+            ScreenTimeAuthorizationStatus.notDetermined,
+            .denied,
+        ]
+    )
+    func onboardingCompleteNotApprovedUnresolved(status: ScreenTimeAuthorizationStatus) {
+        let destination = RootDestination.resolve(
+            hasCompletedOnboarding: true,
+            authorizationStatus: status,
+            hasResolvedAuthorization: false
+        )
+        #expect(destination == .resolvingAuthorization)
     }
 }

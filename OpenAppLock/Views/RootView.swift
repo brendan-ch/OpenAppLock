@@ -14,7 +14,7 @@ import SwiftUI
 struct RootView: View {
     /// How long the launch screen is held on a cold launch while the Screen Time
     /// authorization stream settles. Tunable; the UI-test harness passes `.zero`.
-    static let defaultLaunchSettleDelay: Duration = .milliseconds(750)
+    static let defaultLaunchSettleDelay: Duration = .milliseconds(250)
 
     var launchSettleDelay: Duration = RootView.defaultLaunchSettleDelay
 
@@ -69,7 +69,9 @@ struct RootView: View {
         // launch, then commit to whatever it resolved to (see `RootDestination`).
         .task {
             try? await Task.sleep(for: launchSettleDelay)
-            hasCompletedLaunchSettle = true
+            withAnimation {
+                hasCompletedLaunchSettle = true
+            }
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }

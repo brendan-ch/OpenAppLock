@@ -38,23 +38,22 @@ struct RootView: View {
                 MainView()
             }
         }
-        // Keep authorization state current app-wide: refresh at launch and on
-        // every foreground, so permission changes made in the system Settings app
-        // — including a notification revocation — are reflected everywhere, not
-        // only when the user opens a screen that happens to read them. Notification
-        // status is also mirrored into the app group here, so the scheduler keeps
-        // the time-limit warn activity registered without a Settings visit.
+        // Keep authorization state current app-wide. Screen Time authorization
+        // is *observed* rather than polled: FamilyControls loads it
+        // asynchronously and the synchronous getter can stay pinned at
+        // `.notDetermined`, so `startObserving()` drains the published stream to
+        // get the settled value and any later change (see `ScreenTimeAuthorization`).
         //
-        // `resolveAtLaunch()` polls past the stale `.notDetermined`
-        // FamilyControls reports right after a cold launch so a revoked user's
-        // `.denied` settles promptly (see `RootDestination`).
+        // Notification status is still refreshed on launch and every foreground
+        // — and mirrored into the app group — so a change made in Settings is
+        // reflected everywhere and the scheduler keeps the time-limit warn
+        // activity registered without a Settings visit.
         .task {
-            await authorization.resolveAtLaunch()
+            authorization.startObserving()
             await notificationAuthorization.refresh()
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
-            authorization.refresh()
             Task { await notificationAuthorization.refresh() }
         }
     }

@@ -7,64 +7,45 @@ import Testing
 
 @testable import OpenAppLock
 
-/// Provider that reports `.notDetermined` for its first reads and then the
-/// settled status, mimicking how FamilyControls loads authorization
-/// asynchronously and reports a stale `.notDetermined` right after a cold
-/// launch before the real value arrives.
 @MainActor
-private final class DelayedSettleAuthorizationProvider: AuthorizationProviding {
-    private var reads = 0
-    private let settledStatus: ScreenTimeAuthorizationStatus
-    private let settlesAfterReads: Int
-
-    init(settledStatus: ScreenTimeAuthorizationStatus, settlesAfterReads: Int) {
-        self.settledStatus = settledStatus
-        self.settlesAfterReads = settlesAfterReads
-    }
-
-    var currentStatus: ScreenTimeAuthorizationStatus {
-        defer { reads += 1 }
-        return reads >= settlesAfterReads ? settledStatus : .notDetermined
-    }
-
-    func requestAuthorization() async throws {}
-}
-
-@MainActor
-@Suite("Screen Time authorization launch resolution")
+@Suite("Screen Time authorization observation")
 struct ScreenTimeAuthorizationTests {
-    @Test("A definitive status is available immediately at init")
-    func definitiveStatusAtInit() {
-        let approved = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .approved))
-        #expect(approved.status == .approved)
-
-        let denied = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .denied))
-        #expect(denied.status == .denied)
+    @Test("Init seeds status from the provider's current status")
+    func initSeedsFromCurrentStatus() {
+        let auth = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .notDetermined))
+        #expect(auth.status == .notDetermined)
     }
 
     @Test(
         """
-        resolveAtLaunch settles past the stale launch-time .notDetermined to a \
-        revoked user's real .denied, so the access-required screen can surface \
-        without waiting for the next foreground
+        Observing the provider's stream settles status past the stale launch-time \
+        .notDetermined to the real .approved, which the synchronous getter never \
+        delivered
         """
     )
-    func resolveAtLaunchSettlesToDenied() async {
-        let provider = DelayedSettleAuthorizationProvider(settledStatus: .denied, settlesAfterReads: 2)
+    func observationSettlesToApproved() async {
+        let provider = MockAuthorizationProvider(
+            status: .notDetermined,
+            scriptedUpdates: [.notDetermined, .approved]
+        )
         let auth = ScreenTimeAuthorization(provider: provider)
         #expect(auth.status == .notDetermined)
 
-        await auth.resolveAtLaunch()
+        await auth.observeStatusUpdates()
 
-        #expect(auth.status == .denied)
+        #expect(auth.status == .approved)
     }
 
-    @Test("resolveAtLaunch gives up gracefully when the status never settles")
-    func resolveAtLaunchGivesUpWhenNeverSettles() async {
-        let auth = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .notDetermined))
+    @Test("Observing the provider's stream surfaces a revoked user's .denied")
+    func observationSettlesToDenied() async {
+        let provider = MockAuthorizationProvider(
+            status: .notDetermined,
+            scriptedUpdates: [.notDetermined, .denied]
+        )
+        let auth = ScreenTimeAuthorization(provider: provider)
 
-        await auth.resolveAtLaunch()
+        await auth.observeStatusUpdates()
 
-        #expect(auth.status == .notDetermined)
+        #expect(auth.status == .denied)
     }
 }

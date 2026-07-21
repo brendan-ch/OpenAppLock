@@ -95,11 +95,6 @@ final class MockAuthorizationProvider: AuthorizationProviding {
 @Observable
 final class ScreenTimeAuthorization {
     private(set) var status: ScreenTimeAuthorizationStatus = .notDetermined
-
-    /// Whether the provider's stream has delivered a value yet. The stream is
-    /// the source of truth; until it posts, the root shows the main flow so the
-    /// common (approved) launch never flickers — see `RootDestination`.
-    private(set) var hasReceivedStatus = false
     private(set) var lastRequestFailed = false
 
     private let provider: AuthorizationProviding
@@ -125,7 +120,6 @@ final class ScreenTimeAuthorization {
     func observeStatusUpdates() async {
         for await value in provider.statusUpdates {
             status = value
-            hasReceivedStatus = true
         }
     }
 
@@ -138,6 +132,5 @@ final class ScreenTimeAuthorization {
             status = .denied
             lastRequestFailed = true
         }
-        hasReceivedStatus = true
     }
 }

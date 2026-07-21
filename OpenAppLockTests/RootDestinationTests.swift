@@ -19,11 +19,11 @@ struct RootDestinationTests {
         ]
     )
     func onboardingIncomplete(status: ScreenTimeAuthorizationStatus) {
-        for hasReceived in [true, false] {
+        for hasCompletedLaunchSettle in [true, false] {
             let destination = RootDestination.resolve(
                 hasCompletedOnboarding: false,
                 authorizationStatus: status,
-                hasReceivedAuthorizationStatus: hasReceived
+                hasCompletedLaunchSettle: hasCompletedLaunchSettle
             )
             #expect(destination == .onboarding)
         }
@@ -31,9 +31,9 @@ struct RootDestinationTests {
 
     @Test(
         """
-        Onboarding complete but no status received yet routes to main, so the \
-        common approved launch never flashes the access-required screen while the \
-        stream posts its first value
+        Onboarding complete but the launch settle window has not elapsed holds the \
+        launch screen, so a transient launch-time .notDetermined can't flash the \
+        wrong screen before the stream settles
         """,
         arguments: [
             ScreenTimeAuthorizationStatus.notDetermined,
@@ -41,41 +41,41 @@ struct RootDestinationTests {
             .approved,
         ]
     )
-    func onboardingCompleteNoStatusReceived(status: ScreenTimeAuthorizationStatus) {
+    func onboardingCompleteStillSettling(status: ScreenTimeAuthorizationStatus) {
         let destination = RootDestination.resolve(
             hasCompletedOnboarding: true,
             authorizationStatus: status,
-            hasReceivedAuthorizationStatus: false
+            hasCompletedLaunchSettle: false
         )
-        #expect(destination == .main)
+        #expect(destination == .launchSettling)
     }
 
-    @Test("Onboarding complete with a received approved status routes to main")
-    func onboardingCompleteApproved() {
+    @Test("Onboarding complete and settled with approved authorization routes to main")
+    func onboardingCompleteSettledApproved() {
         let destination = RootDestination.resolve(
             hasCompletedOnboarding: true,
             authorizationStatus: .approved,
-            hasReceivedAuthorizationStatus: true
+            hasCompletedLaunchSettle: true
         )
         #expect(destination == .main)
     }
 
     @Test(
         """
-        Onboarding complete with a received non-approved status routes to the \
-        access-required screen — including .notDetermined, which is the decisive \
-        value the system reports when Screen Time is turned off in Settings
+        Onboarding complete and settled with a non-approved status routes to the \
+        access-required screen — including .notDetermined, the decisive value the \
+        system reports when Screen Time is turned off in Settings
         """,
         arguments: [
             ScreenTimeAuthorizationStatus.notDetermined,
             .denied,
         ]
     )
-    func onboardingCompleteNonApproved(status: ScreenTimeAuthorizationStatus) {
+    func onboardingCompleteSettledNonApproved(status: ScreenTimeAuthorizationStatus) {
         let destination = RootDestination.resolve(
             hasCompletedOnboarding: true,
             authorizationStatus: status,
-            hasReceivedAuthorizationStatus: true
+            hasCompletedLaunchSettle: true
         )
         #expect(destination == .screenTimeAccessRequired)
     }

@@ -10,14 +10,19 @@ import Testing
 @MainActor
 @Suite("Screen Time authorization observation")
 struct ScreenTimeAuthorizationTests {
-    @Test("Before the stream posts, no status has been received")
-    func noStatusReceivedBeforeStreamPosts() {
+    @Test("Status starts .notDetermined until the observed stream posts a value")
+    func statusStartsNotDetermined() {
         let auth = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .approved))
-        #expect(!auth.hasReceivedStatus)
+        #expect(auth.status == .notDetermined)
     }
 
-    @Test("Observing the stream delivers approved and marks the status received")
-    func observationDeliversApproved() async {
+    @Test(
+        """
+        Draining the stream lands on its final value, so a transient launch-time \
+        .notDetermined followed by the real .approved resolves to .approved
+        """
+    )
+    func observationResolvesTransientNotDeterminedToApproved() async {
         let provider = MockAuthorizationProvider(
             status: .notDetermined,
             scriptedUpdates: [.notDetermined, .approved]
@@ -27,25 +32,18 @@ struct ScreenTimeAuthorizationTests {
         await auth.observeStatusUpdates()
 
         #expect(auth.status == .approved)
-        #expect(auth.hasReceivedStatus)
     }
 
-    @Test(
-        """
-        A .notDetermined value from the stream is decisive: it is marked received \
-        (so the root routes to access-required), not treated as still pending
-        """
-    )
-    func observationDeliversNotDeterminedAsDecisive() async {
+    @Test("Draining a stream whose final value is .notDetermined leaves status .notDetermined")
+    func observationResolvesToNotDetermined() async {
         let provider = MockAuthorizationProvider(
             status: .notDetermined,
-            scriptedUpdates: [.notDetermined]
+            scriptedUpdates: [.approved, .notDetermined]
         )
         let auth = ScreenTimeAuthorization(provider: provider)
 
         await auth.observeStatusUpdates()
 
         #expect(auth.status == .notDetermined)
-        #expect(auth.hasReceivedStatus)
     }
 }

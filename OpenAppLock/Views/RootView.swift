@@ -5,28 +5,39 @@
 
 import SwiftUI
 
-/// Gates the app on onboarding and on Screen Time authorization: until the
-/// user has walked through the welcome and permission steps, nothing else is
-/// reachable, and if access is later revoked from system Settings,
-/// `MainView` is replaced by `ScreenTimeAccessRequiredView` until access is
-/// restored. See `RootDestination.resolve` for the exact rule.
+/// Gates the app on onboarding and on Screen Time authorization. On a cold
+/// launch it holds a launch screen for a brief settle window (see
+/// `launchSettleDelay`) so the observed authorization stream can settle past any
+/// transient `.notDetermined` before the root commits; thereafter `MainView` is
+/// shown while access is approved and replaced by `ScreenTimeAccessRequiredView`
+/// when it is not. See `RootDestination.resolve` for the exact rule.
 struct RootView: View {
+    /// How long the launch screen is held on a cold launch while the Screen Time
+    /// authorization stream settles. Tunable; the UI-test harness passes `.zero`.
+    static let defaultLaunchSettleDelay: Duration = .milliseconds(750)
+
+    var launchSettleDelay: Duration = RootView.defaultLaunchSettleDelay
+
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Environment(ScreenTimeAuthorization.self) private var authorization
     @Environment(NotificationAuthorization.self) private var notificationAuthorization
     @Environment(\.scenePhase) private var scenePhase
+
+    @State private var hasCompletedLaunchSettle = false
 
     var body: some View {
         Group {
             switch RootDestination.resolve(
                 hasCompletedOnboarding: hasCompletedOnboarding,
                 authorizationStatus: authorization.status,
-                hasReceivedAuthorizationStatus: authorization.hasReceivedStatus
+                hasCompletedLaunchSettle: hasCompletedLaunchSettle
             ) {
             case .onboarding:
                 OnboardingView {
                     hasCompletedOnboarding = true
                 }
+            case .launchSettling:
+                LaunchScreenView()
             case .screenTimeAccessRequired:
                 ScreenTimeAccessRequiredView()
                     .onAppear {
@@ -52,6 +63,13 @@ struct RootView: View {
         .task {
             authorization.startObserving()
             await notificationAuthorization.refresh()
+        }
+        // Hold the launch screen for a fixed window so the authorization stream
+        // can settle past any transient `.notDetermined` it emits on a cold
+        // launch, then commit to whatever it resolved to (see `RootDestination`).
+        .task {
+            try? await Task.sleep(for: launchSettleDelay)
+            hasCompletedLaunchSettle = true
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }

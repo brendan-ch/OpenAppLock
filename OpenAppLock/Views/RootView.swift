@@ -44,7 +44,14 @@ struct RootView: View {
         // only when the user opens a screen that happens to read them. Notification
         // status is also mirrored into the app group here, so the scheduler keeps
         // the time-limit warn activity registered without a Settings visit.
-        .task { await notificationAuthorization.refresh() }
+        //
+        // `resolveAtLaunch()` polls past the stale `.notDetermined`
+        // FamilyControls reports right after a cold launch so a revoked user's
+        // `.denied` settles promptly (see `RootDestination`).
+        .task {
+            await authorization.resolveAtLaunch()
+            await notificationAuthorization.refresh()
+        }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             authorization.refresh()

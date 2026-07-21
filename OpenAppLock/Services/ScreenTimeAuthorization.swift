@@ -62,6 +62,7 @@ final class MockAuthorizationProvider: AuthorizationProviding {
 final class ScreenTimeAuthorization {
     private(set) var status: ScreenTimeAuthorizationStatus
     private(set) var lastRequestFailed = false
+
     private let provider: AuthorizationProviding
 
     init(provider: AuthorizationProviding) {
@@ -71,6 +72,19 @@ final class ScreenTimeAuthorization {
 
     func refresh() {
         status = provider.currentStatus
+    }
+
+    /// Re-reads while the launch-time status stays `.notDetermined`, giving
+    /// FamilyControls a brief moment to settle so a revoked user's `.denied`
+    /// surfaces promptly, then gives up so the poll can't run forever.
+    func resolveAtLaunch() async {
+        refresh()
+        var remainingAttempts = 10
+        while status == .notDetermined && remainingAttempts > 0 {
+            try? await Task.sleep(for: .milliseconds(50))
+            refresh()
+            remainingAttempts -= 1
+        }
     }
 
     func request() async {

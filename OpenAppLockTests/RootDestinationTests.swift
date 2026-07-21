@@ -20,29 +20,36 @@ struct RootDestinationTests {
     )
     func onboardingIncomplete(status: ScreenTimeAuthorizationStatus) {
         let destination = RootDestination.resolve(
-            hasCompletedOnboarding: false, authorizationStatus: status
+            hasCompletedOnboarding: false,
+            authorizationStatus: status
         )
         #expect(destination == .onboarding)
     }
 
-    @Test("Onboarding complete with approved authorization routes to main")
-    func onboardingCompleteApproved() {
+    @Test(
+        """
+        Onboarding complete routes to main for every status except denied, so a \
+        stale launch-time .notDetermined shows the real app instead of flashing \
+        the access-required screen
+        """,
+        arguments: [
+            ScreenTimeAuthorizationStatus.approved,
+            .notDetermined,
+        ]
+    )
+    func onboardingCompleteNonDeniedRoutesToMain(status: ScreenTimeAuthorizationStatus) {
         let destination = RootDestination.resolve(
-            hasCompletedOnboarding: true, authorizationStatus: .approved
+            hasCompletedOnboarding: true,
+            authorizationStatus: status
         )
         #expect(destination == .main)
     }
 
-    @Test(
-        "Onboarding complete without approval routes to the access-required screen",
-        arguments: [
-            ScreenTimeAuthorizationStatus.notDetermined,
-            .denied,
-        ]
-    )
-    func onboardingCompleteNotApproved(status: ScreenTimeAuthorizationStatus) {
+    @Test("Onboarding complete with denied authorization routes to the access-required screen")
+    func onboardingCompleteDenied() {
         let destination = RootDestination.resolve(
-            hasCompletedOnboarding: true, authorizationStatus: status
+            hasCompletedOnboarding: true,
+            authorizationStatus: .denied
         )
         #expect(destination == .screenTimeAccessRequired)
     }

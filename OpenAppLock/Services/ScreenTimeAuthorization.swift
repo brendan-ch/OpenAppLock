@@ -17,22 +17,19 @@ enum ScreenTimeAuthorizationStatus: Equatable, Sendable {
 /// Abstracts FamilyControls authorization so views and tests never touch
 /// `AuthorizationCenter` directly.
 protocol AuthorizationProviding {
-    var currentStatus: ScreenTimeAuthorizationStatus { get }
-    /// A stream of authorization status values, delivered as FamilyControls
-    /// loads the real value and as it later changes. FamilyControls loads
-    /// authorization asynchronously and the synchronous `currentStatus` can
-    /// stay pinned at `.notDetermined` indefinitely, so this stream — not
-    /// `currentStatus` — is the reliable source of the settled status.
+    /// The stream of authorization status values — the source of truth.
+    /// FamilyControls publishes the current value on subscription and again on
+    /// every change. Note `.notDetermined` is a *decisive* "access is off"
+    /// value (it is what the system reports once Screen Time is toggled off in
+    /// Settings), not a transient loading state — the synchronous
+    /// `AuthorizationCenter.authorizationStatus` getter, by contrast, can stay
+    /// pinned at `.notDetermined` and must not be used.
     var statusUpdates: AsyncStream<ScreenTimeAuthorizationStatus> { get }
     func requestAuthorization() async throws
 }
 
 /// Real Screen Time authorization via FamilyControls.
 struct FamilyControlsAuthorizationProvider: AuthorizationProviding {
-    var currentStatus: ScreenTimeAuthorizationStatus {
-        Self.mapped(AuthorizationCenter.shared.authorizationStatus)
-    }
-
     var statusUpdates: AsyncStream<ScreenTimeAuthorizationStatus> {
         AsyncStream { continuation in
             let task = Task {
@@ -75,9 +72,7 @@ final class MockAuthorizationProvider: AuthorizationProviding {
         self.scriptedUpdates = scriptedUpdates
     }
 
-    var currentStatus: ScreenTimeAuthorizationStatus { status }
-
-    /// Emits `scriptedUpdates` when provided (to mimic an async-settling status),
+    /// Emits `scriptedUpdates` when provided (to model an async-settling status),
     /// otherwise the current status once, then finishes.
     var statusUpdates: AsyncStream<ScreenTimeAuthorizationStatus> {
         let values = scriptedUpdates ?? [status]
@@ -99,7 +94,12 @@ final class MockAuthorizationProvider: AuthorizationProviding {
 /// Observable authorization state for the UI.
 @Observable
 final class ScreenTimeAuthorization {
-    private(set) var status: ScreenTimeAuthorizationStatus
+    private(set) var status: ScreenTimeAuthorizationStatus = .notDetermined
+
+    /// Whether the provider's stream has delivered a value yet. The stream is
+    /// the source of truth; until it posts, the root shows the main flow so the
+    /// common (approved) launch never flickers — see `RootDestination`.
+    private(set) var hasReceivedStatus = false
     private(set) var lastRequestFailed = false
 
     private let provider: AuthorizationProviding
@@ -107,14 +107,12 @@ final class ScreenTimeAuthorization {
 
     init(provider: AuthorizationProviding) {
         self.provider = provider
-        self.status = provider.currentStatus
     }
 
-    /// Starts observing authorization changes for the app's lifetime. The
-    /// synchronous `currentStatus` can stay pinned at `.notDetermined` because
-    /// FamilyControls loads it asynchronously, so draining the provider's
-    /// stream is what delivers the settled value and any later change (e.g. a
-    /// revocation from Settings). Safe to call more than once.
+    /// Starts observing authorization for the app's lifetime. FamilyControls
+    /// publishes the current value on subscription and on every later change
+    /// (e.g. Screen Time being turned off in Settings, reported as
+    /// `.notDetermined`). Safe to call more than once.
     func startObserving() {
         guard observationTask == nil else { return }
         observationTask = Task { [weak self] in
@@ -127,20 +125,19 @@ final class ScreenTimeAuthorization {
     func observeStatusUpdates() async {
         for await value in provider.statusUpdates {
             status = value
+            hasReceivedStatus = true
         }
-    }
-
-    func refresh() {
-        status = provider.currentStatus
     }
 
     func request() async {
         do {
             try await provider.requestAuthorization()
+            status = .approved
             lastRequestFailed = false
         } catch {
+            status = .denied
             lastRequestFailed = true
         }
-        refresh()
+        hasReceivedStatus = true
     }
 }

@@ -20,7 +20,8 @@ struct RootView: View {
         Group {
             switch RootDestination.resolve(
                 hasCompletedOnboarding: hasCompletedOnboarding,
-                authorizationStatus: authorization.status
+                authorizationStatus: authorization.status,
+                hasReceivedAuthorizationStatus: authorization.hasReceivedStatus
             ) {
             case .onboarding:
                 OnboardingView {

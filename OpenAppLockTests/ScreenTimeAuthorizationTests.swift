@@ -10,42 +10,42 @@ import Testing
 @MainActor
 @Suite("Screen Time authorization observation")
 struct ScreenTimeAuthorizationTests {
-    @Test("Init seeds status from the provider's current status")
-    func initSeedsFromCurrentStatus() {
-        let auth = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .notDetermined))
-        #expect(auth.status == .notDetermined)
+    @Test("Before the stream posts, no status has been received")
+    func noStatusReceivedBeforeStreamPosts() {
+        let auth = ScreenTimeAuthorization(provider: MockAuthorizationProvider(status: .approved))
+        #expect(!auth.hasReceivedStatus)
     }
 
-    @Test(
-        """
-        Observing the provider's stream settles status past the stale launch-time \
-        .notDetermined to the real .approved, which the synchronous getter never \
-        delivered
-        """
-    )
-    func observationSettlesToApproved() async {
+    @Test("Observing the stream delivers approved and marks the status received")
+    func observationDeliversApproved() async {
         let provider = MockAuthorizationProvider(
             status: .notDetermined,
             scriptedUpdates: [.notDetermined, .approved]
         )
         let auth = ScreenTimeAuthorization(provider: provider)
-        #expect(auth.status == .notDetermined)
 
         await auth.observeStatusUpdates()
 
         #expect(auth.status == .approved)
+        #expect(auth.hasReceivedStatus)
     }
 
-    @Test("Observing the provider's stream surfaces a revoked user's .denied")
-    func observationSettlesToDenied() async {
+    @Test(
+        """
+        A .notDetermined value from the stream is decisive: it is marked received \
+        (so the root routes to access-required), not treated as still pending
+        """
+    )
+    func observationDeliversNotDeterminedAsDecisive() async {
         let provider = MockAuthorizationProvider(
             status: .notDetermined,
-            scriptedUpdates: [.notDetermined, .denied]
+            scriptedUpdates: [.notDetermined]
         )
         let auth = ScreenTimeAuthorization(provider: provider)
 
         await auth.observeStatusUpdates()
 
-        #expect(auth.status == .denied)
+        #expect(auth.status == .notDetermined)
+        #expect(auth.hasReceivedStatus)
     }
 }

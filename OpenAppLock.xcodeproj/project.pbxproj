@@ -767,6 +767,7 @@
 				CODE_SIGN_ENTITLEMENTS = OpenAppLock/OpenAppLock.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4A9XHUS87Q;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -813,6 +814,7 @@
 				CODE_SIGN_ENTITLEMENTS = OpenAppLock/OpenAppLock.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4A9XHUS87Q;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -951,6 +953,7 @@
 				CODE_SIGN_ENTITLEMENTS = OpenAppLockMonitor/OpenAppLockMonitor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4A9XHUS87Q;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenAppLockMonitor/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OpenAppLockMonitor;
@@ -977,6 +980,7 @@
 				CODE_SIGN_ENTITLEMENTS = OpenAppLockMonitor/OpenAppLockMonitor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4A9XHUS87Q;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenAppLockMonitor/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OpenAppLockMonitor;
@@ -1003,6 +1007,7 @@
 				CODE_SIGN_ENTITLEMENTS = OpenAppLockShieldConfig/OpenAppLockShieldConfig.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4A9XHUS87Q;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenAppLockShieldConfig/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OpenAppLockShieldConfig;
@@ -1029,6 +1034,7 @@
 				CODE_SIGN_ENTITLEMENTS = OpenAppLockShieldConfig/OpenAppLockShieldConfig.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4A9XHUS87Q;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenAppLockShieldConfig/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OpenAppLockShieldConfig;
@@ -1055,6 +1061,7 @@
 				CODE_SIGN_ENTITLEMENTS = OpenAppLockShieldAction/OpenAppLockShieldAction.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4A9XHUS87Q;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenAppLockShieldAction/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OpenAppLockShieldAction;
@@ -1081,6 +1088,7 @@
 				CODE_SIGN_ENTITLEMENTS = OpenAppLockShieldAction/OpenAppLockShieldAction.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4A9XHUS87Q;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenAppLockShieldAction/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OpenAppLockShieldAction;
@@ -1107,6 +1115,7 @@
 				CODE_SIGN_ENTITLEMENTS = OpenAppLockReport/OpenAppLockReport.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4A9XHUS87Q;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenAppLockReport/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OpenAppLockReport;
@@ -1133,6 +1142,7 @@
 				CODE_SIGN_ENTITLEMENTS = OpenAppLockReport/OpenAppLockReport.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4A9XHUS87Q;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = OpenAppLockReport/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = OpenAppLockReport;

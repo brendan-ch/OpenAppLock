@@ -11,6 +11,7 @@ import SwiftUI
 @main
 struct OpenAppLockApp: App {
     private let container: ModelContainer
+    private let launchSettleDelay: Duration
     @State private var authorization: ScreenTimeAuthorization
     @State private var notificationAuthorization: NotificationAuthorization
     @State private var enforcer: RuleEnforcer
@@ -19,6 +20,9 @@ struct OpenAppLockApp: App {
 
     init() {
         let config = LaunchConfiguration.current
+
+        // UI tests must not sit through the cold-launch settle window.
+        launchSettleDelay = config.isUITesting ? .zero : RootView.defaultLaunchSettleDelay
 
         // Diagnostic logging, configured before anything else can log: app-group
         // `Logs/` in production; a wiped per-launch temp dir under UI testing so
@@ -117,7 +121,7 @@ struct OpenAppLockApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            RootView(launchSettleDelay: launchSettleDelay)
                 .environment(authorization)
                 .environment(notificationAuthorization)
                 .environment(enforcer)

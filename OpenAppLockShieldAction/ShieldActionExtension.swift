@@ -43,8 +43,12 @@ final class ShieldActionExtension: ShieldActionDelegate {
     ) {
         switch action {
         case .secondaryButtonPressed:
-            if let snapshot = ShieldLookup.openLimitSnapshot(
-                containingCategory: category, in: RuleSnapshotUserDefaultsStore().load()) {
+            if let snapshot = arbitratedOpenLimitSnapshot({ lookup in
+                ShieldLookup.openLimitSnapshot(
+                    containingCategory: category, in: lookup.snapshots,
+                    usage: lookup.usage, hasActiveOpenSession: lookup.hasActiveOpenSession,
+                    at: lookup.now)
+            }) {
                 completionHandler(grantOpen(ruleID: snapshot.id))
             } else {
                 completionHandler(.close)
@@ -55,11 +59,41 @@ final class ShieldActionExtension: ShieldActionDelegate {
     }
 
     private func handleOpenPress(applicationToken: ApplicationToken) -> ShieldActionResponse {
-        guard
-            let snapshot = ShieldLookup.openLimitSnapshot(
-                containingApplication: applicationToken, in: RuleSnapshotUserDefaultsStore().load())
+        guard let snapshot = arbitratedOpenLimitSnapshot({ lookup in
+            ShieldLookup.openLimitSnapshot(
+                containingApplication: applicationToken, in: lookup.snapshots,
+                usage: lookup.usage, hasActiveOpenSession: lookup.hasActiveOpenSession,
+                at: lookup.now)
+        })
         else { return .close }
         return grantOpen(ruleID: snapshot.id)
+    }
+
+    /// Everything a `ShieldLookup` arbitration reads, captured at one instant so
+    /// a press decides against a single consistent view of the stores.
+    private struct LookupEnvironment {
+        let snapshots: [RuleSnapshotDTO]
+        let usage: (UUID) -> RuleUsageDTO
+        let hasActiveOpenSession: (UUID) -> Bool
+        let now: Date
+    }
+
+    /// Runs a `ShieldLookup` query against the live stores, applying the same
+    /// arbitration the shield UI uses — nil when another covering rule is
+    /// actively blocking, so a press on a stale shield cannot waste an open
+    /// that would not actually lift the block.
+    private func arbitratedOpenLimitSnapshot(
+        _ find: (LookupEnvironment) -> RuleSnapshotDTO?
+    ) -> RuleSnapshotDTO? {
+        let ledger = UsageLedger()
+        let sessions = OpenSessionStore()
+        let now = Date.now
+        return find(
+            LookupEnvironment(
+                snapshots: RuleSnapshotUserDefaultsStore().load(),
+                usage: { ledger.usage(for: $0, onDayContaining: now) },
+                hasActiveOpenSession: { sessions.hasActiveSession(for: $0, at: now) },
+                now: now))
     }
 
     private func grantOpen(ruleID: UUID) -> ShieldActionResponse {

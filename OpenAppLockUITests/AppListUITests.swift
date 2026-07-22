@@ -92,9 +92,13 @@ final class AppListUITests: XCTestCase {
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
         app.buttons["editRuleButton"].waitToAppear().tap()
 
-        // Open the "Distractions" list for editing (a sheet overlay).
-        app.element("selectedAppsRow").waitToAppear().tap()
-        app.buttons["editAppListButton-Distractions"].waitToAppear().tap()
+        // Open the "Distractions" list for editing (a sheet overlay). A single
+        // synthesized tap on a navigation row/button is occasionally dropped on a
+        // loaded CI runner, so tap each step until its destination actually appears.
+        app.element("selectedAppsRow")
+            .tap(untilAppears: app.buttons["editAppListButton-Distractions"])
+        app.buttons["editAppListButton-Distractions"]
+            .tap(untilAppears: app.textFields["appListNameField"])
 
         // Make an outstanding edit by renaming the list (submit to drop the
         // keyboard, which otherwise interferes with resolving the dialog).
@@ -201,15 +205,21 @@ final class AppListUITests: XCTestCase {
         let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
         app.goToRulesTab()
 
-        app.buttons["ruleCard-Sleep"].waitToAppear().tap()
-        app.buttons["editRuleButton"].waitToAppear().tap()
-        app.element("selectedAppsRow").waitToAppear().tap()
+        // Walk into the app-list picker one hop at a time, confirming each
+        // destination before the next tap — a lone synthesized tap on a nav
+        // row/button is occasionally dropped on a loaded CI runner.
+        app.buttons["ruleCard-Sleep"]
+            .tap(untilAppears: app.buttons["editRuleButton"])
+        app.buttons["editRuleButton"]
+            .tap(untilAppears: app.element("selectedAppsRow"))
+        app.element("selectedAppsRow")
+            .tap(untilAppears: app.buttons["editAppListButton-Distractions"])
 
         XCTAssertFalse(app.element("appListsLockedNotice").exists)
         // With no hard block, "Edit" (not "View") opens the full editor.
         XCTAssertFalse(app.buttons["viewAppListButton-Distractions"].exists)
-        app.buttons["editAppListButton-Distractions"].waitToAppear().tap()
-        app.element("appListNameField").waitToAppear()
+        app.buttons["editAppListButton-Distractions"]
+            .tap(untilAppears: app.textFields["appListNameField"])
         app.buttons["editAppsButton"].waitToAppear()
     }
 

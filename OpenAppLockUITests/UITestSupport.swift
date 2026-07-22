@@ -170,4 +170,57 @@ extension XCUIElement {
             file: file, line: line)
         return self
     }
+
+    /// Taps the element, then confirms `result` actually appeared, re-tapping if it
+    /// didn't — a single synthesized tap on a SwiftUI navigation row/button is
+    /// occasionally dropped on a loaded CI runner before the app has quiesced
+    /// (same failure mode `goToSection` works around for sidebar rows). Skips the
+    /// re-tap when this element has already left the hierarchy (the tap landed,
+    /// the destination is just slow to appear).
+    @discardableResult
+    func tap(
+        untilAppears result: XCUIElement, attempts: Int = 4, timeout: TimeInterval = 4,
+        file: StaticString = #filePath, line: UInt = #line
+    ) -> XCUIElement {
+        for _ in 0..<attempts {
+            if exists && isHittable { tap() }
+            if result.waitForExistence(timeout: timeout) { return result }
+        }
+        XCTFail(
+            "Tapping \(self) never made \(result) appear after \(attempts) attempts",
+            file: file, line: line)
+        return result
+    }
+
+    /// Replaces the field's text with `text` and verifies the field actually holds
+    /// it, retrying from scratch on mismatch — `typeText` drops keystrokes on a
+    /// loaded CI runner (observed truncations like "My Foc" for "My Focus"), so
+    /// typing without verification flakes any later assertion on the typed value.
+    /// Submits with a trailing newline only after the value verifies.
+    ///
+    /// Caveat: SwiftUI TextFields with placeholder text report the placeholder
+    /// from `value` when empty, which inflates the delete count harmlessly.
+    func setTextVerified(
+        _ text: String, attempts: Int = 3,
+        file: StaticString = #filePath, line: UInt = #line
+    ) {
+        var lastObserved = ""
+        for _ in 0..<attempts {
+            coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+            let existing = (value as? String) ?? ""
+            typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existing.count + 4))
+            typeText(text)
+
+            let expectation = XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "value == %@", text), object: self)
+            if XCTWaiter().wait(for: [expectation], timeout: 3) == .completed {
+                typeText("\n")
+                return
+            }
+            lastObserved = (value as? String) ?? ""
+        }
+        XCTFail(
+            "Field never held \"\(text)\" after \(attempts) attempts; last value \"\(lastObserved)\"",
+            file: file, line: line)
+    }
 }

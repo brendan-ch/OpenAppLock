@@ -59,11 +59,7 @@ struct DayOfWeekPicker: View {
         Section {
             DayOfWeekPicker(days: $days)
         } header: {
-            HStack {
-                Text(.dayPickerPreviewSectionHeader).textCase(nil)
-                Spacer()
-                Text(days.summary).textCase(nil)
-            }
+            Text(.dayPickerPreviewSectionHeader).textCase(nil)
         }
     }
 }

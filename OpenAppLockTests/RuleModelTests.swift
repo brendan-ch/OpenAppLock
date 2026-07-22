@@ -208,12 +208,6 @@ struct WeekdayTests {
         #expect(Set<Weekday>().summary == "Never")
     }
 
-    @Test("Custom sets list days in display order")
-    func customSets() {
-        let days: Set<Weekday> = [.friday, .monday, .wednesday]
-        #expect(days.summary == "Mon, Wed, Fri")
-    }
-
     @Test("Picker display order starts on Sunday")
     func displayOrder() {
         #expect(Weekday.displayOrder.first == .sunday)

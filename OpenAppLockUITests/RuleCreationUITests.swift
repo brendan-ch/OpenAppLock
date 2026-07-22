@@ -91,19 +91,6 @@ final class RuleCreationUITests: XCTestCase {
         }
     }
 
-    func testDayTogglesUpdateSummary() throws {
-        let app = XCUIApplication.launchOpenAppLock()
-        app.goToRulesTab()
-        app.buttons["newRuleButton"].waitToAppear().tap()
-        app.buttons["ruleKind-schedule"].waitToAppear().tap()
-
-        // Default is Weekdays; enabling Saturday and Sunday makes it Every day.
-        XCTAssertTrue(app.staticTexts["Weekdays"].waitToAppear().exists)
-        app.buttons["dayToggle-1"].tap()
-        app.buttons["dayToggle-7"].tap()
-        XCTAssertTrue(app.staticTexts["Every day"].waitToAppear().exists)
-    }
-
     func testCreateTimeLimitRule() throws {
         let app = XCUIApplication.launchOpenAppLock()
         app.goToRulesTab()

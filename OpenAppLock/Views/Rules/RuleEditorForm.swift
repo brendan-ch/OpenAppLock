@@ -138,11 +138,7 @@ struct RuleEditorForm: View {
         Section {
             DayOfWeekPicker(days: $draft.days)
         } header: {
-            HStack {
-                Text(.ruleEditorOnTheseDaysHeader).textCase(nil)
-                Spacer()
-                Text(draft.days.summary).textCase(nil)
-            }
+            Text(.ruleEditorOnTheseDaysHeader).textCase(nil)
         }
     }
 

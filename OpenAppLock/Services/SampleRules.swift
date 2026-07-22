@@ -67,14 +67,20 @@ enum SampleRules {
         }
     }
 
-    /// A schedule rule whose window started up to an hour ago and runs for
-    /// several hours, clamped so it never crosses midnight accidentally.
+    /// A schedule rule whose window started ~an hour ago and always has ~6 hours
+    /// remaining, wrapping past midnight when needed. Schedules support an end at
+    /// or before the start to mean "crosses midnight" (see `RuleSchedule`), so the
+    /// window stays a genuine ~6-hour active block regardless of the time of day.
+    /// The previous clamp to 23:59 left under 15 minutes remaining in the last
+    /// stretch before midnight, which dropped `RulePolicy.canPause` below its floor
+    /// (`MonitoringPlan.temporaryPauseMinutes`) — the pause button then vanished
+    /// and the CI pause UI tests flaked in the pre-UTC-midnight window.
     static func activeRule(
         named name: String, hardMode: Bool, now: Date, calendar: Calendar = .current
     ) -> BlockingRule {
         let nowMinutes = minutesIntoDay(of: now, calendar: calendar)
-        let start = max(0, nowMinutes - 60)
-        let end = min(24 * 60 - 1, nowMinutes + 6 * 60)
+        let start = (nowMinutes + 24 * 60 - 60) % (24 * 60)
+        let end = (nowMinutes + 6 * 60) % (24 * 60)
         return BlockingRule(
             name: name,
             configuration: .schedule(ScheduleConfig(startMinutes: start, endMinutes: end)),

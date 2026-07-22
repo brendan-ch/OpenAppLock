@@ -54,10 +54,10 @@ final class RuleCreationUITests: XCTestCase {
         // no separate edit/rename button.
         XCTAssertFalse(app.buttons["renameButton"].exists)
         let nameField = app.textFields["ruleNameField"].waitToAppear()
-        // Tap at the trailing edge so the cursor lands after the last character.
-        nameField.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
-        let deletions = String(repeating: XCUIKeyboardKey.delete.rawValue, count: 24)
-        nameField.typeText(deletions + "My Focus\n")
+        // Clear the field and type the new name, verifying the field actually
+        // holds it — typeText drops keystrokes on a loaded CI runner, so a raw
+        // type-then-assert flakes on the truncated value.
+        nameField.setTextVerified("My Focus")
 
         // The title mirrors the typed name via a SwiftUI re-render, which lags
         // typeText on a slow runner — wait for it rather than reading it raw.

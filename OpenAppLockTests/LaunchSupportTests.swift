@@ -84,6 +84,23 @@ struct SampleRulesTests {
         #expect(rule.dto.status(at: now, calendar: utc).isActive)
     }
 
+    /// The seeded active rule backs the UI suite's pause flow, so it must always
+    /// be pausable — at any time of day, including the pre-midnight window where
+    /// the old clamp-to-23:59 window left under `MonitoringPlan.temporaryPauseMinutes`
+    /// remaining and `RulePolicy.canPause`'s floor turned false, vanishing the
+    /// pause button and flaking the CI UI tests near UTC midnight. Converts the
+    /// rule the same way production does (`rule.dto`) and checks `canPause` at the
+    /// same instant the rule was seeded for.
+    @Test(
+        "Seeded active rule is pausable at every time of day",
+        arguments: [(0, 5), (12, 0), (23, 50), (23, 58)]
+    )
+    func activeRuleIsPausable(hour: Int, minute: Int) {
+        let now = date(2025, 1, 6, hour, minute)
+        let rule = SampleRules.activeRule(named: "Work Time", hardMode: false, now: now, calendar: utc)
+        #expect(RulePolicy.canPause(rule.dto, at: now, calendar: utc))
+    }
+
     @Test(
         "Seeded upcoming rules are not active but will start",
         arguments: [(0, 30), (9, 0), (12, 30), (23, 50)]

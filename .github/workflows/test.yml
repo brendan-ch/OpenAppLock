@@ -9,7 +9,7 @@ jobs:
   test:
     name: Test on ${{ matrix.device }}
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     strategy:
       # Run every device leg to completion: an iPad failure shouldn't hide the
@@ -29,6 +29,39 @@ jobs:
       - name: Set Xcode version
         run: |
           sudo xcode-select -s /Applications/Xcode_26.5.app
+
+      # Some macos-26 runner-image builds intermittently ship without the named
+      # simulator, and the build step then dies in ~80s with the cryptic
+      # "Unable to find a device matching the provided destination specifier".
+      # Wait for the device to show up (the image sometimes registers it a
+      # moment late), and if it still isn't there, create it ourselves — simctl
+      # accepts a device-type name and picks the newest compatible runtime. If
+      # even creation fails, dump the available devices/device-types so the
+      # failure is diagnosable instead of cryptic.
+      - name: Ensure simulator exists
+        env:
+          DEVICE: ${{ matrix.device }}
+        run: |
+          # Match "<name> (" — simctl prints "<name> (<UDID>) (<state>)", and a
+          # bare substring match would let "iPhone 17 Pro Max" satisfy a check
+          # for "iPhone 17 Pro" while xcodebuild's -destination match is exact.
+          for attempt in 1 2 3; do
+            if xcrun simctl list devices available | grep -Fq "$DEVICE ("; then
+              echo "Found simulator '$DEVICE' on attempt $attempt."
+              exit 0
+            fi
+            echo "Simulator '$DEVICE' not found (attempt $attempt); waiting 15s..."
+            sleep 15
+          done
+          echo "Simulator '$DEVICE' still missing; attempting to create it."
+          if xcrun simctl create "$DEVICE" "$DEVICE"; then
+            echo "Created simulator '$DEVICE'."
+            exit 0
+          fi
+          echo "Failed to create simulator '$DEVICE'. Available devices and device types:"
+          xcrun simctl list devices available
+          xcrun simctl list devicetypes
+          exit 1
 
       - name: Build for testing
         run: |

@@ -276,15 +276,23 @@ actor RuleEnforcementEngine {
         let status = snapshot.status(at: now, calendar: calendar, usage: usage)
         let isBlocking = status.isActive
         logTimeLimitDecision(snapshot, usage: usage, isBlocking: isBlocking, at: now)
-        guard isBlocking || shouldGateOpenLimit(snapshot, at: now, calendar: calendar) else {
-            let ruleTag = snapshot.id.logTag
-            Diag.log(
-                .enforcer,
-                "rule-\(ruleTag) \(snapshot.kindRaw): not shielded (status=\(status) enabled=\(snapshot.isEnabled))")
-            return (isBlocking, false)
+        
+        let ruleTag = snapshot.id.logTag
+        
+        if shouldGateOpenLimit(snapshot, at: now, calendar: calendar) {
+            applyShield(for: snapshot, status: status, usage: usage, isBlocking: isBlocking)
+            return (isBlocking, true)
         }
-        applyShield(for: snapshot, status: status, usage: usage, isBlocking: isBlocking)
-        return (isBlocking, true)
+        
+        if isBlocking && snapshot.kind != .openLimit {
+            applyShield(for: snapshot, status: status, usage: usage, isBlocking: isBlocking)
+            return (isBlocking, true)
+        }
+        
+        Diag.log(
+            .enforcer,
+            "rule-\(ruleTag) \(snapshot.kindRaw): not shielded (status=\(status) enabled=\(snapshot.isEnabled))")
+        return (isBlocking, false)
     }
 
     /// Surfaces the time-limit block decision: the threshold count vs the budget.

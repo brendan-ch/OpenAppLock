@@ -55,11 +55,12 @@ nonisolated extension RuleSnapshotDTO {
     ) -> RuleStatus {
         guard isEnabled else { return .disabled }
         guard !days.isEmpty else { return .dormant }
+        
         switch activation(usage: usage, at: now, calendar: calendar) {
         case .active(let until): return .active(until: until)
         case .paused(let until): return .paused(until: until)
-        case .inactive(let nextStart):
-            return nextStart.map(RuleStatus.upcoming(startsAt:)) ?? .dormant
+        case .notBlockingNow(let nextReset):
+            return nextReset.map(RuleStatus.upcoming(startsAt:)) ?? .dormant
         }
     }
 

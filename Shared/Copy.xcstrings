@@ -2124,6 +2124,17 @@
         }
       }
     },
+    "shield.openLimitJustBlocked.subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You just used an open for this app list. You may use another open later."
+          }
+        }
+      }
+    },
     "shield.primaryButtonLabel" : {
       "extractionState" : "manual",
       "localizations" : {

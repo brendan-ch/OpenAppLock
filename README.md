@@ -41,7 +41,7 @@ DEVELOPMENT_TEAM = <the team ID of your Apple Developer account>
 
 4. Open the project in Xcode
 
-This setup was stolen from [NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire/blob/main/README.md#building); go check them out!
+This setup was inspired by [NetNewsWire](https://github.com/Ranchero-Software/NetNewsWire/blob/main/README.md#building), an awesome RSS reader.
 
 By default, the app will attempt to read this file, falling back to an empty development team if the file doesn't exist. This will work for simulator testing, but not for real device testing.
 

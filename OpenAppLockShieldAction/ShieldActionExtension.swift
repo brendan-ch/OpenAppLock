@@ -12,6 +12,8 @@ import ManagedSettings
 /// one-shot DeviceActivity session after which the monitor extension
 /// re-shields.
 final class ShieldActionExtension: ShieldActionDelegate {
+    // MARK: Overrides
+    
     override func handle(
         action: ShieldAction, for application: ApplicationToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
@@ -34,21 +36,23 @@ final class ShieldActionExtension: ShieldActionDelegate {
         action: ShieldAction, for webDomain: WebDomainToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
+        // TODO: support open limits for web domains
         completionHandler(.close)
     }
 
     override func handle(
-        action: ShieldAction, for category: ActivityCategoryToken,
+        action: ShieldAction, for categoryToken: ActivityCategoryToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
         switch action {
         case .secondaryButtonPressed:
-            if let snapshot = arbitratedOpenLimitSnapshot({ lookup in
-                ShieldLookup.openLimitSnapshot(
-                    containingCategory: category, in: lookup.snapshots,
-                    usage: lookup.usage, hasActiveOpenSession: lookup.hasActiveOpenSession,
-                    at: lookup.now)
-            }) {
+            let lookupEnvironment = LookupEnvironment.construct()
+            let snapshot = ShieldLookup.openLimitSnapshot(
+                containingCategory: categoryToken, in: lookupEnvironment.snapshots,
+                usage: lookupEnvironment.usage, hasActiveOpenSession: lookupEnvironment.hasActiveOpenSession,
+                at: lookupEnvironment.now)
+            
+            if let snapshot = snapshot {
                 completionHandler(grantOpen(ruleID: snapshot.id))
             } else {
                 completionHandler(.close)
@@ -57,16 +61,20 @@ final class ShieldActionExtension: ShieldActionDelegate {
             completionHandler(.close)
         }
     }
+    
+    // MARK: Open limit handler
 
     private func handleOpenPress(applicationToken: ApplicationToken) -> ShieldActionResponse {
-        guard let snapshot = arbitratedOpenLimitSnapshot({ lookup in
-            ShieldLookup.openLimitSnapshot(
-                containingApplication: applicationToken, in: lookup.snapshots,
-                usage: lookup.usage, hasActiveOpenSession: lookup.hasActiveOpenSession,
-                at: lookup.now)
-        })
-        else { return .close }
-        return grantOpen(ruleID: snapshot.id)
+        let lookupEnvironment = LookupEnvironment.construct()
+        let snapshot = ShieldLookup.openLimitSnapshot(
+                containingApplication: applicationToken, in: lookupEnvironment.snapshots,
+                usage: lookupEnvironment.usage, hasActiveOpenSession: lookupEnvironment.hasActiveOpenSession,
+                at: lookupEnvironment.now)
+        
+        if let snapshot = snapshot {
+            return grantOpen(ruleID: snapshot.id)
+        }
+        return .close
     }
 
     /// Everything a `ShieldLookup` arbitration reads, captured at one instant so
@@ -76,26 +84,21 @@ final class ShieldActionExtension: ShieldActionDelegate {
         let usage: (UUID) -> RuleUsageDTO
         let hasActiveOpenSession: (UUID) -> Bool
         let now: Date
-    }
-
-    /// Runs a `ShieldLookup` query against the live stores, applying the same
-    /// arbitration the shield UI uses — nil when another covering rule is
-    /// actively blocking, so a press on a stale shield cannot waste an open
-    /// that would not actually lift the block.
-    private func arbitratedOpenLimitSnapshot(
-        _ find: (LookupEnvironment) -> RuleSnapshotDTO?
-    ) -> RuleSnapshotDTO? {
-        let ledger = UsageLedger()
-        let sessions = OpenSessionStore()
-        let now = Date.now
-        return find(
-            LookupEnvironment(
+        
+        static func construct() -> LookupEnvironment {
+            let ledger = UsageLedger()
+            let sessions = OpenSessionStore()
+            let now = Date.now
+            let lookupEnvironment = LookupEnvironment(
                 snapshots: RuleSnapshotUserDefaultsStore().load(),
                 usage: { ledger.usage(for: $0, onDayContaining: now) },
                 hasActiveOpenSession: { sessions.hasActiveSession(for: $0, at: now) },
-                now: now))
+                now: now
+            )
+            return lookupEnvironment
+        }
     }
-
+    
     private func grantOpen(ruleID: UUID) -> ShieldActionResponse {
         Diag.log(.session, .event, "shieldAction Open pressed rule-\(ruleID.logTag)")
         let enforcement = LimitEnforcement(
@@ -129,8 +132,11 @@ final class ShieldActionExtension: ShieldActionDelegate {
                 byAdding: .minute, value: MonitoringPlan.openSessionMinutes + 1, to: now)
         else { return }
         let schedule = DeviceActivityFactory.nonRepeatingSchedule(from: now, to: end, calendar: calendar)
+        
+        let deviceActivityName = DeviceActivityName(MonitoringPlan.sessionActivityName(for: ruleID))
+        DeviceActivityCenter().stopMonitoring([deviceActivityName])
         try? DeviceActivityCenter().startMonitoring(
-            DeviceActivityName(MonitoringPlan.sessionActivityName(for: ruleID)),
+            deviceActivityName,
             during: schedule
         )
     }

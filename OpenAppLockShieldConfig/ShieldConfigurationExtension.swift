@@ -45,6 +45,7 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         let snapshots = RuleSnapshotUserDefaultsStore().load()
         let ledger = UsageLedger()
         let sessions = OpenSessionStore()
+        
         let now = Date.now
         guard
             let snapshot = ShieldLookup.openLimitSnapshot(
@@ -55,12 +56,25 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         else {
             return configuration(for: .blocked)
         }
+        
+        let previousExpiry = sessions.getPreviousExpiry(for: snapshot.id)
         let usage = ledger.usage(for: snapshot.id, onDayContaining: now)
+        
+        if let previousExpiry = previousExpiry {
+            let difference = Date.now.distance(to: previousExpiry)
+            if difference > TimeInterval(-MonitoringPlan.openSessionJustBlockedDelaySeconds) && usage.opensUsed < snapshot.maxOpens {
+                return configuration(
+                    for: .openLimitJustBlocked(sessionMinutes: MonitoringPlan.openSessionMinutes)
+                )
+            }
+        }
+        
         return configuration(
             for: .openLimit(
                 opensUsed: usage.opensUsed,
                 maxOpens: snapshot.maxOpens,
-                sessionMinutes: MonitoringPlan.openSessionMinutes))
+                sessionMinutes: MonitoringPlan.openSessionMinutes)
+        )
     }
 
     private func configuration(for presentation: ShieldPresentation) -> ShieldConfiguration {

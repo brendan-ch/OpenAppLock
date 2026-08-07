@@ -16,6 +16,7 @@ struct ShieldPresentation: Equatable {
     let secondaryButton: String?
 
     static let blockedTitle = CopyKey.shieldBlockedTitle.string
+    static let openLimitJustBlockedTitle = CopyKey.shieldBlockedTitle.string
 
     /// A plain, fully-blocked app: no counts, no way through.
     static let blocked = ShieldPresentation(
@@ -43,6 +44,14 @@ struct ShieldPresentation: Equatable {
             secondaryButton: remaining == 1
                 ? CopyKey.shieldOpenButtonOne.string
                 : CopyKey.shieldOpenButtonMany.string(remaining)
+        )
+    }
+    
+    static func openLimitJustBlocked(sessionMinutes: Int) -> ShieldPresentation {
+        return ShieldPresentation(
+            title: openLimitJustBlockedTitle,
+            subtitle: CopyKey.shieldOpenLimitJustBlockedSubtitle.string(sessionMinutes),
+            secondaryButton: nil
         )
     }
 }

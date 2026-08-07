@@ -19,7 +19,8 @@ nonisolated protocol OpenSessionReading: AnyObject, Sendable {
 /// the session instead of re-locking the app mid-session. The monitor clears it
 /// when the session's one-shot activity ends.
 nonisolated final class OpenSessionStore: OpenSessionReading, @unchecked Sendable {
-    private static let key = "openSessionExpiry"
+    private static let openSessionExpiryKey = "openSessionExpiry"
+    private static let previousExpiryKey = "prevSessionExpiry"
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = AppGroup.defaults) {
@@ -30,29 +31,50 @@ nonisolated final class OpenSessionStore: OpenSessionReading, @unchecked Sendabl
         guard let expiry = expiries[ruleID.uuidString] else { return false }
         return Date(timeIntervalSince1970: expiry) > now
     }
+    
+    func getPreviousExpiry(for ruleID: UUID) -> Date? {
+        guard let expiry = previousExpiries[ruleID.uuidString] else { return nil }
+        return Date(timeIntervalSince1970: expiry)
+    }
 
     /// Marks a granted open for `ruleID` running until `expiry`.
     func startSession(for ruleID: UUID, until expiry: Date) {
         var map = expiries
         map[ruleID.uuidString] = expiry.timeIntervalSince1970
-        defaults.set(map, forKey: Self.key)
+        defaults.set(map, forKey: Self.openSessionExpiryKey)
     }
 
     /// Ends a granted open (its one-shot activity fired, or it is being reset).
     func endSession(for ruleID: UUID) {
-        var map = expiries
-        map[ruleID.uuidString] = nil
-        defaults.set(map, forKey: Self.key)
+        var expiryMap = expiries
+        expiryMap[ruleID.uuidString] = nil
+        
+        var prevExpiryMap = previousExpiries
+        prevExpiryMap[ruleID.uuidString] = Date.now.timeIntervalSince1970
+        
+        defaults.set(expiryMap, forKey: Self.openSessionExpiryKey)
+        defaults.set(prevExpiryMap, forKey: Self.previousExpiryKey)
     }
     
     func expireAllActiveSessions() {
-        var map = expiries
-        map.removeAll()
-        defaults.set(map, forKey: Self.key)
+        var expiryMap = expiries
+        var prevExpiryMap = previousExpiries
+        
+        for (key, _) in expiryMap {
+            prevExpiryMap[key] = Date.now.timeIntervalSince1970
+        }
+        expiryMap.removeAll()
+        
+        defaults.set(expiryMap, forKey: Self.openSessionExpiryKey)
+        defaults.set(prevExpiryMap, forKey: Self.previousExpiryKey)
     }
-
+    
     private var expiries: [String: TimeInterval] {
-        defaults.dictionary(forKey: Self.key) as? [String: TimeInterval] ?? [:]
+        defaults.dictionary(forKey: Self.openSessionExpiryKey) as? [String: TimeInterval] ?? [:]
+    }
+    
+    private var previousExpiries: [String: TimeInterval] {
+        defaults.dictionary(forKey: Self.previousExpiryKey) as? [String: TimeInterval] ?? [:]
     }
 }
 

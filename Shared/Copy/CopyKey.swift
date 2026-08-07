@@ -251,6 +251,7 @@ nonisolated enum CopyKey: String, CaseIterable {
     case shieldBlockedSubtitle = "shield.blockedSubtitle"
     case shieldNoOpensLeft = "shield.noOpensLeft"
     case shieldOpenLimitSubtitle = "shield.openLimit.subtitle"
+    case shieldOpenLimitJustBlockedSubtitle = "shield.openLimitJustBlocked.subtitle"
     case shieldOpenButtonOne = "shield.openButtonOne"
     case shieldOpenButtonMany = "shield.openButtonMany"
     case shieldPrimaryButtonLabel = "shield.primaryButtonLabel"

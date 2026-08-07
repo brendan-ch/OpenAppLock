@@ -62,7 +62,7 @@ final class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         
         if let previousExpiry = previousExpiry {
             let difference = Date.now.distance(to: previousExpiry)
-            if difference > TimeInterval(-120) && usage.opensUsed < snapshot.maxOpens {
+            if difference > TimeInterval(-MonitoringPlan.openSessionJustBlockedDelaySeconds) && usage.opensUsed < snapshot.maxOpens {
                 return configuration(
                     for: .openLimitJustBlocked(sessionMinutes: MonitoringPlan.openSessionMinutes)
                 )

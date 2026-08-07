@@ -32,6 +32,10 @@ nonisolated enum MonitoringPlan {
     /// shield can fire right at the pause's end (with one extra minute of
     /// interval padding, as for granted opens).
     static let temporaryPauseMinutes = 15
+    
+    /// The time between when an open limit session blocks and when a user
+    /// can use another open.
+    static let openSessionJustBlockedDelaySeconds = 120
 
     /// The always-on, midnight-to-midnight activity tracking an open-limit
     /// rule's day. Open limits carry no usage events and have no cross-midnight

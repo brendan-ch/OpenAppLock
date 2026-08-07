@@ -103,6 +103,18 @@ struct SettingsView: View {
                             .accessibilityIdentifier("openedLinkProbe")
                     }
                 }
+                
+#if DEBUG
+                Section {
+                    Button {
+                        let store = OpenSessionStore()
+                        store.expireAllActiveSessions()
+                    } label: {
+                        Text("Expire all open limit sessions")
+                    }
+                }
+#endif
+
             }
             .navigationTitle(CopyKey.settingsNavigationTitle.resource)
             .captureLinkTaps(when: launch.isUITesting) { lastOpenedLink = $0 }

@@ -44,6 +44,12 @@ nonisolated final class OpenSessionStore: OpenSessionReading, @unchecked Sendabl
         map[ruleID.uuidString] = nil
         defaults.set(map, forKey: Self.key)
     }
+    
+    func expireAllActiveSessions() {
+        var map = expiries
+        map.removeAll()
+        defaults.set(map, forKey: Self.key)
+    }
 
     private var expiries: [String: TimeInterval] {
         defaults.dictionary(forKey: Self.key) as? [String: TimeInterval] ?? [:]

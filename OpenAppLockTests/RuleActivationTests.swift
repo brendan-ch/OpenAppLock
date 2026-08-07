@@ -61,10 +61,10 @@ struct RuleActivationTests {
             == .active(until: date(2025, 1, 6, 17, 0)))
     }
 
-    @Test("Schedule rule outside its window is inactive with the next start")
+    @Test("Schedule rule outside its window is notBlockingNow with the next start")
     func scheduleInactiveOutsideWindow() {
         #expect(scheduleSnapshot().activation(usage: nil, at: date(2025, 1, 6, 19, 0), calendar: utc)
-            == .inactive(nextStart: tue9))
+            == .notBlockingNow(nextReset: tue9))
     }
 
     @Test("Exactly at the window start counts as active")
@@ -76,19 +76,19 @@ struct RuleActivationTests {
     @Test("Exactly at the window end is no longer active (half-open interval)")
     func scheduleAtWindowEnd() {
         #expect(scheduleSnapshot().activation(usage: nil, at: date(2025, 1, 6, 17, 0), calendar: utc)
-            == .inactive(nextStart: tue9))
+            == .notBlockingNow(nextReset: tue9))
     }
 
-    @Test("A schedule with no days is inactive with no next start")
+    @Test("A schedule with no days is notBlockingNow with no next start")
     func scheduleEmptyDays() {
         #expect(scheduleSnapshot(days: []).activation(usage: nil, at: mon10, calendar: utc)
-            == .inactive(nextStart: nil))
+            == .notBlockingNow(nextReset: nil))
     }
 
-    @Test("A disabled schedule rule is inactive with no next start")
+    @Test("A disabled schedule rule is notBlockingNow with no next start")
     func scheduleDisabled() {
         #expect(scheduleSnapshot(isEnabled: false).activation(usage: nil, at: mon10, calendar: utc)
-            == .inactive(nextStart: nil))
+            == .notBlockingNow(nextReset: nil))
     }
 
     // MARK: Schedule — pause invariants
@@ -118,7 +118,7 @@ struct RuleActivationTests {
     func schedulePausedButOutsideWindow() {
         #expect(scheduleSnapshot(pausedUntil: date(2025, 1, 6, 20, 0))
             .activation(usage: nil, at: date(2025, 1, 6, 19, 0), calendar: utc)
-            == .inactive(nextStart: tue9))
+            == .notBlockingNow(nextReset: tue9))
     }
 
     // MARK: Schedule — midnight-crossing & full day
@@ -137,11 +137,11 @@ struct RuleActivationTests {
             == .active(until: date(2025, 1, 7, 6, 0)))
     }
 
-    @Test("A midnight-crossing window is inactive midday with the evening start next")
+    @Test("A midnight-crossing window is notBlockingNow midday with the evening start next")
     func crossingInactiveMidday() {
         let snap = scheduleSnapshot(start: 22 * 60, end: 6 * 60, days: Weekday.everyDay)
         #expect(snap.activation(usage: nil, at: date(2025, 1, 6, 12, 0), calendar: utc)
-            == .inactive(nextStart: date(2025, 1, 6, 22, 0)))
+            == .notBlockingNow(nextReset: date(2025, 1, 6, 22, 0)))
     }
 
     @Test("A full-day window is active any time on an enabled day")
@@ -159,30 +159,30 @@ struct RuleActivationTests {
             == .active(until: tueMidnight))
     }
 
-    @Test("A time-limit one minute under budget is inactive")
+    @Test("A time-limit one minute under budget is notBlockingNow")
     func timeLimitUnderBudget() {
         #expect(limitSnapshot().activation(usage: RuleUsageDTO(minutesUsed: 44), at: mon10, calendar: utc)
-            == .inactive(nextStart: tue9))
+            == .notBlockingNow(nextReset: tue9))
     }
 
-    @Test("A time-limit rule without usage data is inactive")
+    @Test("A time-limit rule without usage data is notBlockingNow")
     func timeLimitNoUsage() {
         #expect(limitSnapshot().activation(usage: nil, at: mon10, calendar: utc)
-            == .inactive(nextStart: tue9))
+            == .notBlockingNow(nextReset: tue9))
     }
 
-    @Test("A spent time-limit not scheduled today is inactive (the scheduled-today guard)")
+    @Test("A spent time-limit not scheduled today is notBlockingNow (the scheduled-today guard)")
     func timeLimitSpentButNotScheduledToday() {
         #expect(limitSnapshot(days: [.tuesday])
             .activation(usage: RuleUsageDTO(minutesUsed: 99), at: mon10, calendar: utc)
-            == .inactive(nextStart: tue9))
+            == .notBlockingNow(nextReset: tue9))
     }
 
-    @Test("A disabled time-limit with a spent budget is inactive with no next start")
+    @Test("A disabled time-limit with a spent budget is notBlockingNow with no next start")
     func timeLimitDisabledSpent() {
         #expect(limitSnapshot(isEnabled: false)
             .activation(usage: RuleUsageDTO(minutesUsed: 45), at: mon10, calendar: utc)
-            == .inactive(nextStart: nil))
+            == .notBlockingNow(nextReset: nil))
     }
 
     @Test("A paused spent time-limit clamps the pause to the next midnight")
@@ -200,10 +200,10 @@ struct RuleActivationTests {
             == .active(until: tueMidnight))
     }
 
-    @Test("Opens under budget are inactive")
+    @Test("Opens under budget are notBlockingNow")
     func openLimitUnderBudget() {
         #expect(openSnapshot().activation(usage: RuleUsageDTO(opensUsed: 4), at: mon10, calendar: utc)
-            == .inactive(nextStart: tue9))
+            == .notBlockingNow(nextReset: tue9))
     }
 
     // MARK: isBlocking convenience
@@ -212,6 +212,6 @@ struct RuleActivationTests {
     func isBlockingConvenience() {
         #expect(RuleActivation.active(until: tueMidnight).isBlocking)
         #expect(!RuleActivation.paused(until: tueMidnight).isBlocking)
-        #expect(!RuleActivation.inactive(nextStart: nil).isBlocking)
+        #expect(!RuleActivation.notBlockingNow(nextReset: nil).isBlocking)
     }
 }

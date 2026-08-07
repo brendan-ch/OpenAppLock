@@ -48,6 +48,7 @@ nonisolated struct RuleSnapshotDTO: Codable, Equatable {
     }
 
     /// Whether the given usage exhausts this rule's daily budget.
+    /// Open limit counts opens, time limit counts minutes used.
     func limitReached(given usage: RuleUsageDTO, at now: Date = .now) -> Bool {
         switch kind {
         case .schedule: false

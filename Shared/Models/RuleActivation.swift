@@ -19,7 +19,7 @@ import Foundation
 nonisolated enum RuleActivation: Equatable, Sendable {
     /// Not blocking now. `nextStart` is when the rule's next window begins, or
     /// nil when it never will (disabled, or no days selected).
-    case inactive(nextStart: Date?)
+    case notBlockingNow(nextReset: Date?)
     /// Currently blocking; ends at the associated date.
     case active(until: Date)
     /// Would be blocking, but the user temporarily paused it until the associated date.
@@ -39,7 +39,7 @@ nonisolated extension RuleSnapshotDTO {
     func activation(
         usage: RuleUsageDTO?, at now: Date = .now, calendar: Calendar = .current
     ) -> RuleActivation {
-        guard isEnabled else { return .inactive(nextStart: nil) }
+        guard isEnabled else { return .notBlockingNow(nextReset: nil) }
 
         let currentBlockEnd: Date?
         switch kind {
@@ -55,7 +55,7 @@ nonisolated extension RuleSnapshotDTO {
         }
 
         guard let end = currentBlockEnd else {
-            return .inactive(nextStart: schedule.nextStart(after: now, calendar: calendar))
+            return .notBlockingNow(nextReset: schedule.nextStart(after: now, calendar: calendar))
         }
         // A pause only surfaces when the rule would otherwise be blocking, and
         // never outlasts the block itself.

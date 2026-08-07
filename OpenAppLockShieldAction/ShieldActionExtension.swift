@@ -132,8 +132,11 @@ final class ShieldActionExtension: ShieldActionDelegate {
                 byAdding: .minute, value: MonitoringPlan.openSessionMinutes + 1, to: now)
         else { return }
         let schedule = DeviceActivityFactory.nonRepeatingSchedule(from: now, to: end, calendar: calendar)
+        
+        let deviceActivityName = DeviceActivityName(MonitoringPlan.sessionActivityName(for: ruleID))
+        DeviceActivityCenter().stopMonitoring([deviceActivityName])
         try? DeviceActivityCenter().startMonitoring(
-            DeviceActivityName(MonitoringPlan.sessionActivityName(for: ruleID)),
+            deviceActivityName,
             during: schedule
         )
     }

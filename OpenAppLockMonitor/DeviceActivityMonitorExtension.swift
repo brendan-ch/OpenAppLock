@@ -38,6 +38,10 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             shields: ManagedSettingsShieldController()
         )
     }
+    
+    private var openSessionStore: OpenSessionStore {
+        OpenSessionStore()
+    }
 
     /// A temporary pause activity reached an interval edge: recompute the rule's
     /// shield from its snapshot. At the start edge the rule is still paused, so
@@ -72,8 +76,10 @@ final class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         super.intervalDidEnd(for: activity)
         Diag.log(.monitor, .event, "intervalDidEnd \(activity.rawValue)")
         if let ruleID = MonitoringPlan.ruleID(fromSessionActivityName: activity.rawValue) {
-            enforcement.handleOpenSessionEnded(ruleID: ruleID)
-            DeviceActivityCenter().stopMonitoring([activity])
+            if !openSessionStore.hasActiveSession(for: ruleID) {
+                enforcement.handleOpenSessionEnded(ruleID: ruleID)
+                DeviceActivityCenter().stopMonitoring([activity])
+            }
         } else if let ruleID = MonitoringPlan.ruleID(fromScheduleWindowName: activity.rawValue) {
             // A schedule window closed (or its evening half ended at 23:59):
             // recompute so a still-active window stays shielded and a finished

@@ -10,7 +10,7 @@ import SwiftUI
 
 /// Rule summary presented as a plain sheet that doubles as the rule editor: the
 /// rule's facts as labeled rows, an options menu (ellipsis), and an "Edit" button
-/// that **cross-fades the sheet in place** into `RuleEditorForm` rather than
+/// that cross-fades the sheet in place into `RuleEditorForm` rather than
 /// pushing a new screen. Editing keeps the same surface — Edit fades the detail
 /// out and the form in (fade-through, no overlap); Save commits and fades back;
 /// Close fades back too, confirming first when there are unsaved edits (the
@@ -58,9 +58,7 @@ struct RuleDetailSheet: View {
                 modeContent(now: timeline.date)
             }
         }
-        // While editing with unsaved changes, block the sheet's swipe-to-dismiss
-        // so the only way out is Close, which routes through the discard prompt
-        // (mirrors AppListEditorView).
+        // Force route through discard prompt
         .interactiveDismissDisabled(isEditing && hasOutstandingEdits)
         .onDisappear {
             if pendingDeletion {
@@ -85,21 +83,6 @@ struct RuleDetailSheet: View {
         .opacity(contentOpacity)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar(dto: dto, usage: usage, now: now) }
-        // Pause confirmation, triggered by the options menu's "Pause" item.
-        // Attached here (outside the Menu) so the menu dismisses first and the
-        // dialog then presents reliably.
-        .confirmationDialog(
-            Text(CopyKey.ruleDetailPauseConfirmationTitleFormat.string(rule.name)),
-            isPresented: $pendingPause,
-            titleVisibility: .visible
-        ) {
-            Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
-                Task { await enforcer.pause(rule, rules: rules) }
-                pendingPause = false
-            }
-        } message: {
-            Text(.ruleDetailPauseConfirmationMessage)
-        }
     }
 
     private func detailList(dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date) -> some View {
@@ -265,6 +248,19 @@ struct RuleDetailSheet: View {
             }
         } message: {
             Text(.ruleDetailDeleteConfirmationMessage)
+        }
+        .confirmationDialog(
+            Text(CopyKey.ruleDetailPauseConfirmationTitleFormat.string(rule.name)),
+            isPresented: $pendingPause,
+            titleVisibility: .visible
+        ) {
+            Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
+                Task { await enforcer.pause(rule, rules: rules) }
+                pendingPause = false
+            }
+        } message: {
+            Text(.ruleDetailPauseConfirmationMessage)
+
         }
     }
 

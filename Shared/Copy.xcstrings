@@ -73,7 +73,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lock while blocking is on — this list is read-only until the block ends."
+            "value" : "Lock changes while blocking is on. This app list- is read-only until the block ends."
           }
         }
       }
@@ -150,7 +150,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No apps yet. Edit Apps to choose what this list includes."
+            "value" : "No apps yet."
           }
         }
       }
@@ -238,7 +238,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lock while blocking is on — app lists are locked until the block ends."
+            "value" : "Lock changes while blocking is on for a rule. Existing app lists are read-only until the block ends."
           }
         }
       }
@@ -821,7 +821,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Block your most distracting apps with rules that keep you honest — on a schedule, with no way out when you turn on Lock while blocking."
+            "value" : "An app for blocking apps."
           }
         }
       }
@@ -898,7 +898,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Protect your deep-work hours."
+            "value" : "Protect your deep work hours."
           }
         }
       }
@@ -942,7 +942,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wind the day down on schedule."
+            "value" : "Wind down on a schedule."
           }
         }
       }
@@ -1173,7 +1173,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lock while blocking is on — this rule is locked until the block ends."
+            "value" : "Lock changes while blocking is on. This rule is read-only until the block ends."
           }
         }
       }
@@ -1580,7 +1580,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lock while blocking"
+            "value" : "Lock changes while blocking"
           }
         }
       }
@@ -2064,7 +2064,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "While on, apps can’t be deleted from this device whenever a locked rule is actively blocking."
+            "value" : "If a blocking rule has “Lock changes while blocking” turned on, no apps can be deleted."
           }
         }
       }

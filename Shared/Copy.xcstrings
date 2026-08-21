@@ -1057,6 +1057,28 @@
         }
       }
     },
+    "ruleDetail.disableConfirmationMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This rule will be disabled until you enable it again."
+          }
+        }
+      }
+    },
+    "ruleDetail.disableConfirmationTitleFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable %@?"
+          }
+        }
+      }
+    },
     "ruleDetail.discardChangesAction" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1239,7 +1261,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apps unblock for 15 minutes, then blocking resumes automatically."
+            "value" : "This rule will be paused for 15 minutes."
           }
         }
       }

@@ -37,6 +37,7 @@ struct RuleDetailSheet: View {
     /// Drives the fade-through: faded to 0, the mode swaps, then back to 1.
     @State private var contentOpacity: Double = 1
     @State private var pendingDeletion = false
+    @State private var pendingDisable = false
     @State private var pendingPause = false
     @State private var confirmingDiscard = false
     @State private var confirmingDelete = false
@@ -139,8 +140,7 @@ struct RuleDetailSheet: View {
                 attemptClose()
             }
             .accessibilityIdentifier("closeDetailButton")
-            // Discard prompt for closing the editor with unsaved edits; attached
-            // to the Close button so it anchors there (mirrors AppListEditorView).
+            // Discard prompt for closing the editor with unsaved edits
             .confirmationDialog(
                 CopyKey.ruleDetailDiscardChangesTitle.string,
                 isPresented: $confirmingDiscard,
@@ -221,8 +221,7 @@ struct RuleDetailSheet: View {
                     .accessibilityIdentifier("pauseRuleButton")
                 }
                 Button(rule.isEnabled ? CopyKey.ruleDetailDisableAction.resource : CopyKey.ruleDetailEnableAction.resource) {
-                    rule.isEnabled.toggle()
-                    rule.pausedUntil = nil
+                    pendingDisable = true
                 }
                 .accessibilityIdentifier("disableRuleButton")
             }
@@ -254,13 +253,24 @@ struct RuleDetailSheet: View {
             isPresented: $pendingPause,
             titleVisibility: .visible
         ) {
-            Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
+            Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource, role: .destructive) {
                 Task { await enforcer.pause(rule, rules: rules) }
                 pendingPause = false
             }
         } message: {
             Text(.ruleDetailPauseConfirmationMessage)
-
+        }
+        .confirmationDialog(
+            Text(CopyKey.ruleDetailDisableConfirmationTitleFormat.string(rule.name)),
+            isPresented: $pendingDisable,
+            titleVisibility: .visible
+        ) {
+            Button(CopyKey.ruleDetailDisableAction.resource, role: .destructive) {
+                rule.isEnabled.toggle()
+                rule.pausedUntil = nil
+            }
+        } message: {
+            Text(.ruleDetailDisableConfirmationMessage)
         }
     }
 

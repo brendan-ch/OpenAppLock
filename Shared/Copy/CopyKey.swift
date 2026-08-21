@@ -52,6 +52,8 @@ nonisolated enum CopyKey: String, CaseIterable {
     case ruleDetailPauseFor15MinutesAction = "ruleDetail.pauseFor15MinutesAction"
     case ruleDetailResumeBlockingAction = "ruleDetail.resumeBlockingAction"
     case ruleDetailDisableAction = "ruleDetail.disableAction"
+    case ruleDetailDisableConfirmationTitleFormat = "ruleDetail.disableConfirmationTitleFormat"
+    case ruleDetailDisableConfirmationMessage = "ruleDetail.disableConfirmationMessage"
     case ruleDetailEnableAction = "ruleDetail.enableAction"
     case ruleDetailDeleteAction = "ruleDetail.deleteAction"
     case ruleDetailRuleActionsLabel = "ruleDetail.ruleActionsLabel"

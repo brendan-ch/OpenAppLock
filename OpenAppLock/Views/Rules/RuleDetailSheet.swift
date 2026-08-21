@@ -55,7 +55,7 @@ struct RuleDetailSheet: View {
 
     var body: some View {
         NavigationStack {
-            TimelineView(.periodic(from: .now, by: 30)) { timeline in
+            TimelineView(.everyMinute) { timeline in
                 modeContent(now: timeline.date)
             }
         }
@@ -333,11 +333,7 @@ struct RuleDetailSheet: View {
     }
 
     /// Today's `.daily` filter scoped to this rule's selection, so the report
-    /// extension attributes only this rule's apps/categories/web domains. The
-    /// interval is the whole day (start-of-day to start-of-next-day), not
-    /// `…end: .now` — a stable value so the filter doesn't change on every 30s
-    /// `TimelineView` tick and reload/flash the pushed report while it's open. The
-    /// daily segment still reports today's usage-so-far (no future activity to add).
+    /// extension attributes only this rule's apps/categories/web domains.
     private var usageFilter: DeviceActivityFilter {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: .now)

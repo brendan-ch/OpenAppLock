@@ -18,7 +18,7 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            TimelineView(.periodic(from: .now, by: 30)) { timeline in
+            TimelineView(.everyMinute) { timeline in
                 homeList(now: timeline.date)
             }
             .navigationTitle(CopyKey.homeNavigationTitle.resource)

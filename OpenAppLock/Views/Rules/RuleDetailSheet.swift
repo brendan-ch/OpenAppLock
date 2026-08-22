@@ -10,7 +10,7 @@ import SwiftUI
 
 /// Rule summary presented as a plain sheet that doubles as the rule editor: the
 /// rule's facts as labeled rows, an options menu (ellipsis), and an "Edit" button
-/// that **cross-fades the sheet in place** into `RuleEditorForm` rather than
+/// that cross-fades the sheet in place into `RuleEditorForm` rather than
 /// pushing a new screen. Editing keeps the same surface — Edit fades the detail
 /// out and the form in (fade-through, no overlap); Save commits and fades back;
 /// Close fades back too, confirming first when there are unsaved edits (the
@@ -37,6 +37,7 @@ struct RuleDetailSheet: View {
     /// Drives the fade-through: faded to 0, the mode swaps, then back to 1.
     @State private var contentOpacity: Double = 1
     @State private var pendingDeletion = false
+    @State private var pendingDisable = false
     @State private var pendingPause = false
     @State private var confirmingDiscard = false
     @State private var confirmingDelete = false
@@ -54,13 +55,11 @@ struct RuleDetailSheet: View {
 
     var body: some View {
         NavigationStack {
-            TimelineView(.periodic(from: .now, by: 30)) { timeline in
+            TimelineView(.everyMinute) { timeline in
                 modeContent(now: timeline.date)
             }
         }
-        // While editing with unsaved changes, block the sheet's swipe-to-dismiss
-        // so the only way out is Close, which routes through the discard prompt
-        // (mirrors AppListEditorView).
+        // Force route through discard prompt
         .interactiveDismissDisabled(isEditing && hasOutstandingEdits)
         .onDisappear {
             if pendingDeletion {
@@ -85,21 +84,6 @@ struct RuleDetailSheet: View {
         .opacity(contentOpacity)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar(dto: dto, usage: usage, now: now) }
-        // Pause confirmation, triggered by the options menu's "Pause" item.
-        // Attached here (outside the Menu) so the menu dismisses first and the
-        // dialog then presents reliably.
-        .confirmationDialog(
-            Text(CopyKey.ruleDetailPauseConfirmationTitleFormat.string(rule.name)),
-            isPresented: $pendingPause,
-            titleVisibility: .visible
-        ) {
-            Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource) {
-                Task { await enforcer.pause(rule, rules: rules) }
-                pendingPause = false
-            }
-        } message: {
-            Text(.ruleDetailPauseConfirmationMessage)
-        }
     }
 
     private func detailList(dto: RuleSnapshotDTO, usage: RuleUsageDTO?, now: Date) -> some View {
@@ -156,8 +140,7 @@ struct RuleDetailSheet: View {
                 attemptClose()
             }
             .accessibilityIdentifier("closeDetailButton")
-            // Discard prompt for closing the editor with unsaved edits; attached
-            // to the Close button so it anchors there (mirrors AppListEditorView).
+            // Discard prompt for closing the editor with unsaved edits
             .confirmationDialog(
                 CopyKey.ruleDetailDiscardChangesTitle.string,
                 isPresented: $confirmingDiscard,
@@ -238,8 +221,7 @@ struct RuleDetailSheet: View {
                     .accessibilityIdentifier("pauseRuleButton")
                 }
                 Button(rule.isEnabled ? CopyKey.ruleDetailDisableAction.resource : CopyKey.ruleDetailEnableAction.resource) {
-                    rule.isEnabled.toggle()
-                    rule.pausedUntil = nil
+                    pendingDisable = true
                 }
                 .accessibilityIdentifier("disableRuleButton")
             }
@@ -265,6 +247,30 @@ struct RuleDetailSheet: View {
             }
         } message: {
             Text(.ruleDetailDeleteConfirmationMessage)
+        }
+        .confirmationDialog(
+            Text(CopyKey.ruleDetailPauseConfirmationTitleFormat.string(rule.name)),
+            isPresented: $pendingPause,
+            titleVisibility: .visible
+        ) {
+            Button(CopyKey.ruleDetailPauseFor15MinutesAction.resource, role: .destructive) {
+                Task { await enforcer.pause(rule, rules: rules) }
+                pendingPause = false
+            }
+        } message: {
+            Text(.ruleDetailPauseConfirmationMessage)
+        }
+        .confirmationDialog(
+            Text(CopyKey.ruleDetailDisableConfirmationTitleFormat.string(rule.name)),
+            isPresented: $pendingDisable,
+            titleVisibility: .visible
+        ) {
+            Button(CopyKey.ruleDetailDisableAction.resource, role: .destructive) {
+                rule.isEnabled.toggle()
+                rule.pausedUntil = nil
+            }
+        } message: {
+            Text(.ruleDetailDisableConfirmationMessage)
         }
     }
 
@@ -327,11 +333,7 @@ struct RuleDetailSheet: View {
     }
 
     /// Today's `.daily` filter scoped to this rule's selection, so the report
-    /// extension attributes only this rule's apps/categories/web domains. The
-    /// interval is the whole day (start-of-day to start-of-next-day), not
-    /// `…end: .now` — a stable value so the filter doesn't change on every 30s
-    /// `TimelineView` tick and reload/flash the pushed report while it's open. The
-    /// daily segment still reports today's usage-so-far (no future activity to add).
+    /// extension attributes only this rule's apps/categories/web domains.
     private var usageFilter: DeviceActivityFilter {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: .now)

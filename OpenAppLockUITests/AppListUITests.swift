@@ -314,11 +314,11 @@ final class AppListUITests: XCTestCase {
         app.element("appListReadOnlyNotice").waitToAppear()
         XCTAssertFalse(
             app.buttons["editAppsButton"].exists,
-            "The app selection must stay locked in Hard Mode"
+            "The app selection must stay locked when a locked rule is blocking"
         )
         XCTAssertFalse(
             app.buttons["saveAppListButton"].exists,
-            "Saving list changes must stay locked in Hard Mode"
+            "Saving list changes must stay locked when a locked rule is blocking"
         )
     }
 }

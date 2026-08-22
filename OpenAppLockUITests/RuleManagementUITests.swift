@@ -119,6 +119,8 @@ final class RuleManagementUITests: XCTestCase {
         XCTAssertEqual(actionsMenu.label, "Rule Actions")
         actionsMenu.tap()
         app.buttons["Disable"].waitToAppear().tap()
+        // Handle the pop-up
+        app.buttons["Disable"].waitToAppear().tap()
 
         // The detail's Status row now reports the rule as disabled (polled — the
         // row's label re-renders asynchronously after the menu action).

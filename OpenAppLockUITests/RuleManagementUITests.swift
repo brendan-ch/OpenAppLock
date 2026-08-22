@@ -51,7 +51,7 @@ final class RuleManagementUITests: XCTestCase {
             app.swipeUp()
             hardMode.waitToAppear()
         }
-        XCTAssertEqual(hardMode.label, "Lock while blocking", "The Lock while blocking switch must carry its label for VoiceOver")
+        XCTAssertEqual(hardMode.label, "Lock changes while blocking", "The Lock while blocking switch must carry its label for VoiceOver")
         XCTAssertEqual(hardMode.value as? String, "0", "Hard Mode starts off")
 
         // A centered `.tap()` lands on the row label and doesn't flip a SwiftUI

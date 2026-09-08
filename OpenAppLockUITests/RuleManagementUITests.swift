@@ -119,16 +119,38 @@ final class RuleManagementUITests: XCTestCase {
         XCTAssertEqual(actionsMenu.label, "Rule Actions")
         actionsMenu.tap()
         app.buttons["Disable"].waitToAppear().tap()
+        
         // Handle the pop-up
         app.buttons["Disable"].waitToAppear().tap()
 
-        // The detail's Status row now reports the rule as disabled (polled — the
-        // row's label re-renders asynchronously after the menu action).
+        // The detail's Status row now reports the rule as disabled.
         app.element("detailRow-Status").waitForLabel(containing: "Disabled")
 
         app.buttons["closeDetailButton"].tap()
         let cardStatus = app.staticTexts["ruleStatus-Sleep"].waitToAppear()
         XCTAssertEqual(cardStatus.label, "Disabled")
+    }
+    
+    func testDisableThenEnableRule() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToRulesTab()
+        
+        app.buttons["ruleCard-Sleep"].waitToAppear().tap()
+        
+        let actionsMenu = app.navigationBars.buttons["ruleActionsMenu"].waitToAppear()
+        XCTAssertEqual(actionsMenu.label, "Rule Actions")
+        actionsMenu.tap()
+        app.buttons["Disable"].waitToAppear().tap()
+        
+        // Handle the pop-up
+        app.buttons["Disable"].waitToAppear().tap()
+        
+        actionsMenu.tap()
+        app.buttons["Enable"].waitToAppear().tap()
+        
+        // Enable should directly enable the rule without a pop-up.
+        let status = app.element("detailRow-Status")
+        XCTAssertTrue(status.label.contains("Starts in"), "Got: \(status.label)")
     }
 
     func testDeleteRuleRemovesCard() throws {

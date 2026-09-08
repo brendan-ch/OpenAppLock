@@ -16,6 +16,8 @@ struct RuleEditorForm: View {
     @Binding var draft: RuleDraft
 
     @State private var showingAppPicker = false
+    
+    let minuteIntervalForDatePickers = 5
 
     var body: some View {
         Form {
@@ -53,12 +55,19 @@ struct RuleEditorForm: View {
                     selection: timeBinding($draft.scheduleConfig.startMinutes),
                     displayedComponents: .hourAndMinute
                 )
+                // See https://stackoverflow.com/questions/58976654/how-to-give-datepicker-a-minute-interval-in-swiftui/73196996#73196996
+                .onAppear {
+                    UIDatePicker.appearance().minuteInterval = minuteIntervalForDatePickers
+                }
                 .accessibilityIdentifier("fromTimePicker")
                 DatePicker(
                     CopyKey.ruleEditorToLabel.resource,
                     selection: timeBinding($draft.scheduleConfig.endMinutes),
                     displayedComponents: .hourAndMinute
                 )
+                .onAppear {
+                    UIDatePicker.appearance().minuteInterval = minuteIntervalForDatePickers
+                }
                 .accessibilityIdentifier("toTimePicker")
             } header: {
                 Text(.ruleEditorDuringThisTimeHeader).textCase(nil)

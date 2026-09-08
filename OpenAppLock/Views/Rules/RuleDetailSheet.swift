@@ -221,7 +221,12 @@ struct RuleDetailSheet: View {
                     .accessibilityIdentifier("pauseRuleButton")
                 }
                 Button(rule.isEnabled ? CopyKey.ruleDetailDisableAction.resource : CopyKey.ruleDetailEnableAction.resource) {
-                    pendingDisable = true
+                    if rule.isEnabled {
+                        pendingDisable = true
+                    } else {
+                        rule.isEnabled.toggle()
+                        rule.pausedUntil = nil
+                    }
                 }
                 .accessibilityIdentifier("disableRuleButton")
             }

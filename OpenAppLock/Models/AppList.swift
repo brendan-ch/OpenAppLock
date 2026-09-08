@@ -10,7 +10,7 @@ import SwiftData
 /// list, so editing the list affects every rule that uses it. Deleting a list
 /// detaches it from its rules (they fall back to "no apps").
 @Model
-final class AppList: Equatable {
+final class AppList: Equatable, Hashable {
     @Attribute(.unique) var id: UUID
     var name: String
     /// Encoded `FamilyActivitySelection` (opaque tokens). Nil until apps are picked.

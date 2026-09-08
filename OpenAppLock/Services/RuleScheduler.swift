@@ -118,14 +118,14 @@ nonisolated final class RuleScheduler: @unchecked Sendable {
                 // Self-dating per-day activities (block + opt-in warn): a stale
                 // cross-midnight flush carries a prior day key and is dropped.
                 plans.append(
-                    contentsOf: dayPlans(
+                    contentsOf: timeLimitRulePlannedActivities(
                         for: snapshot, selectionData: selectionData, at: now, calendar: calendar))
             case .openLimit:
                 // Open limits carry no usage events and have no stale-flush class;
                 // they keep the single always-on repeating activity.
-                plans.append(limitPlan(for: snapshot, selectionData: selectionData))
+                plans.append(openLimitRulePlannedActivity(for: snapshot, selectionData: selectionData))
             case .schedule:
-                plans.append(contentsOf: schedulePlans(for: snapshot))
+                plans.append(contentsOf: scheduleRuleSnapshotPlannedActivities(for: snapshot))
             }
         }
 
@@ -180,7 +180,7 @@ nonisolated final class RuleScheduler: @unchecked Sendable {
     /// events, so a restart has no accrual to lose; it is still fingerprinted
     /// on kind, budget, and selection to detect the configuration changes that
     /// should restart the activity (e.g. an app-list swap).
-    func limitPlan(for snapshot: RuleSnapshotDTO, selectionData: Data) -> PlannedActivity {
+    func openLimitRulePlannedActivity(for snapshot: RuleSnapshotDTO, selectionData: Data) -> PlannedActivity {
         let fingerprint = "\(snapshot.kindRaw)|\(snapshot.dailyLimitMinutes)|"
             + Self.selectionFingerprint(selectionData)
         return PlannedActivity(
@@ -196,7 +196,7 @@ nonisolated final class RuleScheduler: @unchecked Sendable {
     /// name makes a cross-midnight stale flush self-identify so the monitor drops
     /// it. The day after is armed solely by the monitor's midnight self-arm, not
     /// here.
-    func dayPlans(
+    func timeLimitRulePlannedActivities(
         for snapshot: RuleSnapshotDTO, selectionData: Data,
         at now: Date, calendar: Calendar = .current
     ) -> [PlannedActivity] {
@@ -235,7 +235,7 @@ nonisolated final class RuleScheduler: @unchecked Sendable {
     /// crossing). A window encodes only its interval — days, mode and apps are
     /// read fresh by reconcile() at each callback — so it is fingerprinted on
     /// start/end alone.
-    func schedulePlans(for snapshot: RuleSnapshotDTO) -> [PlannedActivity] {
+    func scheduleRuleSnapshotPlannedActivities(for snapshot: RuleSnapshotDTO) -> [PlannedActivity] {
         let fingerprint = "schedule|\(snapshot.startMinutes)|\(snapshot.endMinutes)"
         return scheduleWindows(for: snapshot).map { window in
             PlannedActivity(

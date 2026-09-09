@@ -145,7 +145,6 @@ struct AppListEditorView: View {
                             Text(.appListsDeleteConfirmationMessage)
                         }
                         .alert(CopyKey.appListsLibraryDeletionBlockedAlertTitle.string, isPresented: $deletionBlocked) {
-                            Button(CopyKey.appListsOkButtonLabel.resource, role: .cancel) {}
                         } message: {
                             Text(.appListsLibraryDeletionBlockedAlertMessage)
                         }

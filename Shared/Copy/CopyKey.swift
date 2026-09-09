@@ -160,7 +160,6 @@ nonisolated enum CopyKey: String, CaseIterable {
     case appListsLibraryYourAppListsSectionHeader = "appLists.libraryYourAppListsSectionHeader"
     case appListsLibraryLockedFooter = "appLists.libraryLockedFooter"
     case appListsLibraryDeletionBlockedAlertTitle = "appLists.libraryDeletionBlockedAlertTitle"
-    case appListsOkButtonLabel = "appLists.okButtonLabel"
     case appListsLibraryDeletionBlockedAlertMessage = "appLists.libraryDeletionBlockedAlertMessage"
     case appListsLibraryViewButtonLabel = "appLists.libraryViewButtonLabel"
     case appListsLibraryEditButtonLabel = "appLists.libraryEditButtonLabel"

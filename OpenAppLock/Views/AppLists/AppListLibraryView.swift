@@ -123,7 +123,6 @@ struct AppListLibraryView: View {
             AppListDetailView(list: list)
         }
         .alert(Text(.appListsLibraryDeletionBlockedAlertTitle), isPresented: $deletionBlocked) {
-            Button(CopyKey.appListsOkButtonLabel.resource, role: .cancel) {}
         } message: {
             Text(.appListsLibraryDeletionBlockedAlertMessage)
         }

@@ -152,4 +152,52 @@ final class RuleCreationUITests: XCTestCase {
         XCTAssertTrue(app.buttons["preset-morning-focus"].exists)
         XCTAssertTrue(app.buttons["preset-deep-work"].exists)
     }
+
+    func testCreateScheduleRuleAlertsIfStartEndTimesTooClose() throws {
+        let app = XCUIApplication.launchOpenAppLock()
+        app.goToRulesTab()
+        app.buttons["newRuleButton"].waitToAppear().tap()
+        app.buttons["ruleKind-schedule"].waitToAppear().tap()
+        app.staticTexts["ruleEditorTitle"].waitToAppear()
+
+        let fromTimePicker = app.datePickers["fromTimePicker"]
+        fromTimePicker.tap()
+        app.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: "09")
+        app.pickerWheels.element(boundBy: 1).adjust(toPickerWheelValue: "00")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+
+        let toTimePicker = app.datePickers["toTimePicker"]
+        toTimePicker.tap()
+        app.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: "09")
+        app.pickerWheels.element(boundBy: 1).adjust(toPickerWheelValue: "05")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+
+        app.buttons["commitRuleButton"].waitToAppear().tap()
+
+        XCTAssertTrue(app.staticTexts["Unable to save"].waitToAppear().exists)
+    }
+
+    func testCreateScheduleRuleAlertsIfStartTimeTooCloseToMidnight() throws {
+        let app = XCUIApplication.launchOpenAppLock()
+        app.goToRulesTab()
+        app.buttons["newRuleButton"].waitToAppear().tap()
+        app.buttons["ruleKind-schedule"].waitToAppear().tap()
+        app.staticTexts["ruleEditorTitle"].waitToAppear()
+
+        let fromTimePicker = app.datePickers["fromTimePicker"]
+        fromTimePicker.tap()
+        app.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: "23")
+        app.pickerWheels.element(boundBy: 1).adjust(toPickerWheelValue: "50")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+
+        let toTimePicker = app.datePickers["toTimePicker"]
+        toTimePicker.tap()
+        app.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: "09")
+        app.pickerWheels.element(boundBy: 1).adjust(toPickerWheelValue: "00")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+
+        app.buttons["commitRuleButton"].waitToAppear().tap()
+
+        XCTAssertTrue(app.staticTexts["Unable to save"].waitToAppear().exists)
+    }
 }

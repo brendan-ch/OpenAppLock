@@ -1420,6 +1420,39 @@
         }
       }
     },
+    "ruleDraft.validationFailedTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to save"
+          }
+        }
+      }
+    },
+    "ruleDraft.validationStartEndTimesTooCloseMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due to system limitations, the start and end times must be at least 15 minutes apart."
+          }
+        }
+      }
+    },
+    "ruleDraft.validationStartEndTimesTooCloseToMidnightMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due to system limitations, the start time can’t be within 15 minutes to midnight."
+          }
+        }
+      }
+    },
     "ruleEditor.addRuleLabel" : {
       "extractionState" : "manual",
       "localizations" : {

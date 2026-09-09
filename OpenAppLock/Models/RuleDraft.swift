@@ -50,6 +50,18 @@ struct RuleDraft: Hashable {
         self.configuration = .schedule(
             ScheduleConfig(startMinutes: preset.startMinutes, endMinutes: preset.endMinutes))
     }
+    
+    func validate() -> ValidationResult {
+        if self.configuration.kind == .schedule {
+            if self.configuration.scheduleConfig?.startAndEndTimesTooClose == true {
+                return .failure(reason: .startEndTimesTooClose)
+            }
+            if self.configuration.scheduleConfig?.startIsTooCloseToMidnight == true {
+                return .failure(reason: .startTooCloseToMidnight)
+            }
+        }
+        return .success
+    }
 
     /// Writes the draft back onto a rule. The rule (and the chosen list) must
     /// already be inserted in a context: SwiftData relationships may only be
@@ -119,5 +131,25 @@ extension RuleDraft {
     var openLimitConfig: OpenLimitConfig {
         get { configuration.openLimitConfig ?? OpenLimitConfig() }
         set { configuration = .openLimit(newValue) }
+    }
+}
+
+extension RuleDraft {
+    enum ValidationResult: Equatable {
+        case success
+        case failure(reason: Reason)
+        enum Reason: Equatable {
+            case startEndTimesTooClose
+            case startTooCloseToMidnight
+        }
+    }
+}
+
+extension RuleDraft.ValidationResult.Reason {
+    var message: String {
+        switch self {
+        case .startEndTimesTooClose: CopyKey.ruleDraftValidationFailedStartEndTimesTooCloseMessage.string
+        case .startTooCloseToMidnight: CopyKey.ruleDraftValidationFailedStartTimeTooCloseToMidnightMessage.string
+        }
     }
 }

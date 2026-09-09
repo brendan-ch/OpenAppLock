@@ -195,6 +195,30 @@ struct RuleDraftTests {
         #expect(draft.scheduleConfig.endMinutes == 6 * 60 + 30)
         #expect(draft.kind == .schedule)
     }
+    
+    @Test("Draft validation fails for a schedule rule if the start and end times are too close")
+    func validateFailsIfScheduleStartAndEndTimesTooClose() {
+        let config = RuleConfiguration.schedule(
+            ScheduleConfig(
+                startMinutes: 9 * 60, endMinutes: 9 * 60 + 5,
+                selectionMode: .allowOnly))
+        var draft = RuleDraft(kind: .schedule)
+        draft.configuration = config
+        
+        #expect(draft.validate() == .failure(reason: .startEndTimesTooClose))
+    }
+    
+    @Test("Draft validation fails for a schedule rule if the start time is too close to midnight")
+    func validateFailsIfScheduleStartTimeTooCloseToMidnight() {
+        let config = RuleConfiguration.schedule(
+            ScheduleConfig(
+                startMinutes: 23 * 60 + 50, endMinutes: 6 * 60,
+                selectionMode: .allowOnly))
+        var draft = RuleDraft(kind: .schedule)
+        draft.configuration = config
+        
+        #expect(draft.validate() == .failure(reason: .startTooCloseToMidnight))
+    }
 }
 
 @MainActor

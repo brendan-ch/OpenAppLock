@@ -89,6 +89,11 @@ nonisolated enum CopyKey: String, CaseIterable {
     case newRuleNavigationTitle = "newRule.navigationTitle"
     case newRuleCloseButton = "newRule.closeButton"
     case newRulePresetSummaryFormat = "newRule.presetSummaryFormat"
+    
+    // MARK: - RuleDraft
+    case ruleDraftValidationFailedTitle = "ruleDraft.validationFailedTitle"
+    case ruleDraftValidationFailedStartEndTimesTooCloseMessage = "ruleDraft.validationStartEndTimesTooCloseMessage"
+    case ruleDraftValidationFailedStartTimeTooCloseToMidnightMessage = "ruleDraft.validationStartEndTimesTooCloseToMidnightMessage"
 
     // MARK: - SettingsView (Task 3)
     case settingsUninstallProtectionToggleLabel = "settings.uninstallProtectionToggleLabel"

@@ -75,6 +75,7 @@ struct ScheduleConfig: Hashable, Sendable {
     }
     
     var startAndEndTimesTooClose: Bool {
+        endMinutes > startMinutes &&
         endMinutes - startMinutes < minimumRuleDurationMinutes
     }
 

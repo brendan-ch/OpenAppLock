@@ -62,12 +62,17 @@ struct OpenAppLockApp: App {
         let appSettings = AppSettingsStore()
         _settings = State(initialValue: appSettings)
 
-        let schema = Schema(versionedSchema: OpenAppLockSchemaV1.self)
+        let schema = Schema(versionedSchema: OpenAppLockSchemaV2.self)
         let modelConfiguration = ModelConfiguration(
-            schema: schema, isStoredInMemoryOnly: config.isUITesting
+            schema: schema,
+            isStoredInMemoryOnly: config.isUITesting
         )
         do {
-            container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            container = try ModelContainer(
+                for: schema,
+                migrationPlan: OpenAppLockSchemaMigrationPlan.self,
+                configurations: [modelConfiguration]
+            )
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }

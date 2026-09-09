@@ -41,15 +41,15 @@ struct RuleConfigurationTests {
         #expect(openLimit.scheduleConfig == nil)
     }
     
-    @Test("Schedule rule is not enforceable if start time is too close to midnight")
+    @Test("Schedule rule checks if start time is too close to midnight")
     func scheduleRuleNotEnforceableIfStartTooCloseToMidnight() {
         let schedule = RuleConfiguration.schedule(ScheduleConfig(startMinutes: 23 * 60 + 50, endMinutes: 1 * 60, selectionMode: .block))
-        #expect(schedule.scheduleConfig?.hasEnforceableStartAndEndTimes == false)
+        #expect(schedule.scheduleConfig?.startIsTooCloseToMidnight == true)
     }
     
     @Test("Schedule rule is not enforceable if start time is too close to end time")
     func scheduleRuleNotEnforceableIfStartTooCloseToEnd() {
         let schedule = RuleConfiguration.schedule(ScheduleConfig(startMinutes: 9 * 60, endMinutes: 9 * 60 + 5, selectionMode: .block))
-        #expect(schedule.scheduleConfig?.hasEnforceableStartAndEndTimes == false)
+        #expect(schedule.scheduleConfig?.startAndEndTimesTooClose == true)
     }
 }

@@ -62,14 +62,6 @@ struct ScheduleConfig: Hashable, Sendable {
     var endMinutes: Int
     var selectionMode: SelectionMode
     
-    /// Indicates whether the rule is enforceable within system and ``RuleScheduler`` implementation constraints.
-    var hasEnforceableStartAndEndTimes: Bool {
-        if startMinutes >= endMinutes {
-            return !startIsTooCloseToMidnight
-        }
-        return !startAndEndTimesTooClose
-    }
-    
     var startIsTooCloseToMidnight: Bool {
         startMinutes > fifteenMinutesBeforeMidnight
     }

@@ -28,14 +28,14 @@ final class SettingsUITests: XCTestCase {
         let app = XCUIApplication.launchOpenAppLock(seedScenario: "hard-mode-active")
         app.goToSettingsTab()
 
-        // While the seeded "Locked In" Hard Mode rule is blocking, the toggle is
+        // While the seeded "Locked In" Lock While Blocking rule is blocking, the toggle is
         // replaced by a lock (mirroring Home's "Currently Blocking" rows) so the
         // protection can't be turned off mid-block.
         app.element("uninstallProtectionLockedNotice").waitToAppear()
         app.element("uninstallProtectionLockIcon").waitToAppear()
         XCTAssertFalse(
             app.switches["uninstallProtectionToggle"].exists,
-            "The Uninstall Protection switch must be hidden while a Hard Mode rule is blocking"
+            "The Uninstall Protection switch must be hidden while a Lock While Blocking rule is blocking"
         )
     }
 
@@ -104,7 +104,7 @@ final class SettingsUITests: XCTestCase {
         app.element("appListRow-Distractions").tap()
         XCTAssertFalse(
             app.textFields["appListNameField"].waitForExistence(timeout: 1.5),
-            "App lists must be read-only while a Hard Mode rule is blocking"
+            "App lists must be read-only while a Lock While Blocking rule is blocking"
         )
     }
 }

@@ -159,8 +159,8 @@ struct RuleEditorForm: View {
         }
     }
 
-    /// Hard Mode applies to every kind. A labeled `Toggle` makes the whole row
-    /// the tap target and gives VoiceOver a "Hard Mode" switch in one element.
+    /// Lock While Blocking applies to every kind. A labeled `Toggle` makes the whole row
+    /// the tap target and gives VoiceOver a "Lock While Blocking" switch in one element.
     private var hardModeSection: some View {
         Section {
             Toggle(CopyKey.ruleEditorHardModeToggle.resource, isOn: $draft.hardMode)

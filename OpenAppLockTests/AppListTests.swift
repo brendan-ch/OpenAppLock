@@ -196,7 +196,7 @@ struct AppListDraftTests {
 }
 
 @MainActor
-@Suite("App-list editing under Hard Mode")
+@Suite("App-list editing under Lock While Blocking")
 struct AppListEditingPolicyTests {
     let mondayDuringWork = date(2025, 1, 6, 10, 0)
     let mondayEvening = date(2025, 1, 6, 19, 0)

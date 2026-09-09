@@ -14,7 +14,7 @@ import Foundation
 /// paths never disagree; a parity unit test enforces this.
 enum UninstallProtectionPolicy {
     /// Whether device app removal should be denied right now: the user opted in
-    /// (`enabled`) *and* some snapshot is actively blocking with Hard Mode on.
+    /// (`enabled`) *and* some snapshot is actively blocking with Lock While Blocking on.
     static func shouldDenyAppRemoval(
         snapshots: [RuleSnapshotDTO], enabled: Bool,
         usageFor: (RuleSnapshotDTO) -> RuleUsageDTO? = { _ in nil },
@@ -34,7 +34,7 @@ enum UninstallProtectionPolicy {
         }
     }
 
-    /// True while the snapshot is actively blocking with Hard Mode on.
+    /// True while the snapshot is actively blocking with Lock While Blocking on.
     static func isHardLocked(
         _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current

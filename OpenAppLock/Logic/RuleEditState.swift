@@ -10,7 +10,7 @@
 enum RuleEditState {
     /// Outstanding edits exist when any user-editable field of the draft differs
     /// from what the editor opened with. `RuleDraft` is `Equatable`, so a single
-    /// raw comparison covers the name, days, Hard Mode, kind configuration, and
+    /// raw comparison covers the name, days, Lock While Blocking, kind configuration, and
     /// the chosen app list at once. The comparison is raw — not sanitized — so a
     /// trailing-whitespace name edit still counts, matching `AppListEditState`.
     static func hasOutstandingEdits(original: RuleDraft, current: RuleDraft) -> Bool {

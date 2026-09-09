@@ -115,7 +115,7 @@ struct SampleRulesTests {
         }
     }
 
-    @Test("Hard mode scenario seeds a locked active rule")
+    @Test("Lock While Blocking scenario seeds a locked active rule")
     func hardModeScenario() {
         let now = date(2025, 1, 6, 12, 0)
         let rule = SampleRules.activeRule(named: "Locked In", hardMode: true, now: now, calendar: utc)

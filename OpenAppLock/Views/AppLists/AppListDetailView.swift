@@ -6,7 +6,7 @@
 import FamilyControls
 import SwiftUI
 
-/// Read-only view of an app list's contents. Shown while a Hard Mode rule is
+/// Read-only view of an app list's contents. Shown while a Lock While Blocking rule is
 /// actively blocking: the list itself stays locked (no name field, no "Edit
 /// Apps", no Save), but the user can still see which apps the list includes —
 /// viewing is never a back door out of the block.

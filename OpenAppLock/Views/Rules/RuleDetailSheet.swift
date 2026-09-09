@@ -170,7 +170,7 @@ struct RuleDetailSheet: View {
         // `canEdit` gate, re-checked every render. If a hard block engages while
         // the form is open, Save (and the weakening menu actions) disappear, so
         // in-progress edits can only be discarded via Close — never committed.
-        // That is the Hard Mode invariant (an active hard block can't be
+        // That is the Lock While Blocking invariant (an active hard block can't be
         // weakened), not an oversight: it closes the commit window the old
         // pushed editor left open.
         if RulePolicy.canEdit(dto, usage: usage, at: now) {
@@ -431,7 +431,7 @@ private struct RuleUsageReportPage: View {
 
 #if DEBUG
 /// Renders the detail sheet for one scenario against an in-memory rule, so the
-/// previews exercise realistic layouts (app list attached, days, hard mode)
+/// previews exercise realistic layouts (app list attached, days, Lock While Blocking)
 /// without touching the on-disk store. The view keeps the container alive via
 /// `.modelContainer`, which is also what supplies its `modelContext`.
 @MainActor
@@ -479,9 +479,9 @@ private func ruleDetailPreview(
         days: Weekday.everyDay)
 }
 
-#Preview("Schedule · Hard Mode") {
+#Preview("Schedule · Lock While Blocking") {
     // A full-day window (start == end) on every day reads as actively blocking
-    // whenever the preview runs, surfacing the Hard Mode lock notice and hiding
+    // whenever the preview runs, surfacing the Lock While Blocking lock notice and hiding
     // Edit — the state that is otherwise hard to catch in a static preview.
     ruleDetailPreview(
         name: "Locked In",

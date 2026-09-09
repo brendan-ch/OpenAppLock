@@ -40,7 +40,7 @@ final class BlockingRule {
     var selectionCount: Int
     var dayNumbers: [Int]
     /// When set, the rule's current block is temporarily paused (user tapped Pause).
-    /// Cleared automatically once the date passes; never set while Hard Mode is active.
+    /// Cleared automatically once the date passes; never set while Lock While Blocking is active.
     var pausedUntil: Date?
     var createdAt: Date
 

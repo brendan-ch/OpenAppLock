@@ -41,7 +41,7 @@ struct RuleEditStateTests {
         #expect(RuleEditState.hasOutstandingEdits(original: original, current: current))
     }
 
-    @Test("Toggling Hard Mode counts as an outstanding edit")
+    @Test("Toggling Lock While Blocking counts as an outstanding edit")
     func hardModeToggleIsAnEdit() {
         let original = RuleDraft(kind: .schedule)
         var current = original

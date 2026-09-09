@@ -11,7 +11,7 @@ struct LaunchConfiguration: Equatable {
     enum SeedScenario: String {
         /// One actively blocking rule ("Work Time") and one upcoming rule ("Sleep").
         case standard
-        /// An actively blocking Hard Mode rule ("Locked In") plus an upcoming rule.
+        /// An actively blocking Lock While Blocking rule ("Locked In") plus an upcoming rule.
         case hardModeActive = "hard-mode-active"
         /// Limit rules with seeded usage: "Time Keeper" (18m of 45m),
         /// "Gate Keeper" (2 of 5 opens), and "Doom Scroll" (budget spent →

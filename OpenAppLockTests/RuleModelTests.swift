@@ -153,7 +153,7 @@ struct RuleDraftTests {
         #expect(rule.hardMode)
     }
 
-    @Test("Enabling Hard Mode via a draft edit clears any pending pause")
+    @Test("Enabling Lock While Blocking via a draft edit clears any pending pause")
     func applyHardModeClearsPause() throws {
         let context = try makeInMemoryContext()
         let rule = BlockingRule(name: "Work Time")

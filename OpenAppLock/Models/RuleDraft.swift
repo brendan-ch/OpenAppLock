@@ -74,9 +74,9 @@ struct RuleDraft: Hashable {
         rule.name = name
         rule.days = days
         rule.hardMode = hardMode
-        // Hard Mode and a pause can't coexist (a hard block can't be lifted), so
-        // an edit that turns Hard Mode on clears any lingering pause — otherwise
-        // a paused soft rule edited to Hard Mode would stay unshielded until the
+        // Lock While Blocking and a pause can't coexist (a hard block can't be lifted), so
+        // an edit that turns Lock While Blocking on clears any lingering pause — otherwise
+        // a paused soft rule edited to Lock While Blocking would stay unshielded until the
         // pause elapsed. See `BlockingRule.pausedUntil`.
         if hardMode { rule.pausedUntil = nil }
         rule.configuration = configuration

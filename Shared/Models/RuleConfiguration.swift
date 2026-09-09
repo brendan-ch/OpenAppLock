@@ -65,9 +65,17 @@ struct ScheduleConfig: Hashable, Sendable {
     /// Indicates whether the rule is enforceable within system and ``RuleScheduler`` implementation constraints.
     var hasEnforceableStartAndEndTimes: Bool {
         if startMinutes >= endMinutes {
-            return startMinutes < fifteenMinutesBeforeMidnight
+            return !startIsTooCloseToMidnight
         }
-        return endMinutes - startMinutes >= minimumRuleDurationMinutes
+        return !startAndEndTimesTooClose
+    }
+    
+    var startIsTooCloseToMidnight: Bool {
+        startMinutes > fifteenMinutesBeforeMidnight
+    }
+    
+    var startAndEndTimesTooClose: Bool {
+        endMinutes - startMinutes < minimumRuleDurationMinutes
     }
 
     init(

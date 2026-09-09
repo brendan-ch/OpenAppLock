@@ -41,6 +41,8 @@ struct RuleDetailSheet: View {
     @State private var pendingPause = false
     @State private var confirmingDiscard = false
     @State private var confirmingDelete = false
+    @State private var presentFailedValidation = false
+    @State private var failedValidationReason: String? = nil
 
     init(rule: BlockingRule) {
         self.rule = rule
@@ -64,6 +66,13 @@ struct RuleDetailSheet: View {
         .onDisappear {
             if pendingDeletion {
                 modelContext.delete(rule)
+            }
+        }
+        .alert(CopyKey.ruleDraftValidationFailedTitle.string, isPresented: $presentFailedValidation) {
+            
+        } message: {
+            if let failedValidationReason = failedValidationReason {
+                Text(failedValidationReason)
             }
         }
     }
@@ -169,7 +178,7 @@ struct RuleDetailSheet: View {
             ToolbarItem(placement: .primaryAction) {
                 if isEditing {
                     Button(role: .confirm) {
-                        commitEdit()
+                        tryCommitEdit()
                     } label: {
                         Image(systemName: "checkmark")
                     }
@@ -319,9 +328,16 @@ struct RuleDetailSheet: View {
     }
 
     /// Applies the (sanitized) edits to the rule and fades back to the detail.
-    private func commitEdit() {
-        draft.sanitized().apply(to: rule)
-        setEditing(false)
+    private func tryCommitEdit() {
+        let sanitizedDraft = draft.sanitized()
+        
+        if case .failure(let reason) = sanitizedDraft.validate() {
+            presentFailedValidation = true
+            failedValidationReason = reason.message
+        } else {
+            sanitizedDraft.apply(to: rule)
+            setEditing(false)
+        }
     }
 
     // MARK: - Detail rows

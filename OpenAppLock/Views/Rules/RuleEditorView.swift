@@ -13,6 +13,9 @@ import SwiftUI
 struct RuleEditorView: View {
     @State var draft: RuleDraft
     var onCommit: (RuleDraft) -> Void
+    
+    @State private var presentFailedValidation: Bool = false
+    @State private var failedValidationReason: String? = nil
 
     var body: some View {
         RuleEditorForm(draft: $draft)
@@ -26,12 +29,25 @@ struct RuleEditorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm) {
-                        onCommit(draft.sanitized())
+                        let validationResult = draft.validate()
+                        if case .failure(let reason) = validationResult {
+                            presentFailedValidation = true
+                            failedValidationReason = reason.message
+                        } else {
+                            onCommit(draft.sanitized())
+                        }
                     } label: {
                         Image(systemName: "checkmark")
                     }
                     .accessibilityLabel(CopyKey.ruleEditorAddRuleLabel.resource)
                     .accessibilityIdentifier("commitRuleButton")
+                }
+            }
+            .alert(CopyKey.ruleDraftValidationFailedTitle.string, isPresented: $presentFailedValidation) {
+                
+            } message: {
+                if let failedValidationReason = failedValidationReason {
+                    Text(failedValidationReason)
                 }
             }
     }

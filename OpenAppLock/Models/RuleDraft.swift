@@ -62,6 +62,10 @@ struct RuleDraft: Hashable {
         }
         return .success
     }
+    
+    var hasValidConfiguration: Bool {
+        validate() == .success
+    }
 
     /// Writes the draft back onto a rule. The rule (and the chosen list) must
     /// already be inserted in a context: SwiftData relationships may only be

@@ -7,7 +7,8 @@ import Foundation
 
 extension RuleSnapshotDTO {
     /// Builds the projection from a `BlockingRule`, flattening the app-list
-    /// relationship to its raw `selectionData`.
+    /// relationship to its raw `selectionData`. The canonical call site is
+    /// `BlockingRule.dto`; this initializer is its implementation.
     init(rule: BlockingRule) {
         self.init(
             id: rule.id,

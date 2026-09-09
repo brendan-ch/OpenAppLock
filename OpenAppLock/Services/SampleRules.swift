@@ -9,6 +9,8 @@ import SwiftData
 /// Builds deterministic rules for UI-test scenarios, positioned relative to
 /// "now" so an active window is genuinely active whenever the test runs.
 enum SampleRules {
+    static var minutesInterval: Int { 5 }
+    
     static func seed(
         _ scenario: LaunchConfiguration.SeedScenario,
         into context: ModelContext,
@@ -79,8 +81,8 @@ enum SampleRules {
         named name: String, hardMode: Bool, now: Date, calendar: Calendar = .current
     ) -> BlockingRule {
         let nowMinutes = minutesIntoDay(of: now, calendar: calendar)
-        let start = (nowMinutes + 24 * 60 - 60) % (24 * 60)
-        let end = (nowMinutes + 6 * 60) % (24 * 60)
+        let start = clampToMinutesInterval(minutes: (nowMinutes + 24 * 60 - 60) % (24 * 60))
+        let end = clampToMinutesInterval(minutes: (nowMinutes + 6 * 60) % (24 * 60))
         return BlockingRule(
             name: name,
             configuration: .schedule(ScheduleConfig(startMinutes: start, endMinutes: end)),
@@ -95,8 +97,8 @@ enum SampleRules {
         named name: String, now: Date, calendar: Calendar = .current
     ) -> BlockingRule {
         let nowMinutes = minutesIntoDay(of: now, calendar: calendar)
-        let start = (nowMinutes + 2 * 60) % (24 * 60)
-        let end = (start + 8 * 60) % (24 * 60)
+        let start = clampToMinutesInterval(minutes: (nowMinutes + 2 * 60) % (24 * 60))
+        let end = clampToMinutesInterval(minutes: (start + 8 * 60) % (24 * 60))
         return BlockingRule(
             name: name,
             configuration: .schedule(ScheduleConfig(startMinutes: start, endMinutes: end)),
@@ -107,5 +109,9 @@ enum SampleRules {
     private static func minutesIntoDay(of date: Date, calendar: Calendar) -> Int {
         let components = calendar.dateComponents([.hour, .minute], from: date)
         return (components.hour ?? 0) * 60 + (components.minute ?? 0)
+    }
+    
+    private static func clampToMinutesInterval(minutes: Int) -> Int {
+        return minutes - (minutes % minutesInterval)
     }
 }

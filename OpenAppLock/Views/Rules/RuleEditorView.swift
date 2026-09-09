@@ -14,8 +14,7 @@ struct RuleEditorView: View {
     @State var draft: RuleDraft
     var onCommit: (RuleDraft) -> Void
     
-    @State private var presentFailedValidation: Bool = false
-    @State private var failedValidationReason: String? = nil
+    @State private var failedValidationMessage: String? = nil
 
     var body: some View {
         RuleEditorForm(draft: $draft)
@@ -31,8 +30,7 @@ struct RuleEditorView: View {
                     Button(role: .confirm) {
                         let validationResult = draft.validate()
                         if case .failure(let reason) = validationResult {
-                            presentFailedValidation = true
-                            failedValidationReason = reason.message
+                            failedValidationMessage = reason.message
                         } else {
                             onCommit(draft.sanitized())
                         }
@@ -43,11 +41,14 @@ struct RuleEditorView: View {
                     .accessibilityIdentifier("commitRuleButton")
                 }
             }
-            .alert(CopyKey.ruleDraftValidationFailedTitle.string, isPresented: $presentFailedValidation) {
+            .alert(CopyKey.ruleDraftValidationFailedTitle.string, isPresented: .init(
+                get: { failedValidationMessage != nil },
+                set: { if !$0 { failedValidationMessage = nil } }
+            )) {
                 
             } message: {
-                if let failedValidationReason = failedValidationReason {
-                    Text(failedValidationReason)
+                if let failedValidationMessage = failedValidationMessage {
+                    Text(failedValidationMessage)
                 }
             }
     }

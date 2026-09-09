@@ -41,8 +41,7 @@ struct RuleDetailSheet: View {
     @State private var pendingPause = false
     @State private var confirmingDiscard = false
     @State private var confirmingDelete = false
-    @State private var presentFailedValidation = false
-    @State private var failedValidationReason: String? = nil
+    @State private var failedValidationMessage: String? = nil
 
     init(rule: BlockingRule) {
         self.rule = rule
@@ -68,11 +67,14 @@ struct RuleDetailSheet: View {
                 modelContext.delete(rule)
             }
         }
-        .alert(CopyKey.ruleDraftValidationFailedTitle.string, isPresented: $presentFailedValidation) {
+        .alert(CopyKey.ruleDraftValidationFailedTitle.string, isPresented: .init(
+            get: { failedValidationMessage != nil },
+            set: { if !$0 { failedValidationMessage = nil } }
+        )) {
             
         } message: {
-            if let failedValidationReason = failedValidationReason {
-                Text(failedValidationReason)
+            if let failedValidationMessage = failedValidationMessage {
+                Text(failedValidationMessage)
             }
         }
     }
@@ -332,8 +334,7 @@ struct RuleDetailSheet: View {
         let sanitizedDraft = draft.sanitized()
         
         if case .failure(let reason) = sanitizedDraft.validate() {
-            presentFailedValidation = true
-            failedValidationReason = reason.message
+            failedValidationMessage = reason.message
         } else {
             sanitizedDraft.apply(to: rule)
             setEditing(false)

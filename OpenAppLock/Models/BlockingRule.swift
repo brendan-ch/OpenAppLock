@@ -33,11 +33,6 @@ final class BlockingRule {
     /// writing them on unmanaged instances traps intermittently inside
     /// SwiftData (EXC_BREAKPOINT on the next insert/save).
     var appList: AppList?
-    /// Legacy inline selection, superseded by `appList`. Kept only so
-    /// `AppListMigration` can read pre-app-list stores; always nil afterwards.
-    var selectionData: Data?
-    /// Legacy denormalized count; superseded by `appList?.selectionCount`.
-    var selectionCount: Int
     var dayNumbers: [Int]
     /// When set, the rule's current block is temporarily paused (user tapped Pause).
     /// Cleared automatically once the date passes; never set while Lock While Blocking is active.
@@ -71,8 +66,6 @@ final class BlockingRule {
         self.isEnabled = isEnabled
         self.hardMode = hardMode
         self.appList = nil
-        self.selectionData = nil
-        self.selectionCount = 0
         self.dayNumbers = days.map(\.rawValue).sorted()
         self.pausedUntil = pausedUntil
         self.createdAt = createdAt

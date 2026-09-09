@@ -162,14 +162,12 @@ final class RuleCreationUITests: XCTestCase {
 
         let fromTimePicker = app.datePickers["fromTimePicker"]
         fromTimePicker.tap()
-        app.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: "09")
-        app.pickerWheels.element(boundBy: 1).adjust(toPickerWheelValue: "00")
+        app.set24hTimeOnTimePicker(hour: 9, minute: 0)
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
 
         let toTimePicker = app.datePickers["toTimePicker"]
         toTimePicker.tap()
-        app.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: "09")
-        app.pickerWheels.element(boundBy: 1).adjust(toPickerWheelValue: "05")
+        app.set24hTimeOnTimePicker(hour: 9, minute: 5)
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
 
         app.buttons["commitRuleButton"].waitToAppear().tap()
@@ -186,18 +184,17 @@ final class RuleCreationUITests: XCTestCase {
 
         let fromTimePicker = app.datePickers["fromTimePicker"]
         fromTimePicker.tap()
-        app.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: "23")
-        app.pickerWheels.element(boundBy: 1).adjust(toPickerWheelValue: "50")
+        app.set24hTimeOnTimePicker(hour: 23, minute: 50)
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
 
         let toTimePicker = app.datePickers["toTimePicker"]
         toTimePicker.tap()
-        app.pickerWheels.element(boundBy: 0).adjust(toPickerWheelValue: "09")
-        app.pickerWheels.element(boundBy: 1).adjust(toPickerWheelValue: "00")
+        app.set24hTimeOnTimePicker(hour: 9, minute: 0)
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
 
         app.buttons["commitRuleButton"].waitToAppear().tap()
 
         XCTAssertTrue(app.staticTexts["Unable to save"].waitToAppear().exists)
     }
+    
 }

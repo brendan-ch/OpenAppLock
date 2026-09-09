@@ -79,7 +79,6 @@ struct OpenAppLockApp: App {
                 scenario, into: container.mainContext, usage: usageLedger as? MockUsageLedger
             )
         }
-        AppListMigration.run(in: container.mainContext)
 
         let authProvider: AuthorizationProviding =
             config.isUITesting

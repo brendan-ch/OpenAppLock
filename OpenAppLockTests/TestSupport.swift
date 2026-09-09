@@ -19,7 +19,7 @@ import SwiftData
 private let sharedTestContainer: ModelContainer = {
     do {
         return try ModelContainer(
-            for: Schema([BlockingRule.self, AppList.self]),
+            for: Schema(versionedSchema: OpenAppLockSchemaV1.self),
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
     } catch {

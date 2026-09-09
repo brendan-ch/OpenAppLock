@@ -62,7 +62,7 @@ struct OpenAppLockApp: App {
         let appSettings = AppSettingsStore()
         _settings = State(initialValue: appSettings)
 
-        let schema = Schema([BlockingRule.self, AppList.self])
+        let schema = Schema(versionedSchema: OpenAppLockSchemaV1.self)
         let modelConfiguration = ModelConfiguration(
             schema: schema, isStoredInMemoryOnly: config.isUITesting
         )

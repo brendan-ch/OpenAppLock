@@ -20,7 +20,7 @@ struct RulesListView: View {
     @State private var showingNewRule = false
     @State private var showingRuleLimitAlert = false
     
-    @State private var appeared = false
+    @State private var viewAppeared = false
 
     var body: some View {
         NavigationStack {
@@ -51,22 +51,29 @@ struct RulesListView: View {
             Text(CopyKey.rulesListRuleLimitAlertMessage.string(RuleCreationPolicy.maxRuleCount))
         }
         .onAppear {
-            appeared = true
+            viewAppeared = true
         }
         .onDisappear {
-            appeared = false
+            viewAppeared = false
         }
-        .onChange(of: capturedURL, initial: true) {
-            if appeared {
-                if let capturedURL = capturedURL {
-                    detailRule = URLResolver.resolveRule(from: capturedURL, in: rules)
-                    captureURL()
-                }
-            }
+        .onChange(of: capturedURL) {
+            tryCaptureURLIfViewAppeared()
+        }
+        .onChange(of: viewAppeared) {
+            tryCaptureURLIfViewAppeared()
         }
 
     }
 
+    private func tryCaptureURLIfViewAppeared() {
+        if viewAppeared {
+            if let capturedURL = capturedURL {
+                detailRule = URLResolver.resolveRule(from: capturedURL, in: rules)
+                captureURL()
+            }
+        }
+    }
+    
     /// Presents the New Rule sheet, or the cap alert when the rule limit is
     /// reached (see `RuleCreationPolicy`). Both the toolbar and empty-state
     /// buttons route through here.

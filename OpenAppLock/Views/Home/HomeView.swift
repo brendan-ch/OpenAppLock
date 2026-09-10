@@ -19,7 +19,7 @@ struct HomeView: View {
     @Query(sort: BlockingRule.displayOrder) private var rules: [BlockingRule]
     
     @State private var detailRule: BlockingRule?
-    @State private var appeared = false
+    @State private var viewAppeared = false
 
     var body: some View {
         NavigationStack {
@@ -32,18 +32,16 @@ struct HomeView: View {
             RuleDetailSheet(rule: rule)
         }
         .onAppear {
-            appeared = true
+            viewAppeared = true
         }
         .onDisappear {
-            appeared = false
+            viewAppeared = false
         }
-        .onChange(of: capturedURL, initial: true) {
-            if appeared {
-                if let capturedURL = capturedURL {
-                    detailRule = URLResolver.resolveRule(from: capturedURL, in: rules)
-                    captureURL()
-                }
-            }
+        .onChange(of: capturedURL) {
+            tryCaptureURLIfViewAppeared()
+        }
+        .onChange(of: viewAppeared) {
+            tryCaptureURLIfViewAppeared()
         }
     }
 
@@ -60,6 +58,17 @@ struct HomeView: View {
     private func liveStatus(for rule: BlockingRule, now: Date) -> RuleStatus {
         let dto = rule.dto
         return dto.status(at: now, usage: enforcer.usage(for: dto, at: now))
+    }
+    
+    // MARK: - State setters
+    
+    private func tryCaptureURLIfViewAppeared() {
+        if viewAppeared {
+            if let capturedURL = capturedURL {
+                detailRule = URLResolver.resolveRule(from: capturedURL, in: rules)
+                captureURL()
+            }
+        }
     }
     
     // MARK: - Currently Blocking

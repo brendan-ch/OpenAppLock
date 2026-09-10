@@ -163,12 +163,12 @@ final class RuleCreationUITests: XCTestCase {
         let fromTimePicker = app.datePickers["fromTimePicker"]
         fromTimePicker.tap()
         app.set24hTimeOnTimePicker(hour: 9, minute: 0)
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        app.staticTexts["ruleEditorTitle"].tapAtNormalizedOffset(0.5, 0.5)
 
         let toTimePicker = app.datePickers["toTimePicker"]
         toTimePicker.tap()
         app.set24hTimeOnTimePicker(hour: 9, minute: 5)
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        app.staticTexts["ruleEditorTitle"].tapAtNormalizedOffset(0.5, 0.5)
 
         app.buttons["commitRuleButton"].waitToAppear().tap()
 
@@ -185,12 +185,12 @@ final class RuleCreationUITests: XCTestCase {
         let fromTimePicker = app.datePickers["fromTimePicker"]
         fromTimePicker.tap()
         app.set24hTimeOnTimePicker(hour: 23, minute: 50)
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        app.staticTexts["ruleEditorTitle"].tapAtNormalizedOffset(0.5, 0.5)
 
         let toTimePicker = app.datePickers["toTimePicker"]
         toTimePicker.tap()
         app.set24hTimeOnTimePicker(hour: 9, minute: 0)
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        app.staticTexts["ruleEditorTitle"].tapAtNormalizedOffset(0.5, 0.5)
 
         app.buttons["commitRuleButton"].waitToAppear().tap()
 

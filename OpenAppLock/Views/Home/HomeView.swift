@@ -12,8 +12,8 @@ import SwiftUI
 /// Rules tab.
 struct HomeView: View {
     @Environment(RuleEnforcer.self) private var enforcer
-    @AppStorage(AppGroup.migrationDataChangedKey) private var migrationDataChanged: Bool = false
-    @AppStorage(AppGroup.migrationBannerDismissedKey) private var shouldDismissMigrationBanner: Bool = false
+    @AppStorage(AppGroup.migrationDataChangedKey, store: AppGroup.defaults) private var migrationDataChanged: Bool = false
+    @AppStorage(AppGroup.migrationBannerDismissedKey, store: AppGroup.defaults) private var shouldDismissMigrationBanner: Bool = false
     @Query(sort: BlockingRule.displayOrder) private var rules: [BlockingRule]
     
     @State private var detailRule: BlockingRule?
@@ -148,7 +148,7 @@ struct HomeView: View {
 
     @ViewBuilder
     private func bannersSection() -> some View {
-        // may split out into a dedicated banner system later, don't want to over-engineer right now
+        // May split out into a dedicated banner system later, don't want to over-engineer right now
         Section {
             if !shouldDismissMigrationBanner && migrationDataChanged {
                 HStack(alignment: .top) {

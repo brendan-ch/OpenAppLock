@@ -129,6 +129,12 @@ extension XCUIApplication {
 }
 
 extension XCUIElement {
+    /// Taps a point inside this element's own frame at normalized offsets,
+    /// rather than a coordinate derived from the whole app window.
+    func tapAtNormalizedOffset(_ dx: CGFloat, _ dy: CGFloat) {
+        coordinate(withNormalizedOffset: CGVector(dx: dx, dy: dy)).tap()
+    }
+
     /// Asserts the element appears within the timeout, then returns it. The
     /// default is generous (15s) because the CI runners are frequently
     /// overloaded — sheet/picker presentations and SwiftData-backed renders can

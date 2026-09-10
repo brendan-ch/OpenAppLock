@@ -32,6 +32,7 @@ struct HomeView: View {
         List {
             blockingSection(now: now)
             activeRulesSection(now: now)
+            bannersSection()
         }
     }
 
@@ -139,6 +140,41 @@ struct HomeView: View {
             }
         }
         .accessibilityIdentifier("activeRuleRow-\(rule.name)")
+    }
+    
+    // MARK: - Banners
+    
+    private func bannersSection() -> some View {
+        return HStack(alignment: .top) {
+            Image(systemName: "info.circle")
+                .foregroundStyle(.tint)
+                .frame(width: 28)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Some of your data was migrated")
+                    .bold()
+                Text("Start and end times for your Schedule rules have shifted to support rule blocking improvements.")
+                
+                Spacer().frame(height: 4)
+                
+                HStack(spacing: 24) {
+                    Button {
+                        
+                    } label: {
+                        Text("Learn more")
+                    }
+                    .buttonStyle(.borderless)
+                    Button {
+                        
+                    } label: {
+                        Text("Dismiss")
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+            Spacer()
+        }
     }
 }
 

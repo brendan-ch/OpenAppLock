@@ -25,6 +25,7 @@ nonisolated enum LogLevel: String, Sendable, CaseIterable {
 nonisolated enum LogCategory: String, Sendable {
     case enforcer, scheduler, shield, monitor
     case usage, dayStart, session, appList, rule, lifecycle
+    case migration
 }
 
 /// Which process wrote an entry, inferred from the running bundle so no

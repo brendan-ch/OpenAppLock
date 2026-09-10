@@ -12,8 +12,10 @@ import SwiftUI
 /// Rules tab.
 struct HomeView: View {
     @Environment(RuleEnforcer.self) private var enforcer
+    @AppStorage(AppGroup.migrationDataChangedKey) private var migrationDataChanged: Bool = false
+    @AppStorage(AppGroup.migrationBannerDismissedKey) private var shouldDismissMigrationBanner: Bool = false
     @Query(sort: BlockingRule.displayOrder) private var rules: [BlockingRule]
-
+    
     @State private var detailRule: BlockingRule?
 
     var body: some View {
@@ -32,6 +34,7 @@ struct HomeView: View {
         List {
             blockingSection(now: now)
             activeRulesSection(now: now)
+            bannersSection()
         }
     }
 
@@ -140,4 +143,64 @@ struct HomeView: View {
         }
         .accessibilityIdentifier("activeRuleRow-\(rule.name)")
     }
+    
+    // MARK: - Banners
+
+    @ViewBuilder
+    private func bannersSection() -> some View {
+        // may split out into a dedicated banner system later, don't want to over-engineer right now
+        Section {
+            if !shouldDismissMigrationBanner && migrationDataChanged {
+                HStack(alignment: .top) {
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(.tint)
+                        .frame(width: 28)
+                        .accessibilityHidden(true)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Some of your data was migrated")
+                            .bold()
+                        Text("Start and end times for your Schedule rules have shifted to support rule blocking improvements.")
+                        
+                        Spacer().frame(height: 4)
+                        
+                        HStack(spacing: 24) {
+                            Button {
+                                withAnimation {
+                                    shouldDismissMigrationBanner = true
+                                }
+                            } label: {
+                                Text("Dismiss")
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityIdentifier("dismissMigrationBannerButton")
+                        }
+                    }
+                    Spacer()
+                }
+                .accessibilityIdentifier("migrationBanner")
+            }
+        }
+        
+    }
 }
+
+#if DEBUG
+/// Seeds the standard Home state via `SampleRules`: the active soft rule
+/// "Work Time" (Currently Blocking, pausable) and the upcoming "Sleep" (Active
+/// Rules), so the preview exercises both sections with live status rows.
+@MainActor
+private func homePreview() -> some View {
+    let container = try! ModelContainer(
+        for: BlockingRule.self, AppList.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    SampleRules.seed(.standard, into: container.mainContext)
+    return HomeView()
+        .modelContainer(container)
+        .environment(RuleEnforcer(shields: MockShieldController()))
+}
+
+#Preview("Active window + upcoming") {
+    homePreview()
+}
+#endif

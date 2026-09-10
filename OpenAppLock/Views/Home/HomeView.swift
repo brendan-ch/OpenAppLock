@@ -28,6 +28,10 @@ struct HomeView: View {
         .sheet(item: $detailRule) { rule in
             RuleDetailSheet(rule: rule)
         }
+        .onOpenURL { url in
+            Diag.log(.lifecycle, "handling URL open \(url)")
+            updateViewStateBasedOnUrl(url)
+        }
     }
 
     private func homeList(now: Date) -> some View {
@@ -43,6 +47,21 @@ struct HomeView: View {
     private func liveStatus(for rule: BlockingRule, now: Date) -> RuleStatus {
         let dto = rule.dto
         return dto.status(at: now, usage: enforcer.usage(for: dto, at: now))
+    }
+    
+    // MARK: - State setters
+    private func updateViewStateBasedOnUrl(_ url: URL) {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            return
+        }
+        guard components.host == "rules" else {
+            return
+        }
+        let ruleIdLookup = components.url?.lastPathComponent
+        let matchingRule = rules.first { $0.id.uuidString == ruleIdLookup }
+        if let matchingRule = matchingRule {
+            detailRule = matchingRule
+        }
     }
 
     // MARK: - Currently Blocking

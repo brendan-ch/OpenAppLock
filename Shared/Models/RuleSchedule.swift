@@ -76,14 +76,14 @@ nonisolated struct RuleSchedule: Hashable, Sendable {
 }
 
 extension RuleSchedule {
-    /// "09:00" style label for a minutes-from-midnight value.
-    static func timeLabel(forMinutes minutes: Int) -> String {
-        let clamped = ((minutes % (24 * 60)) + 24 * 60) % (24 * 60)
-        return String(format: "%02d:%02d", clamped / 60, clamped % 60)
+    /// Build a time formatting backed by `Date`.
+    static func formattedTime(forMinutes minutes: Int, calendar: Calendar = .current) -> String {
+        let ref = calendar.startOfDay(for: .now)
+        let date = calendar.date(byAdding: .minute, value: minutes, to: ref)!
+        return date.formatted(.dateTime.hour().minute())
     }
-
-    /// "09:00 – 17:00" range label used by rule details and preset cards.
+    
     var timeRangeLabel: String {
-        "\(Self.timeLabel(forMinutes: startMinutes)) – \(Self.timeLabel(forMinutes: endMinutes))"
+        "\(Self.formattedTime(forMinutes: startMinutes)) - \(Self.formattedTime(forMinutes: endMinutes))"
     }
 }

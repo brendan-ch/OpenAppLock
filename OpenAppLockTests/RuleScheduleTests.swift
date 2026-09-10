@@ -110,12 +110,4 @@ struct RuleScheduleTests {
         #expect(nineToFiveWeekdays.durationMinutes == 8 * 60)
         #expect(overnight.durationMinutes == 8 * 60)
     }
-
-    @Test("Time labels are zero-padded 24h")
-    func timeLabels() {
-        #expect(RuleSchedule.timeLabel(forMinutes: 9 * 60) == "09:00")
-        #expect(RuleSchedule.timeLabel(forMinutes: 17 * 60 + 5) == "17:05")
-        #expect(RuleSchedule.timeLabel(forMinutes: 0) == "00:00")
-        #expect(nineToFiveWeekdays.timeRangeLabel == "09:00 – 17:00")
-    }
 }

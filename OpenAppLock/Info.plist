@@ -2,12 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UILaunchScreen</key>
-	<dict>
-	</dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>dev.bchen.OpenAppLock</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>openapplock</string>
+			</array>
+		</dict>
+	</array>
 	<key>OALGitHubURL</key>
 	<string>$(OAL_GITHUB_URL)</string>
 	<key>OALWebsiteURL</key>
 	<string>$(OAL_WEBSITE_URL)</string>
+	<key>UILaunchScreen</key>
+	<dict/>
 </dict>
 </plist>

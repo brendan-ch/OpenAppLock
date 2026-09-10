@@ -31,6 +31,13 @@ nonisolated enum AppGroup {
     /// foreground auth refresh — see ``NotificationPreferences``.
     static let notificationsAuthorizedKey = "notificationsAuthorized"
 
+    /// Set by the V1 to V2 schema migration only when it changed stored data
+    static let migrationDataChangedKey = "ruleMigrationDataChanged"
+
+    /// Set when the user dismisses the migration banner, so it stays hidden on
+    /// later launches.
+    static let migrationBannerDismissedKey = "ruleMigrationBannerDismissed"
+
     /// Shared defaults; falls back to standard defaults when the group
     /// container is unavailable (e.g. entitlement not provisioned yet).
     static var defaults: UserDefaults {

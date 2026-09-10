@@ -138,6 +138,17 @@ struct RuleDetailSheet: View {
                     .accessibilityIdentifier("hardModeLockedNotice")
                 }
             }
+            
+#if DEBUG
+            Section("Debug") {
+                Button {
+                    UIPasteboard.general.string = rule.id.uuidString
+                } label: {
+                    Text("Copy full rule ID")
+                }
+            }
+#endif
+
         }
     }
 

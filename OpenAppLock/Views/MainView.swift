@@ -21,9 +21,15 @@ struct MainView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Query(sort: \BlockingRule.createdAt) private var rules: [BlockingRule]
+    
+    @State private var capturedURL: URL? = nil
 
     var body: some View {
         layout
+            .environment(\.capturedURL, capturedURL)
+            .environment(\.captureURL) {
+                capturedURL = nil
+            }
             .task {
                 await enforcementLoop()
             }
@@ -38,6 +44,10 @@ struct MainView: View {
                     Diag.log(.lifecycle, "refresh trigger: scenePhase active")
                     refreshEnforcement()
                 }
+            }
+            .onOpenURL { url in
+                Diag.log(.lifecycle, "handling URL open \(url)")
+                capturedURL = url
             }
     }
 

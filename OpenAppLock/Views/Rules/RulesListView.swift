@@ -11,12 +11,16 @@ import SwiftUI
 /// `BlockingRule.displayOrder`). "+" creates a new rule; tapping a row opens its
 /// detail sheet.
 struct RulesListView: View {
+    @Environment(\.capturedURL) private var capturedURL
+    @Environment(\.captureURL) private var captureURL
     @Environment(RuleEnforcer.self) private var enforcer
     @Query(sort: BlockingRule.displayOrder) private var rules: [BlockingRule]
 
     @State private var detailRule: BlockingRule?
     @State private var showingNewRule = false
     @State private var showingRuleLimitAlert = false
+    
+    @State private var appeared = false
 
     var body: some View {
         NavigationStack {
@@ -46,6 +50,21 @@ struct RulesListView: View {
         } message: {
             Text(CopyKey.rulesListRuleLimitAlertMessage.string(RuleCreationPolicy.maxRuleCount))
         }
+        .onAppear {
+            appeared = true
+        }
+        .onDisappear {
+            appeared = false
+        }
+        .onChange(of: capturedURL, initial: true) {
+            if appeared {
+                if let capturedURL = capturedURL {
+                    detailRule = URLResolver.resolveRule(from: capturedURL, in: rules)
+                    captureURL()
+                }
+            }
+        }
+
     }
 
     /// Presents the New Rule sheet, or the cap alert when the rule limit is

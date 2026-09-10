@@ -144,7 +144,7 @@ struct SettingsView: View {
         }
     }
 
-    /// True while any Hard Mode rule is actively blocking, which locks the
+    /// True while any Lock While Blocking rule is actively blocking, which locks the
     /// toggle (it must not be turned off while a hard block is in force).
     private var isUninstallProtectionLocked: Bool {
         !RulePolicy.canToggleUninstallProtection(

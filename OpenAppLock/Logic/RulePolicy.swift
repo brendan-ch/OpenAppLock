@@ -5,7 +5,7 @@
 
 import Foundation
 
-/// Gates every mutation of a rule. This is where Hard Mode is enforced:
+/// Gates every mutation of a rule. This is where Lock While Blocking is enforced:
 /// while a hard-mode rule is actively blocking, nothing about it can be
 /// weakened until the window ends.
 ///
@@ -18,7 +18,7 @@ import Foundation
 /// Limit rules block on spent usage rather than the clock, so their gates
 /// take the day's `RuleUsageDTO`; passing nil treats them as not blocking.
 nonisolated enum RulePolicy {
-    /// True while the rule is actively blocking with Hard Mode on.
+    /// True while the rule is actively blocking with Lock While Blocking on.
     static func isHardLocked(
         _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,
         at now: Date = .now, calendar: Calendar = .current
@@ -48,7 +48,7 @@ nonisolated enum RulePolicy {
     }
 
     /// Whether the user may temporarily pause the current block. Requires an
-    /// active block, Hard Mode off, a pausable kind (schedule or time limit —
+    /// active block, Lock While Blocking off, a pausable kind (schedule or time limit —
     /// open limits are never pausable), and more than `temporaryPauseMinutes`
     /// left on the block (a near-finished block isn't worth pausing, and this
     /// keeps the background re-arm above DeviceActivity's 15-minute floor).
@@ -63,7 +63,7 @@ nonisolated enum RulePolicy {
         return until.timeIntervalSince(now) > Double(MonitoringPlan.temporaryPauseMinutes * 60)
     }
 
-    /// Hard Mode can always be turned on, but never off while the rule is
+    /// Lock While Blocking can always be turned on, but never off while the rule is
     /// actively blocking — that is the whole point of a hard block.
     static func canTurnOffHardMode(
         _ snapshot: RuleSnapshotDTO, usage: RuleUsageDTO? = nil,

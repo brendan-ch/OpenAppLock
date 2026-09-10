@@ -152,4 +152,49 @@ final class RuleCreationUITests: XCTestCase {
         XCTAssertTrue(app.buttons["preset-morning-focus"].exists)
         XCTAssertTrue(app.buttons["preset-deep-work"].exists)
     }
+
+    func testCreateScheduleRuleAlertsIfStartEndTimesTooClose() throws {
+        let app = XCUIApplication.launchOpenAppLock()
+        app.goToRulesTab()
+        app.buttons["newRuleButton"].waitToAppear().tap()
+        app.buttons["ruleKind-schedule"].waitToAppear().tap()
+        app.staticTexts["ruleEditorTitle"].waitToAppear()
+
+        let fromTimePicker = app.datePickers["fromTimePicker"]
+        fromTimePicker.tap()
+        app.set24hTimeOnTimePicker(hour: 9, minute: 0)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+
+        let toTimePicker = app.datePickers["toTimePicker"]
+        toTimePicker.tap()
+        app.set24hTimeOnTimePicker(hour: 9, minute: 5)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+
+        app.buttons["commitRuleButton"].waitToAppear().tap()
+
+        XCTAssertTrue(app.staticTexts["Unable to save"].waitToAppear().exists)
+    }
+
+    func testCreateScheduleRuleAlertsIfStartTimeTooCloseToMidnight() throws {
+        let app = XCUIApplication.launchOpenAppLock()
+        app.goToRulesTab()
+        app.buttons["newRuleButton"].waitToAppear().tap()
+        app.buttons["ruleKind-schedule"].waitToAppear().tap()
+        app.staticTexts["ruleEditorTitle"].waitToAppear()
+
+        let fromTimePicker = app.datePickers["fromTimePicker"]
+        fromTimePicker.tap()
+        app.set24hTimeOnTimePicker(hour: 23, minute: 50)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+
+        let toTimePicker = app.datePickers["toTimePicker"]
+        toTimePicker.tap()
+        app.set24hTimeOnTimePicker(hour: 9, minute: 0)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+
+        app.buttons["commitRuleButton"].waitToAppear().tap()
+
+        XCTAssertTrue(app.staticTexts["Unable to save"].waitToAppear().exists)
+    }
+    
 }

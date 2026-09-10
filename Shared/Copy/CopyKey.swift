@@ -89,6 +89,11 @@ nonisolated enum CopyKey: String, CaseIterable {
     case newRuleNavigationTitle = "newRule.navigationTitle"
     case newRuleCloseButton = "newRule.closeButton"
     case newRulePresetSummaryFormat = "newRule.presetSummaryFormat"
+    
+    // MARK: - RuleDraft
+    case ruleDraftValidationFailedTitle = "ruleDraft.validationFailedTitle"
+    case ruleDraftValidationFailedStartEndTimesTooCloseMessage = "ruleDraft.validationStartEndTimesTooCloseMessage"
+    case ruleDraftValidationFailedStartTimeTooCloseToMidnightMessage = "ruleDraft.validationStartEndTimesTooCloseToMidnightMessage"
 
     // MARK: - SettingsView (Task 3)
     case settingsUninstallProtectionToggleLabel = "settings.uninstallProtectionToggleLabel"
@@ -155,7 +160,6 @@ nonisolated enum CopyKey: String, CaseIterable {
     case appListsLibraryYourAppListsSectionHeader = "appLists.libraryYourAppListsSectionHeader"
     case appListsLibraryLockedFooter = "appLists.libraryLockedFooter"
     case appListsLibraryDeletionBlockedAlertTitle = "appLists.libraryDeletionBlockedAlertTitle"
-    case appListsOkButtonLabel = "appLists.okButtonLabel"
     case appListsLibraryDeletionBlockedAlertMessage = "appLists.libraryDeletionBlockedAlertMessage"
     case appListsLibraryViewButtonLabel = "appLists.libraryViewButtonLabel"
     case appListsLibraryEditButtonLabel = "appLists.libraryEditButtonLabel"

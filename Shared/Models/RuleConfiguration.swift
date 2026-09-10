@@ -55,9 +55,21 @@ enum RuleConfiguration: Hashable, Sendable {
 /// Schedule-rule options: a recurring time window and how the app list is
 /// interpreted. A window whose end is at or before its start crosses midnight.
 struct ScheduleConfig: Hashable, Sendable {
+    let fifteenMinutesBeforeMidnight: Int = 23 * 60 + 45
+    let minimumRuleDurationMinutes: Int = 15
+    
     var startMinutes: Int
     var endMinutes: Int
     var selectionMode: SelectionMode
+    
+    var startIsTooCloseToMidnight: Bool {
+        startMinutes > fifteenMinutesBeforeMidnight
+    }
+    
+    var startAndEndTimesTooClose: Bool {
+        endMinutes > startMinutes &&
+        endMinutes - startMinutes < minimumRuleDurationMinutes
+    }
 
     init(
         startMinutes: Int = 9 * 60,

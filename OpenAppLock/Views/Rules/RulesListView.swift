@@ -43,7 +43,6 @@ struct RulesListView: View {
             Text(CopyKey.rulesListRuleLimitAlertTitle.resource),
             isPresented: $showingRuleLimitAlert
         ) {
-            Button(CopyKey.appListsOkButtonLabel.resource, role: .cancel) {}
         } message: {
             Text(CopyKey.rulesListRuleLimitAlertMessage.string(RuleCreationPolicy.maxRuleCount))
         }

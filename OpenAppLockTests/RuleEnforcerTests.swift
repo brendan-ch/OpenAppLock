@@ -318,7 +318,7 @@ struct OverlappingRuleEnforcementTests {
 }
 
 /// Uninstall Protection: `refresh` denies device app removal only while the
-/// user opted in *and* a Hard Mode rule is actively blocking.
+/// user opted in *and* a Lock While Blocking rule is actively blocking.
 @MainActor
 @Suite("Uninstall protection enforcement")
 struct UninstallProtectionEnforcementTests {

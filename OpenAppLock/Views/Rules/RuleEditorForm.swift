@@ -16,6 +16,8 @@ struct RuleEditorForm: View {
     @Binding var draft: RuleDraft
 
     @State private var showingAppPicker = false
+    
+    let minuteIntervalForDatePickers = 5
 
     var body: some View {
         Form {
@@ -53,12 +55,19 @@ struct RuleEditorForm: View {
                     selection: timeBinding($draft.scheduleConfig.startMinutes),
                     displayedComponents: .hourAndMinute
                 )
+                // See https://stackoverflow.com/questions/58976654/how-to-give-datepicker-a-minute-interval-in-swiftui/73196996#73196996
+                .onAppear {
+                    UIDatePicker.appearance().minuteInterval = minuteIntervalForDatePickers
+                }
                 .accessibilityIdentifier("fromTimePicker")
                 DatePicker(
                     CopyKey.ruleEditorToLabel.resource,
                     selection: timeBinding($draft.scheduleConfig.endMinutes),
                     displayedComponents: .hourAndMinute
                 )
+                .onAppear {
+                    UIDatePicker.appearance().minuteInterval = minuteIntervalForDatePickers
+                }
                 .accessibilityIdentifier("toTimePicker")
             } header: {
                 Text(.ruleEditorDuringThisTimeHeader).textCase(nil)
@@ -150,8 +159,8 @@ struct RuleEditorForm: View {
         }
     }
 
-    /// Hard Mode applies to every kind. A labeled `Toggle` makes the whole row
-    /// the tap target and gives VoiceOver a "Hard Mode" switch in one element.
+    /// Lock While Blocking applies to every kind. A labeled `Toggle` makes the whole row
+    /// the tap target and gives VoiceOver a "Lock While Blocking" switch in one element.
     private var hardModeSection: some View {
         Section {
             Toggle(CopyKey.ruleEditorHardModeToggle.resource, isOn: $draft.hardMode)

@@ -145,7 +145,7 @@ struct UsageStatusTests {
                 == .paused(until: date(2025, 1, 6, 10, 15)))
     }
 
-    @Test("Hard Mode locks a limit-blocked rule and its app lists")
+    @Test("Lock While Blocking locks a limit-blocked rule and its app lists")
     func hardModeLocksLimitBlock() {
         let rule = timeLimitRule(limit: 45)
         rule.hardMode = true

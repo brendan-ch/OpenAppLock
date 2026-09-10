@@ -9,7 +9,7 @@ import Testing
 @testable import OpenAppLock
 
 @MainActor
-@Suite("Hard Mode policy")
+@Suite("Lock While Blocking policy")
 struct RulePolicyTests {
     let mondayDuringWork = date(2025, 1, 6, 10, 0)
     let mondayEvening = date(2025, 1, 6, 19, 0)
@@ -19,7 +19,7 @@ struct RulePolicyTests {
         BlockingRule(name: "Work Time", hardMode: hardMode)
     }
 
-    @Test("An active Hard Mode rule is locked")
+    @Test("An active Lock While Blocking rule is locked")
     func hardLockedWhileActive() {
         let rule = rule(hardMode: true)
         #expect(RulePolicy.isHardLocked(rule.dto, at: mondayDuringWork, calendar: utc))
@@ -30,7 +30,7 @@ struct RulePolicyTests {
         #expect(!RulePolicy.canTurnOffHardMode(rule.dto, at: mondayDuringWork, calendar: utc))
     }
 
-    @Test("A Hard Mode rule unlocks once its window ends")
+    @Test("A Lock While Blocking rule unlocks once its window ends")
     func unlockedOutsideWindow() {
         let rule = rule(hardMode: true)
         #expect(!RulePolicy.isHardLocked(rule.dto, at: mondayEvening, calendar: utc))
@@ -40,7 +40,7 @@ struct RulePolicyTests {
         #expect(RulePolicy.canTurnOffHardMode(rule.dto, at: mondayEvening, calendar: utc))
     }
 
-    @Test("A disabled Hard Mode rule is not locked")
+    @Test("A disabled Lock While Blocking rule is not locked")
     func disabledRuleNotLocked() {
         let rule = rule(hardMode: true)
         rule.isEnabled = false
@@ -64,7 +64,7 @@ struct RulePolicyTests {
             == .paused(until: date(2025, 1, 6, 10, 15)))
     }
 
-    @Test("Pausing a Hard Mode rule is refused and changes nothing")
+    @Test("Pausing a Lock While Blocking rule is refused and changes nothing")
     func hardModePauseRefused() {
         let rule = rule(hardMode: true)
         #expect(!RulePolicy.pause(rule, at: mondayDuringWork, calendar: utc))

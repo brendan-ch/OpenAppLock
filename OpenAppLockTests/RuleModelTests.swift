@@ -153,7 +153,7 @@ struct RuleDraftTests {
         #expect(rule.hardMode)
     }
 
-    @Test("Enabling Hard Mode via a draft edit clears any pending pause")
+    @Test("Enabling Lock While Blocking via a draft edit clears any pending pause")
     func applyHardModeClearsPause() throws {
         let context = try makeInMemoryContext()
         let rule = BlockingRule(name: "Work Time")
@@ -194,6 +194,30 @@ struct RuleDraftTests {
         #expect(draft.scheduleConfig.startMinutes == 23 * 60)
         #expect(draft.scheduleConfig.endMinutes == 6 * 60 + 30)
         #expect(draft.kind == .schedule)
+    }
+    
+    @Test("Draft validation fails for a schedule rule if the start and end times are too close")
+    func validateFailsIfScheduleStartAndEndTimesTooClose() {
+        let config = RuleConfiguration.schedule(
+            ScheduleConfig(
+                startMinutes: 9 * 60, endMinutes: 9 * 60 + 5,
+                selectionMode: .allowOnly))
+        var draft = RuleDraft(kind: .schedule)
+        draft.configuration = config
+        
+        #expect(draft.validate() == .failure(reason: .startEndTimesTooClose))
+    }
+    
+    @Test("Draft validation fails for a schedule rule if the start time is too close to midnight")
+    func validateFailsIfScheduleStartTimeTooCloseToMidnight() {
+        let config = RuleConfiguration.schedule(
+            ScheduleConfig(
+                startMinutes: 23 * 60 + 50, endMinutes: 6 * 60,
+                selectionMode: .allowOnly))
+        var draft = RuleDraft(kind: .schedule)
+        draft.configuration = config
+        
+        #expect(draft.validate() == .failure(reason: .startTooCloseToMidnight))
     }
 }
 

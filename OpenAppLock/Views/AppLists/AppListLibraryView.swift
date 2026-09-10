@@ -7,7 +7,7 @@ import SwiftData
 import SwiftUI
 
 /// The reusable app-list library: the saved lists, per-row Edit/View
-/// affordances, the New List flow, swipe-to-delete, and the Hard Mode lock. It
+/// affordances, the New List flow, swipe-to-delete, and the Lock While Blocking lock. It
 /// is always **pushed** onto a navigation stack — by the rule editor's App List
 /// row (picker mode) or by Settings ▸ Manage App Lists (management mode). Two
 /// modes:
@@ -16,12 +16,12 @@ import SwiftUI
 ///   selects the list and calls `onPick`, which pops back to the rule editor. A
 ///   trailing button opens the list — "Edit" (the full editor as a **sheet
 ///   overlay**) when unlocked, "View" (the read-only `AppListDetailView`) while
-///   a Hard Mode rule blocks. Creating a list selects it without popping.
+///   a Lock While Blocking rule blocks. Creating a list selects it without popping.
 /// - **Management** (`selection` nil): no checkmark; tapping the row opens it —
 ///   the editor sheet when unlocked, the read-only `AppListDetailView` while
 ///   locked. Used by Settings ▸ Manage App Lists.
 ///
-/// Editing and deletion are disabled in both modes while any Hard Mode rule is
+/// Editing and deletion are disabled in both modes while any Lock While Blocking rule is
 /// actively blocking — changing a list would be a back door out of the block —
 /// but viewing a list's apps stays allowed, since reading can't weaken a block.
 struct AppListLibraryView: View {
@@ -123,7 +123,6 @@ struct AppListLibraryView: View {
             AppListDetailView(list: list)
         }
         .alert(Text(.appListsLibraryDeletionBlockedAlertTitle), isPresented: $deletionBlocked) {
-            Button(CopyKey.appListsOkButtonLabel.resource, role: .cancel) {}
         } message: {
             Text(.appListsLibraryDeletionBlockedAlertMessage)
         }

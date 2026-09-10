@@ -113,6 +113,21 @@ extension XCUIApplication {
     }
 }
 
+extension XCUIApplication {
+    /// Given a 24-hour time, adjust the hour/minute wheels of the open time picker. Works against pickers in the 12h and 24h formats, but may not work against other formats.
+    func set24hTimeOnTimePicker(hour: Int, minute: Int) {
+        let wheels = self.pickerWheels
+        if wheels.count >= 3 {
+            wheels.element(boundBy: 0).adjust(toPickerWheelValue: "\(hour % 12 == 0 ? 12 : hour % 12)")
+            wheels.element(boundBy: 2).adjust(toPickerWheelValue: hour >= 12 ? "PM" : "AM")
+        } else {
+            wheels.element(boundBy: 0).adjust(toPickerWheelValue: String(format: "%02d", hour))
+        }
+        wheels.element(boundBy: 1).adjust(toPickerWheelValue: String(format: "%02d", minute))
+
+    }
+}
+
 extension XCUIElement {
     /// Asserts the element appears within the timeout, then returns it. The
     /// default is generous (15s) because the CI runners are frequently

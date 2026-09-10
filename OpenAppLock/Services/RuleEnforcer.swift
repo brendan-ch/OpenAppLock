@@ -101,8 +101,7 @@ final class RuleEnforcer {
         }
         let snapshots = rules.map(\.dto)
         let uninstallProtectionEnabled = settings.uninstallProtectionEnabled
-        // Off the main thread: all shield + DeviceActivity I/O (the multi-second
-        // `startMonitoring` hang lives here).
+        // Off the main thread: all shield + DeviceActivity I/O.
         let outcome = await engine.apply(
             snapshots: snapshots, uninstallProtectionEnabled: uninstallProtectionEnabled,
             at: now, calendar: calendar)

@@ -41,7 +41,7 @@ final class RuleManagementUITests: XCTestCase {
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
         app.buttons["editRuleButton"].waitToAppear().tap()
 
-        // Wait for the editor to render the Hard Mode row, then scroll it into
+        // Wait for the editor to render the Lock While Blocking row, then scroll it into
         // view only if it is actually below the fold. (The previous
         // `waitForExistence(timeout: 2)` gate could flake `false` on a slow runner
         // before the editor had rendered and trigger a spurious `swipeUp()`, which
@@ -52,14 +52,14 @@ final class RuleManagementUITests: XCTestCase {
             hardMode.waitToAppear()
         }
         XCTAssertEqual(hardMode.label, "Lock changes while blocking", "The Lock while blocking switch must carry its label for VoiceOver")
-        XCTAssertEqual(hardMode.value as? String, "0", "Hard Mode starts off")
+        XCTAssertEqual(hardMode.value as? String, "0", "Lock While Blocking starts off")
 
         // A centered `.tap()` lands on the row label and doesn't flip a SwiftUI
         // Toggle; tap the switch itself at the trailing edge. The asserted value
         // change fails loudly here if the tap misses, rather than surfacing later
         // as an unreachable `doneButton`.
         hardMode.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
-        XCTAssertEqual(hardMode.value as? String, "1", "Tapping Hard Mode should turn it on")
+        XCTAssertEqual(hardMode.value as? String, "1", "Tapping Lock While Blocking should turn it on")
 
         app.buttons["doneButton"].waitToAppear().tap()
 
@@ -67,6 +67,49 @@ final class RuleManagementUITests: XCTestCase {
         let row = app.element("detailRow-Pausing allowed").waitToAppear()
         XCTAssertTrue(row.label.contains("No"), "Expected 'Pausing allowed: No', got: \(row.label)")
     }
+    
+    func testEditRuleAlertsIfStartEndTimesTooClose() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToRulesTab()
+        app.buttons["ruleCard-Sleep"].waitToAppear().tap()
+        app.buttons["editRuleButton"].waitToAppear().tap()
+
+        let fromTimePicker = app.datePickers["fromTimePicker"]
+        fromTimePicker.tap()
+        app.set24hTimeOnTimePicker(hour: 9, minute: 0)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        
+        let toTimePicker = app.datePickers["toTimePicker"]
+        toTimePicker.tap()
+        app.set24hTimeOnTimePicker(hour: 9, minute: 5)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+
+        app.buttons["doneButton"].waitToAppear().tap()
+        
+        XCTAssertTrue(app.staticTexts["Unable to save"].waitToAppear().exists)
+    }
+    
+    func testEditRuleAlertsIfStartTimeTooCloseToMidnight() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToRulesTab()
+        app.buttons["ruleCard-Sleep"].waitToAppear().tap()
+        app.buttons["editRuleButton"].waitToAppear().tap()
+        
+        let fromTimePicker = app.datePickers["fromTimePicker"]
+        fromTimePicker.tap()
+        app.set24hTimeOnTimePicker(hour: 23, minute: 50)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        
+        let toTimePicker = app.datePickers["toTimePicker"]
+        toTimePicker.tap()
+        app.set24hTimeOnTimePicker(hour: 9, minute: 0)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        
+        app.buttons["doneButton"].waitToAppear().tap()
+        
+        XCTAssertTrue(app.staticTexts["Unable to save"].waitToAppear().exists)
+    }
+
 
     func testEditingRuleAndClosingWithChangesPromptsToDiscard() throws {
         let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
@@ -206,7 +249,7 @@ final class RuleManagementUITests: XCTestCase {
     }
 }
 
-/// Hard block behavior — seeded with an actively-blocking Hard Mode rule.
+/// Hard block behavior — seeded with an actively-blocking Lock While Blocking rule.
 final class HardModeUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false

@@ -6,7 +6,7 @@
 import XCTest
 
 /// App lists: the editor's App List row, the picker (select / create / edit),
-/// rule-level Block vs Allow Only, and the Hard Mode list lockdown. The rule
+/// rule-level Block vs Allow Only, and the Lock While Blocking list lockdown. The rule
 /// editor (and its app-list picker) is reached from the Rules tab.
 final class AppListUITests: XCTestCase {
     override func setUpWithError() throws {
@@ -164,7 +164,7 @@ final class AppListUITests: XCTestCase {
         app.element("appListsLockedNotice").waitToAppear()
         XCTAssertFalse(
             app.buttons["editAppListButton-Distractions"].exists,
-            "App lists must be read-only while a Hard Mode rule is blocking"
+            "App lists must be read-only while a Lock While Blocking rule is blocking"
         )
         // Editing is locked, but the list can still be opened to view its apps.
         XCTAssertTrue(

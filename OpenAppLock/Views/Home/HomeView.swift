@@ -141,3 +141,23 @@ struct HomeView: View {
         .accessibilityIdentifier("activeRuleRow-\(rule.name)")
     }
 }
+
+#if DEBUG
+/// Seeds the standard Home state via `SampleRules`: the active soft rule
+/// "Work Time" (Currently Blocking, pausable) and the upcoming "Sleep" (Active
+/// Rules), so the preview exercises both sections with live status rows.
+@MainActor
+private func homePreview() -> some View {
+    let container = try! ModelContainer(
+        for: BlockingRule.self, AppList.self,
+        configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    SampleRules.seed(.standard, into: container.mainContext)
+    return HomeView()
+        .modelContainer(container)
+        .environment(RuleEnforcer(shields: MockShieldController()))
+}
+
+#Preview("Active window + upcoming") {
+    homePreview()
+}
+#endif

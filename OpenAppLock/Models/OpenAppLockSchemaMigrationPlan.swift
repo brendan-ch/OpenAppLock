@@ -21,9 +21,20 @@ enum OpenAppLockSchemaMigrationPlan: SchemaMigrationPlan {
         fromVersion: OpenAppLockSchemaV1.self,
         toVersion: OpenAppLockSchemaV2.self,
         willMigrate: { context in
-            print("MIGRATING")
-            
-            // perform clamping of start and end times
+            let latestAllowedStartMinutes = 23 * 60 + 45
+            let minimumRuleDurationMinutes = 15
+
+            let rules = try context.fetch(FetchDescriptor<OpenAppLockSchemaV1.BlockingRule>())
+            for rule in rules where rule.kind == .schedule {
+                if rule.startMinutes > latestAllowedStartMinutes {
+                    rule.startMinutes = latestAllowedStartMinutes
+                }
+                if rule.endMinutes > rule.startMinutes,
+                   rule.endMinutes - rule.startMinutes < minimumRuleDurationMinutes {
+                    rule.endMinutes = rule.startMinutes + minimumRuleDurationMinutes
+                }
+            }
+            try context.save()
         }, didMigrate: nil
     )
 }

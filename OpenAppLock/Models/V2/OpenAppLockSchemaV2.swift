@@ -10,6 +10,6 @@ import SwiftData
 struct OpenAppLockSchemaV2: VersionedSchema {
     static var versionIdentifier = Schema.Version(2, 0, 0)
     static var models: [any PersistentModel.Type] {
-        return [BlockingRule.self, AppList.self]
+        return [Self.BlockingRule.self, Self.AppList.self]
     }
 }

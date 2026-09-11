@@ -92,6 +92,41 @@ struct V1ToV2MigrationTests {
         #expect(updatedModel.schedule.startMinutes == 9 * 60)
         #expect(updatedModel.schedule.endMinutes == 9 * 60 + 15)
         #expect(changed.count == 1)
-
+    }
+    
+    @Test("Rule with 23:56-23:54 changes to 23:45-23:40")
+    func testStartAndEndTimeShiftForMidnightScheduledRule() throws {
+        let context = try makeModelContext()
+        
+        let model = OpenAppLockSchemaV1.BlockingRule(name: "Test", configuration: .schedule(ScheduleConfig(startMinutes: 23 * 60 + 56, endMinutes: 23 * 60 + 54)))
+        context.insert(model)
+        let changed = try MigrationHelpers.prepareV1DataForMigration(context)
+        
+        guard let updatedModel = context.model(for: model.id) as? OpenAppLockSchemaV1.BlockingRule else {
+            Issue.record("Unable to find matching BlockingRule \(model.id)")
+            return
+        }
+        
+        #expect(updatedModel.schedule.startMinutes == 23 * 60 + 45)
+        #expect(updatedModel.schedule.endMinutes == 23 * 60 + 40)
+        #expect(changed.count == 1)
+    }
+    
+    @Test("Rule with 00:02-00:01 changes to 00:00-00:00")
+    func testIntervalClampForOverlappingRule() throws {
+        let context = try makeModelContext()
+        
+        let model = OpenAppLockSchemaV1.BlockingRule(name: "Test", configuration: .schedule(ScheduleConfig(startMinutes: 2, endMinutes: 1)))
+        context.insert(model)
+        let changed = try MigrationHelpers.prepareV1DataForMigration(context)
+        
+        guard let updatedModel = context.model(for: model.id) as? OpenAppLockSchemaV1.BlockingRule else {
+            Issue.record("Unable to find matching BlockingRule \(model.id)")
+            return
+        }
+        
+        #expect(updatedModel.schedule.startMinutes == 0)
+        #expect(updatedModel.schedule.endMinutes == 0)
+        #expect(changed.count == 1)
     }
 }

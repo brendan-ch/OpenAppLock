@@ -43,18 +43,23 @@ enum MigrationHelpers {
         
         let rules = try context.fetch(FetchDescriptor<OpenAppLockSchemaV1.BlockingRule>())
         for rule in rules where rule.kind == .schedule {
-            if rule.endMinutes > rule.startMinutes,
-               rule.endMinutes - rule.startMinutes < minimumRuleDurationMinutes {
-                rule.endMinutes = rule.startMinutes + minimumRuleDurationMinutes
-                changed.insert(rule.id)
-                Diag.log(.migration, "moved endMinutes to \(minimumRuleDurationMinutes) minutes after startMinutes for rule-\(rule.id.logTag)")
-                
-            }
-            
             if rule.startMinutes > latestAllowedStartMinutes {
                 rule.startMinutes = latestAllowedStartMinutes
                 changed.insert(rule.id)
                 Diag.log(.migration, "moved startMinutes to \(latestAllowedStartMinutes) minutes for rule-\(rule.id.logTag)")
+            }
+            
+            if rule.endMinutes > rule.startMinutes,
+               rule.endMinutes - rule.startMinutes < minimumRuleDurationMinutes {
+                rule.endMinutes = rule.startMinutes + minimumRuleDurationMinutes
+                
+                if rule.endMinutes == 24 * 60 {
+                    rule.endMinutes = 0
+                }
+                
+                changed.insert(rule.id)
+                Diag.log(.migration, "moved endMinutes to \(minimumRuleDurationMinutes) minutes after startMinutes for rule-\(rule.id.logTag)")
+                
             }
             
             if rule.startMinutes % 5 != 0 {

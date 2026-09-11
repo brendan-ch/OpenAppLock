@@ -10,6 +10,8 @@ import SwiftUI
 
 @main
 struct OpenAppLockApp: App {
+    @UIApplicationDelegateAdaptor(CustomAppDelegate.self) private var delegate
+    
     private let container: ModelContainer
     private let launchSettleDelay: Duration
     @State private var authorization: ScreenTimeAuthorization

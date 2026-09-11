@@ -36,6 +36,9 @@ nonisolated struct UserNotificationScheduler: LocalNotificationScheduling {
             content.title = planned.title
             content.body = planned.body
             content.sound = .default
+            if let url = planned.url {
+                content.setURL(url)
+            }
             let trigger = UNCalendarNotificationTrigger(
                 dateMatching: planned.dateComponents, repeats: true)
             // Already inside the scheduler actor's async context (called

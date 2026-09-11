@@ -100,3 +100,10 @@ nonisolated extension RuleSnapshotDTO {
         pausedUntil = try container.decodeIfPresent(Date.self, forKey: .pausedUntil)
     }
 }
+
+nonisolated extension RuleSnapshotDTO {
+    func toURL() -> URL? {
+        URL.fromRuleID(self.id)
+    }
+}
+

@@ -11,12 +11,15 @@ import SwiftUI
 /// `BlockingRule.displayOrder`). The rule list and rule creation live on the
 /// Rules tab.
 struct HomeView: View {
+    @Environment(\.capturedURL) private var capturedURL
+    @Environment(\.captureURL) private var captureURL
     @Environment(RuleEnforcer.self) private var enforcer
     @AppStorage(AppGroup.migrationDataChangedKey, store: AppGroup.defaults) private var migrationDataChanged: Bool = false
     @AppStorage(AppGroup.migrationBannerDismissedKey, store: AppGroup.defaults) private var shouldDismissMigrationBanner: Bool = false
     @Query(sort: BlockingRule.displayOrder) private var rules: [BlockingRule]
     
     @State private var detailRule: BlockingRule?
+    @State private var viewAppeared = false
 
     var body: some View {
         NavigationStack {
@@ -27,6 +30,18 @@ struct HomeView: View {
         }
         .sheet(item: $detailRule) { rule in
             RuleDetailSheet(rule: rule)
+        }
+        .onAppear {
+            viewAppeared = true
+        }
+        .onDisappear {
+            viewAppeared = false
+        }
+        .onChange(of: capturedURL) {
+            tryCaptureURLIfViewAppeared()
+        }
+        .onChange(of: viewAppeared) {
+            tryCaptureURLIfViewAppeared()
         }
     }
 
@@ -44,7 +59,18 @@ struct HomeView: View {
         let dto = rule.dto
         return dto.status(at: now, usage: enforcer.usage(for: dto, at: now))
     }
-
+    
+    // MARK: - State setters
+    
+    private func tryCaptureURLIfViewAppeared() {
+        if viewAppeared {
+            if let capturedURL = capturedURL {
+                detailRule = URLResolver.resolveRule(from: capturedURL, in: rules)
+                captureURL()
+            }
+        }
+    }
+    
     // MARK: - Currently Blocking
 
     @ViewBuilder

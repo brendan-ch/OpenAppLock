@@ -33,6 +33,7 @@ nonisolated struct PlannedNotification: Equatable, Sendable {
     let dateComponents: DateComponents
     let title: String
     let body: String
+    let url: URL?
 }
 
 /// Pure planner for the "a schedule rule starts in N minutes" notifications.
@@ -82,9 +83,10 @@ nonisolated enum ScheduleStartNotificationPlan {
         if Set(fireWeekdays) == Weekday.everyDay {
             return [
                 PlannedNotification(
-                    identifier: NotificationIDs.scheduleStartDaily(ruleID: snapshot.id),
+                    identifier: NotificationIDs
+                        .scheduleStartDaily(ruleID: snapshot.id),
                     dateComponents: DateComponents(hour: hour, minute: minute),
-                    title: title, body: body)
+                    title: title, body: body, url: snapshot.toURL())
             ]
         }
 
@@ -92,10 +94,11 @@ nonisolated enum ScheduleStartNotificationPlan {
             .sorted { $0.rawValue < $1.rawValue }
             .map { weekday in
                 PlannedNotification(
-                    identifier: NotificationIDs.scheduleStart(ruleID: snapshot.id, weekday: weekday),
+                    identifier: NotificationIDs
+                        .scheduleStart(ruleID: snapshot.id, weekday: weekday),
                     dateComponents: DateComponents(
                         hour: hour, minute: minute, weekday: weekday.rawValue),
-                    title: title, body: body)
+                    title: title, body: body, url: snapshot.toURL())
             }
     }
 

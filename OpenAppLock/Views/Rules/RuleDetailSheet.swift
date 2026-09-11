@@ -140,12 +140,17 @@ struct RuleDetailSheet: View {
             }
             
 #if DEBUG
-            Section("Debug") {
+            Section {
                 Button {
                     UIPasteboard.general.string = rule.id.uuidString
                 } label: {
                     Text("Copy full rule ID")
                 }
+            } header: {
+                Text("Debug")
+            } footer: {
+                Text("Rule ID: \(dto.id.uuidString)")
+                    .accessibilityIdentifier("ruleIDLabel")
             }
 #endif
 

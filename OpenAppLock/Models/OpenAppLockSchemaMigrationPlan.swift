@@ -24,7 +24,7 @@ enum OpenAppLockSchemaMigrationPlan: SchemaMigrationPlan {
         willMigrate: { context in
             Diag.log(.migration, "migrating schema from V1 to V2")
 
-            let changed = try MigrationHelpers.migrateV1toV2(context)
+            let changed = try MigrationHelpers.prepareV1DataForMigration(context)
             if changed.count > 0 {
                 AppGroup.defaults.set(true, forKey: AppGroup.migrationDataChangedKey)
                 Diag.log(.migration, "clamped schedule rule times; flagged migrated-data banner")
@@ -35,7 +35,7 @@ enum OpenAppLockSchemaMigrationPlan: SchemaMigrationPlan {
 
 enum MigrationHelpers {
     /// Perform the schema migration and get the IDs of rules that changed.
-    static func migrateV1toV2(_ context: ModelContext) throws -> Set<UUID> {
+    static func prepareV1DataForMigration(_ context: ModelContext) throws -> Set<UUID> {
         let latestAllowedStartMinutes = 23 * 60 + 45
         let minimumRuleDurationMinutes = 15
 

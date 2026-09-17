@@ -19,7 +19,7 @@ import SwiftData
 private let sharedTestContainer: ModelContainer = {
     do {
         return try ModelContainer(
-            for: Schema(versionedSchema: OpenAppLockSchemaV2.self),
+            for: Schema(versionedSchema: OpenAppLockSchemaV3.self),
             migrationPlan: OpenAppLockSchemaMigrationPlan.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )

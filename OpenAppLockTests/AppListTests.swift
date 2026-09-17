@@ -9,9 +9,9 @@ import Testing
 
 @testable import OpenAppLock
 
-// Note: every test wires `rule.appList` only after both models are inserted —
+// Note: every test wires a relationship only after both models are inserted —
 // SwiftData relationships must not be written on unmanaged instances
-// (see BlockingRule.appList).
+// (see BlockingRule.appLists).
 
 @MainActor
 @Suite("AppList model & relationship")
@@ -38,7 +38,7 @@ struct AppListModelTests {
         let rule = BlockingRule(name: "Work Time")
         context.insert(list)
         context.insert(rule)
-        rule.appList = list
+        rule.appLists = [list]
         try context.save()
 
         context.delete(list)
@@ -46,7 +46,7 @@ struct AppListModelTests {
 
         let rules = try context.fetch(FetchDescriptor<BlockingRule>())
         #expect(rules.count == 1)
-        #expect(rules.first?.appList == nil)
+        #expect(rules.first?.appLists.isEmpty == true)
     }
 
     @Test("Deleting a rule keeps its list")
@@ -56,7 +56,7 @@ struct AppListModelTests {
         let rule = BlockingRule(name: "Work Time")
         context.insert(list)
         context.insert(rule)
-        rule.appList = list
+        rule.appLists = [list]
         try context.save()
 
         context.delete(rule)
@@ -75,7 +75,7 @@ struct AppListModelTests {
         context.insert(used)
         context.insert(unused)
         context.insert(rule)
-        rule.appList = used
+        rule.appLists = [used]
         try context.save()
 
         #expect(AppList.isInUse(used, context: context))
@@ -93,14 +93,14 @@ struct AppListDraftTests {
         let rule = BlockingRule(name: "Work Time")
         context.insert(list)
         context.insert(rule)
-        rule.appList = list
+        rule.appLists = [list]
 
         var draft = RuleDraft(rule: rule)
-        #expect(draft.appList === list)
+        #expect(draft.appLists.map(\.id) == [list.id])
 
         draft.name = "Other"
         let other = draft.insertRule(into: context)
-        #expect(other.appList === list)
+        #expect(other.appLists.map(\.id) == [list.id])
         #expect(other.name == "Other")
     }
 
@@ -170,7 +170,7 @@ struct AppListEnforcementTests {
         let rule = BlockingRule(name: "Work Time")
         context.insert(list)
         context.insert(rule)
-        rule.appList = list
+        rule.appLists = [list]
 
         await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
 
@@ -183,7 +183,7 @@ struct AppListEnforcementTests {
 struct AppListCountLabelTests {
     /// Inserts a list plus `ruleCount` rules pointing at it. The relationship is
     /// wired only after every model is in the context — SwiftData forbids
-    /// relationship writes on unmanaged instances (see BlockingRule.appList).
+    /// relationship writes on unmanaged instances (see BlockingRule.appLists).
     private func makeList(
         selectionCount: Int = 0,
         ruleCount: Int,
@@ -194,7 +194,7 @@ struct AppListCountLabelTests {
         for index in 0..<ruleCount {
             let rule = BlockingRule(name: "Rule \(index + 1)")
             context.insert(rule)
-            rule.appList = list
+            rule.appLists = [list]
         }
         try context.save()
         return list

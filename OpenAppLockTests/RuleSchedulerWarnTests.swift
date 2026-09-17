@@ -38,7 +38,7 @@ struct RuleSchedulerWarnTests {
             days: Weekday.everyDay)
         context.insert(list)
         context.insert(rule)
-        rule.appList = list
+        rule.appLists = [list]
         return rule
     }
 

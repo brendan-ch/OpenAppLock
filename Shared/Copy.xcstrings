@@ -1453,6 +1453,17 @@
         }
       }
     },
+    "ruleEditor.appListMultipleSummaryFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$d Lists · %2$d Apps"
+          }
+        }
+      }
+    },
     "ruleEditor.appListSummaryFormat" : {
       "extractionState" : "manual",
       "localizations" : {

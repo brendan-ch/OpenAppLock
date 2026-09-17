@@ -144,6 +144,7 @@ Where each topic is documented:
 | Day-of-week picker & summary | `OpenAppLock/Views/Components/DayOfWeekPicker.swift`, `Shared/Models/Weekday.swift` |
 | Presets; editor form; New Rule + in-place detail editing; discard prompt | `OpenAppLock/Models/RulePreset.swift`, `OpenAppLock/Views/Rules/RuleEditorForm.swift` (shared form body), `OpenAppLock/Views/Rules/RuleEditorView.swift` (New Rule wrapper), `OpenAppLock/Views/Rules/RuleDetailSheet.swift` (detail ⇄ editor cross-fade), `OpenAppLock/Logic/RuleEditState.swift` (outstanding-edits check) |
 | App lists (model, picker, library, edit) + legacy migration | `OpenAppLock/Models/AppList.swift`, `OpenAppLock/Views/AppLists/*`, `OpenAppLock/Services/AppListMigration.swift` |
+| Multiple app lists per rule (V3 schema, V2→V3 migration, union selection) | `OpenAppLock/Models/V3/*`, `OpenAppLock/Models/OpenAppLockSchemaMigrationPlan.swift`, `OpenAppLock/Models/BlockingRule+DTO.swift` (`combinedSelectionData`, `appListSummary`), `OpenAppLock/Views/AppLists/AppListLibraryView.swift` (multi-select picker); design spec `Docs/Agents/Specs/MULTI_APP_LIST_RULES.md` |
 | Home: Currently Blocking + Usage, row strings | `OpenAppLock/Views/Home/HomeView.swift`, `OpenAppLock/Logic/UsageDisplay.swift` |
 | Schedule activation / time-window math (incl. midnight crossing) | `Shared/Models/RuleSchedule.swift`, `Shared/Enforcement/ScheduleEnforcement.swift` |
 | Temporary pause / disable / delete / Hard Mode gating | `OpenAppLock/Logic/RulePolicy.swift` |

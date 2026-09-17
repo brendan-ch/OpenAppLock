@@ -7,7 +7,7 @@ import Foundation
 import SwiftData
 
 // Set to the current schema version
-typealias AppList = OpenAppLockSchemaV2.AppList
+typealias AppList = OpenAppLockSchemaV3.AppList
 
 extension AppList {
     /// The order app lists appear in the library — Settings ▸ App Lists and the

@@ -88,9 +88,9 @@ struct RuleEditStateTests {
         let list = AppList(name: "Distractions", selectionCount: 3)
         context.insert(list)
 
-        let original = RuleDraft(kind: .schedule)  // appList == nil
+        let original = RuleDraft(kind: .schedule)  // appLists == []
         var current = original
-        current.appList = list
+        current.appLists = [list]
         #expect(RuleEditState.hasOutstandingEdits(original: original, current: current))
     }
 }

@@ -46,7 +46,7 @@ struct RuleSnapshotTests {
             days: Weekday.weekends)
         context.insert(list)
         context.insert(rule)
-        rule.appList = list
+        rule.appLists = [list]
 
         let snapshot = RuleSnapshotDTO(rule: rule)
         #expect(snapshot.id == rule.id)
@@ -148,7 +148,7 @@ struct RuleSchedulerTests {
             name: name, configuration: .default(for: kind), days: Weekday.everyDay)
         context.insert(list)
         context.insert(rule)
-        rule.appList = list
+        rule.appLists = [list]
         return rule
     }
 
@@ -165,7 +165,7 @@ struct RuleSchedulerTests {
         if withApps {
             let list = AppList(name: "Apps", selectionData: Data([7]), selectionCount: 1)
             context.insert(list)
-            rule.appList = list
+            rule.appLists = [list]
         }
         return rule
     }

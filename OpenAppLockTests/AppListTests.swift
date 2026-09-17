@@ -34,19 +34,21 @@ struct AppListModelTests {
     @Test("Deleting a list detaches it from its rules")
     func deletingListDetachesRules() throws {
         let context = try makeInMemoryContext()
-        let list = AppList(name: "Distractions")
+        let first = AppList(name: "First")
+        let second = AppList(name: "Second")
         let rule = BlockingRule(name: "Work Time")
-        context.insert(list)
+        context.insert(first)
+        context.insert(second)
         context.insert(rule)
-        rule.appLists = [list]
+        rule.appLists = [first, second]
         try context.save()
 
-        context.delete(list)
+        context.delete(first)
         try context.save()
 
-        let rules = try context.fetch(FetchDescriptor<BlockingRule>())
-        #expect(rules.count == 1)
-        #expect(rules.first?.appLists.isEmpty == true)
+        #expect(rule.appLists.map(\.id) == [second.id])
+        #expect(!AppList.isInUse(first, context: context))
+        #expect(AppList.isInUse(second, context: context))
     }
 
     @Test("Deleting a rule keeps its list")
@@ -81,27 +83,75 @@ struct AppListModelTests {
         #expect(AppList.isInUse(used, context: context))
         #expect(!AppList.isInUse(unused, context: context))
     }
+
+    @Test("Combined selection: single data carrier passes through, none yields nil")
+    func combinedSelectionEdgeCases() throws {
+        let carrier = AppList(name: "Carrier", selectionData: Data([9, 9]))
+        let empty = AppList(name: "Empty")
+        let fallbackRule = BlockingRule(name: "Fallback")
+        fallbackRule.appLists = [carrier, empty]
+        #expect(fallbackRule.combinedSelectionData == Data([9, 9]))
+        #expect(fallbackRule.dto.selectionData == Data([9, 9]))
+
+        let emptyRule = BlockingRule(name: "Empty")
+        emptyRule.appLists = [AppList(name: "Empty")]
+        #expect(emptyRule.combinedSelectionData == nil)
+        #expect(emptyRule.dto.selectionData == nil)
+    }
+
+    @Test("Two data-carrying lists produce combined selection data")
+    func twoDataCarriersProduceCombinedData() throws {
+        let first = AppList(name: "First", selectionData: Data([1, 2, 3]))
+        let second = AppList(name: "Second", selectionData: Data([4, 5, 6]))
+        let rule = BlockingRule(name: "Work Time")
+        rule.appLists = [first, second]
+        #expect(rule.combinedSelectionData != first.selectionData)
+        #expect(rule.combinedSelectionData != second.selectionData)
+    }
 }
 
 @MainActor
 @Suite("Rule drafts with app lists")
 struct AppListDraftTests {
-    @Test("Drafts carry the rule's app list and apply it back")
-    func draftCarriesAppList() throws {
+    @Test("Drafts carry every selected list and apply them back")
+    func draftCarriesAllLists() throws {
         let context = try makeInMemoryContext()
-        let list = AppList(name: "Distractions", selectionCount: 4)
+        let first = AppList(name: "Distractions", selectionCount: 3)
+        let second = AppList(name: "Social", selectionCount: 2)
         let rule = BlockingRule(name: "Work Time")
-        context.insert(list)
+        context.insert(first)
+        context.insert(second)
         context.insert(rule)
-        rule.appLists = [list]
+        rule.appLists = [first, second]
+        try context.save()
 
         var draft = RuleDraft(rule: rule)
-        #expect(draft.appLists.map(\.id) == [list.id])
+        #expect(Set(draft.appLists.map(\.id)) == Set([first.id, second.id]))
 
         draft.name = "Other"
         let other = draft.insertRule(into: context)
-        #expect(other.appLists.map(\.id) == [list.id])
+        #expect(Set(other.appLists.map(\.id)) == Set([first.id, second.id]))
         #expect(other.name == "Other")
+    }
+
+    @Test("Draft apply replaces the rule's previous selection entirely")
+    func draftApplyReplacesLists() throws {
+        let context = try makeInMemoryContext()
+        let first = AppList(name: "First")
+        let second = AppList(name: "Second")
+        let third = AppList(name: "Third")
+        let rule = BlockingRule(name: "Work Time")
+        context.insert(first)
+        context.insert(second)
+        context.insert(third)
+        context.insert(rule)
+        rule.appLists = [first, second]
+        try context.save()
+
+        var draft = RuleDraft(rule: rule)
+        draft.appLists = [third]
+        draft.apply(to: rule)
+        #expect(rule.appLists.map(\.id) == [third.id])
     }
 
     @Test("Limit drafts structurally cannot carry a selection mode")
@@ -166,15 +216,19 @@ struct AppListEnforcementTests {
         let context = try makeInMemoryContext()
         let shields = MockShieldController()
         let enforcer = RuleEnforcer(shields: shields)
-        let list = AppList(name: "Distractions", selectionData: Data([1, 2, 3]))
+        let data = Data([1, 2, 3])
+        let list = AppList(name: "Distractions", selectionData: data)
         let rule = BlockingRule(name: "Work Time")
         context.insert(list)
         context.insert(rule)
         rule.appLists = [list]
+        try context.save()
+
+        #expect(rule.combinedSelectionData == data)
+        #expect(rule.dto.selectionData == data)
 
         await enforcer.refresh(rules: [rule], at: mondayDuringWork, calendar: utc)
-
-        #expect(shields.appliedSelectionData[rule.id] == Data([1, 2, 3]))
+        #expect(shields.appliedSelectionData[rule.id] == data)
     }
 }
 
@@ -247,5 +301,27 @@ struct AppListCountLabelTests {
         let context = try makeInMemoryContext()
         let list = try makeList(selectionCount: 0, ruleCount: 0, in: context)
         #expect(list.appAndRuleCountLabel == "0 Apps · 0 Rules")
+    }
+
+    @Test("appListSummary keeps the single-list format and counts lists for multiple")
+    func appListSummaryByListCount() {
+        let single = BlockingRule(name: "Work Time")
+        single.appLists = [AppList(name: "Distractions", selectionCount: 4)]
+        #expect(
+            single.appListSummary
+                == CopyKey.ruleDetailAppListSummaryFormat.string("Distractions", "4 Apps"))
+
+        let multiple = BlockingRule(name: "Work Time")
+        multiple.appLists = [
+            AppList(name: "Distractions", selectionCount: 4),
+            AppList(name: "Social", selectionCount: 1),
+        ]
+        #expect(multiple.appListSummary == "2 Lists · 5 Apps")
+    }
+
+    @Test("appListSummary shows the no-apps placeholder with nothing selected")
+    func appListSummaryEmptySelection() {
+        let rule = BlockingRule(name: "Work Time")
+        #expect(rule.appListSummary == "No apps")
     }
 }

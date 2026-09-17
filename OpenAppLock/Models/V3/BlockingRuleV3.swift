@@ -27,17 +27,10 @@ extension OpenAppLockSchemaV3 {
         var isEnabled: Bool
         /// Hard block: while the rule is active it cannot be disabled, edited, or paused.
         var hardMode: Bool
-        /// The app lists this rule blocks (or allows, in Allow Only mode). All the
-        /// lists' selections are treated as one combined app list for enforcement.
-        ///
-        /// Deliberately not an `init` parameter: SwiftData relationship properties
-        /// must only be assigned once both models are inserted in a context —
-        /// writing them on unmanaged instances traps intermittently inside
-        /// SwiftData (EXC_BREAKPOINT on the next insert/save).
+        /// The app lists this rule blocks (or allows, in Allow Only mode).
+        /// Assigned only after both models are inserted in a context.
         var appLists: [AppList] = []
-        /// Legacy single-list relationship from V2, kept only as this
-        /// migration's data source — promotion copies it into `appLists` and
-        /// app code never reads or writes it.
+        /// Legacy V2 column, kept only as the migration source.
         var appList: AppList?
         var dayNumbers: [Int]
         /// When set, the rule's current block is temporarily paused (user tapped Pause).

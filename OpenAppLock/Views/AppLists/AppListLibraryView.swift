@@ -14,10 +14,8 @@ import SwiftUI
 ///
 /// - **Picker** (`selection` non-nil): each row's tap **toggles** its membership
 ///   in the rule's selection, so multiple lists can be combined into one rule.
-///   A trailing button opens the list — "Edit" (the full editor as a **sheet
-///   overlay**) when unlocked, "View" (the read-only `AppListDetailView`) while
-///   a Lock While Blocking rule blocks. Creating a list appends it to the
-///   selection; leaving the picker is the navigation back button.
+///   A trailing button opens the list for editing/viewing as before. Creating
+///   a list appends it to the selection.
 /// - **Management** (`selection` nil): no checkmark; tapping the row opens it —
 ///   the editor sheet when unlocked, the read-only `AppListDetailView` while
 ///   locked. Used by Settings ▸ Manage App Lists.
@@ -26,11 +24,8 @@ import SwiftUI
 /// actively blocking — changing a list would be a back door out of the block —
 /// but viewing a list's apps stays allowed, since reading can't weaken a block.
 struct AppListLibraryView: View {
-    /// Picker mode when non-nil; management mode when nil. Multiple selected
-    /// lists combine into one rule selection.
+    /// Picker mode when non-nil; management mode when nil.
     var selection: Binding<[AppList]>?
-    /// Called after the picker appends a newly created list — kept so hosts can
-    /// react without popping the pushed screen.
     var onPick: (() -> Void)?
 
     @Environment(\.modelContext) private var modelContext
@@ -155,9 +150,7 @@ struct AppListLibraryView: View {
     @ViewBuilder
     private func listRow(_ list: AppList) -> some View {
         if isPicking {
-            // Picker mode: tapping the row toggles the list in the rule's
-            // selection, so it keeps a distinct trailing Edit affordance to
-            // open the list for editing.
+            // Picker mode: tapping the row toggles the list's membership.
             HStack {
                 Button {
                     toggle(list)
@@ -233,8 +226,7 @@ struct AppListLibraryView: View {
         selection?.wrappedValue.contains { $0.id == list.id } ?? false
     }
 
-    /// Adds or removes the list from the picker's selection binding
-    /// (tapping another list never replaces prior selections).
+    /// Adds or removes the list from the picker's selection binding.
     private func toggle(_ list: AppList) {
         guard var current = selection?.wrappedValue else { return }
         if let index = current.firstIndex(where: { $0.id == list.id }) {

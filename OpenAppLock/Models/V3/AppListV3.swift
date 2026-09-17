@@ -10,10 +10,8 @@ import Foundation
 // results in "The current model reference and the next model reference cannot be equal"
 
 extension OpenAppLockSchemaV3 {
-    /// A named, reusable selection of apps/categories/websites. Rules point at
-    /// one or more lists, so editing a list affects every rule that uses it.
-    /// Deleting a list detaches it from its rules (they fall back to the
-    /// remaining lists, or "no apps" when none are left).
+    /// A named, reusable selection of apps/categories/websites, referenced by
+    /// one or more rules.
     @Model
     final class AppList: Equatable, Hashable {
         @Attribute(.unique) var id: UUID
@@ -42,9 +40,6 @@ extension OpenAppLockSchemaV3 {
         }
 
         /// Whether any rule currently points at this list (guards deletion).
-        /// Rules are fetched and checked in memory — the rule count is small,
-        /// and a `#Predicate` over a to-many relationship's members is not
-        /// reliably expressible.
         static func isInUse(_ list: AppList, context: ModelContext) -> Bool {
             let rules = (try? context.fetch(FetchDescriptor<BlockingRule>())) ?? []
             return rules.contains { rule in rule.appLists.contains { $0.id == list.id } }

@@ -7,10 +7,6 @@ import FamilyControls
 import Foundation
 
 extension BlockingRule {
-    /// The rule's selected app lists, ordered like the library and the editor's
-    /// picker: name (localized, case-insensitive), creation date breaking ties
-    /// (see `AppList.displayOrder`). Relationship order is unspecified, so every
-    /// consumer goes through this.
     var sortedAppLists: [AppList] {
         appLists.sorted { first, second in
             let comparison = first.name.localizedStandardCompare(second.name)
@@ -21,14 +17,8 @@ extension BlockingRule {
         }
     }
 
-    /// The union of every selected list's app/category/web-domain tokens, as one
-    /// selection — enforcement treats all selected lists as a single app list.
-    /// With at most one list carrying data, that list's bytes pass through
-    /// unchanged so single-list rules stay byte-identical to the pre-V3 format.
-    ///
-    /// A true multi-list union requires real Screen Time tokens (decodable only
-    /// with Family Controls authorization), so its union is device-verifiable
-    /// only; in tests bogus bytes decode to an empty selection.
+    /// Union of every selected list, as one selection. ≤ 1 data-carrying list
+    /// passes through byte-identical to the pre-V3 format.
     var combinedSelectionData: Data? {
         let carriers = appLists.compactMap(\.selectionData)
         if carriers.count <= 1 { return carriers.first }
@@ -45,15 +35,13 @@ extension BlockingRule {
             && combined.webDomainTokens.isEmpty {
             Diag.log(
                 .rule, .event,
-                "multi-list combined selection decoded empty (opportunistic union on device; bogus bytes or no authorization here)")
+                "multi-list combined selection decoded empty (bogus bytes or no authorization here)")
             return nil
         }
         return AppSelectionCodec.encode(combined)
     }
 
-    /// The app-level summary for the rule's projected selection: a single list
-    /// shows "name · N Apps"; multiple lists show "N Lists · M Apps"; no lists
-    /// (or none selected) shows the no-apps placeholder.
+    /// Single list: "name · N Apps"; several: "N Lists · M Apps"; none: "No apps".
     var appListSummary: String {
         let lists = sortedAppLists
         if lists.isEmpty { return CopyKey.ruleDetailNoAppsPlaceholder.string }
@@ -66,10 +54,7 @@ extension BlockingRule {
 }
 
 extension RuleSnapshotDTO {
-    /// Builds the projection from a `BlockingRule`, flattening the app-list
-    /// relationships to their union `selectionData` (see `combinedSelectionData`).
-    /// The canonical call site is `BlockingRule.dto`; this initializer is its
-    /// implementation.
+    /// Builds the projection from a `BlockingRule`; uses the union selection.
     init(rule: BlockingRule) {
         self.init(
             id: rule.id,

@@ -360,10 +360,8 @@ struct RuleDetailSheet: View {
     // MARK: - Detail rows
 
     /// Whether this rule selects any app/category/web domain to scope the report
-    /// to. Union of the rule's lists (see `combinedSelectionData`). An empty
-    /// selection makes `usageFilter`'s token sets empty, which
-    /// `DeviceActivityFilter` treats as "no restriction" (all device activity), so
-    /// the panel is hidden rather than enumerating every app.
+    /// to (see `combinedSelectionData`). An empty selection matches *all*
+    /// device activity, so the panel is hidden rather than enumerating every app.
     private var hasUsageSelection: Bool {
         let selection = AppSelectionCodec.decode(rule.combinedSelectionData)
         return !selection.applicationTokens.isEmpty
@@ -371,8 +369,7 @@ struct RuleDetailSheet: View {
             || !selection.webDomainTokens.isEmpty
     }
 
-    /// Today's `.daily` filter scoped to this rule's selection, so the report
-    /// extension attributes only this rule's lists' apps/categories/web domains.
+    /// Today's `.daily` filter scoped to the rule's lists' union selection.
     private var usageFilter: DeviceActivityFilter {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: .now)

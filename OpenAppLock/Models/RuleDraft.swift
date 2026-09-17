@@ -17,9 +17,7 @@ struct RuleDraft: Hashable {
     var name: String
     var days: Set<Weekday>
     var hardMode: Bool
-    /// The persisted lists the rule will use; enforcement treats all of their
-    /// selections as one combined app list. App lists are managed (created and
-    /// edited) directly by the picker, so the draft only carries the pointers.
+    /// The persisted lists the rule will use, treated as one combined selection.
     var appLists: [AppList]
     var configuration: RuleConfiguration
 
@@ -68,8 +66,7 @@ struct RuleDraft: Hashable {
     }
 
     /// Writes the draft back onto a rule. The rule (and the chosen lists) must
-    /// already be inserted in a context: SwiftData relationships may only be
-    /// assigned between managed models (see `BlockingRule.appLists`).
+    /// already be inserted in a context.
     func apply(to rule: BlockingRule) {
         rule.name = name
         rule.days = days

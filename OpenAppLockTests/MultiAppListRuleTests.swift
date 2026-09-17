@@ -110,11 +110,6 @@ struct MultiAppListRuleTests {
         #expect(rule.dto.selectionData == nil)
     }
 
-    /// Real token fabrication is impossible without Screen Time authorization,
-    /// so a true union of two non-empty selections can only be verified on
-    /// device. This test covers what is testable here: two lists with data
-    /// produce *combined* selection data (never a bare passthrough), which
-    /// still decodes to a selection even if the bytes are bogus.
     @Test("Two data-carrying lists produce combined selection data")
     func twoDataCarriersProduceCombinedData() throws {
         let first = AppList(name: "First", selectionData: Data([1, 2, 3]))

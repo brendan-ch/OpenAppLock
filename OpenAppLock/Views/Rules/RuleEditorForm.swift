@@ -24,10 +24,8 @@ struct RuleEditorForm: View {
             nameSection
             sections
         }
-        // Push the app-list selection onto the host's stack (the back button
-        // returns here); the library presents its editor as a sheet. Row taps
-        // toggle lists into the rule's selection (multi-select); the back
-        // button is what leaves the picker.
+        // Push the app-list selection onto the host's stack; the back button
+        // returns here. Row taps toggle lists into the rule's selection.
         .navigationDestination(isPresented: $showingAppPicker) {
             AppListLibraryView(selection: $draft.appLists)
                 .navigationTitle(CopyKey.ruleEditorAppListTitle.resource)

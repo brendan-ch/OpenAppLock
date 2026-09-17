@@ -11,9 +11,6 @@ import SwiftData
 @MainActor
 @Suite("v2 to v3 migration tests")
 struct V2ToV3MigrationTests {
-    /// A fresh on-disk store per test under the session temp dir. Existing V1→V2
-    /// tests still rely on shared single containers; the V2→V3 path needs
-    /// migration across an actual reopen to be exercised.
     private func makeStoreURL() -> URL {
         let url = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("migration-v2-\(UUID().uuidString).sqlite")
@@ -65,7 +62,6 @@ struct V2ToV3MigrationTests {
         let migrated = try #require(fetched.first { $0.id == ruleID })
         #expect(migrated.appLists.count == 1)
         #expect(migrated.appLists.first?.name == "Distractions")
-        // Promotion strips the legacy column once copied.
         #expect(migrated.appList == nil)
     }
 

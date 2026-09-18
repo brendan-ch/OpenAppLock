@@ -96,8 +96,8 @@ enum MigrationHelpers {
     }
 
     /// Copies each rule's legacy `appList` into the V3 `appLists` array, then
-    /// strips the legacy column. Throws so a failed one-shot migration replays
-    /// on next launch instead of dropping selections.
+    /// strips the legacy column. Required to ensurethat `appList` becomes `nil`
+    /// on the rule.
     static func promoteV2RuleAppLists(_ context: ModelContext) throws {
         let rules = try context.fetch(FetchDescriptor<BlockingRule>())
         var promoted = 0
@@ -105,10 +105,15 @@ enum MigrationHelpers {
             rule.appLists = [rule.appList!]
             promoted += 1
         }
+        
+        // All rules have lists stored in appLists at this point
         for rule in rules where rule.appList != nil {
             rule.appList = nil
         }
-        Diag.log(.migration, "promoted \(promoted) rules' legacy appList to appLists")
+        
+        // May log 0 if SwiftData already repointed the data via lightweight migration
+        Diag.log(.migration, "promoted \(promoted) additional rules' legacy appList to appLists")
+        
         try context.save()
     }
 }

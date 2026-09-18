@@ -130,3 +130,60 @@ struct V1ToV2MigrationTests {
         #expect(changed.count == 1)
     }
 }
+
+@MainActor
+@Suite("v2 to v3 migration tests")
+struct V2ToV3MigrationTests {
+    private func makeStoreURL() -> URL {
+        URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("migration-v2-\(UUID().uuidString).sqlite")
+    }
+
+    /// Fresh on-disk V2 store; an actual reopen is what exercises the
+    /// V2→V3 migration.
+    private func makeV2Store(
+        url: URL, attachedRuleID: inout UUID?, detachedRuleID: inout UUID
+    ) throws {
+        let container = try ModelContainer(
+            for: Schema(versionedSchema: OpenAppLockSchemaV2.self),
+            migrationPlan: OpenAppLockSchemaMigrationPlan.self,
+            configurations: ModelConfiguration(url: url))
+        let context = ModelContext(container)
+        let attached = OpenAppLockSchemaV2.BlockingRule(name: "Attached")
+        let list = OpenAppLockSchemaV2.AppList(name: "Distractions", selectionCount: 3)
+        context.insert(list)
+        context.insert(attached)
+        attached.appList = list
+        attachedRuleID = attached.id
+        let detached = OpenAppLockSchemaV2.BlockingRule(name: "Detached")
+        context.insert(detached)
+        detachedRuleID = detached.id
+        try context.save()
+    }
+
+    private func migratedV3Store(url: URL) throws -> (ModelContext, ModelContainer) {
+        let container = try ModelContainer(
+            for: Schema(versionedSchema: OpenAppLockSchemaV3.self),
+            migrationPlan: OpenAppLockSchemaMigrationPlan.self,
+            configurations: ModelConfiguration(url: url))
+        return (ModelContext(container), container)
+    }
+
+    @Test("appList migrations: single-list rule promoted and stripped; unlisted rule stays empty")
+    func appListPromotionAcrossReopen() throws {
+        let url = makeStoreURL()
+        var attachedRuleID: UUID?
+        var detachedRuleID = UUID()
+        try makeV2Store(url: url, attachedRuleID: &attachedRuleID, detachedRuleID: &detachedRuleID)
+
+        let (context, _) = try migratedV3Store(url: url)
+        let rules = try context.fetch(FetchDescriptor<OpenAppLockSchemaV3.BlockingRule>())
+
+        let attached = try #require(rules.first { $0.id == attachedRuleID })
+        #expect(attached.appLists.map(\.name) == ["Distractions"])
+        #expect(attached.appList == nil)
+
+        let detached = try #require(rules.first { $0.id == detachedRuleID })
+        #expect(detached.appLists.isEmpty)
+    }
+}

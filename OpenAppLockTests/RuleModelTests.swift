@@ -121,7 +121,7 @@ struct RuleDraftTests {
                 startMinutes: 22 * 60, endMinutes: 6 * 60,
                 selectionMode: .allowOnly))
         draft.hardMode = true
-        draft.appList = list
+        draft.appLists = [list]
 
         let rule = draft.insertRule(into: context)
         #expect(rule.selectionMode == .allowOnly)

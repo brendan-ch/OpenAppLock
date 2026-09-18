@@ -68,8 +68,9 @@ struct MainView: View {
         rules.map {
             "\($0.id)|\($0.isEnabled)|\($0.hardMode)|"
                 + "\($0.startMinutes)|\($0.endMinutes)|\($0.dayNumbers)|"
-                + "\($0.selectionModeRaw)|\($0.appList?.id.uuidString ?? "-")|"
-                + "\($0.appList?.selectionCount ?? 0)|"
+                + "\($0.selectionModeRaw)|"
+                + "\($0.appLists.map { $0.id.uuidString }.sorted().joined(separator: "+"))|"
+                + "\($0.appLists.reduce(0) { $0 + $1.selectionCount })|"
                 + "\($0.pausedUntil?.timeIntervalSince1970 ?? 0)"
         }
         .joined(separator: ",")

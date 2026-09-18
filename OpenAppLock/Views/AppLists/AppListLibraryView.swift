@@ -12,11 +12,10 @@ import SwiftUI
 /// row (picker mode) or by Settings ▸ Manage App Lists (management mode). Two
 /// modes:
 ///
-/// - **Picker** (`selection` non-nil): each row shows a checkmark and tapping it
-///   selects the list and calls `onPick`, which pops back to the rule editor. A
-///   trailing button opens the list — "Edit" (the full editor as a **sheet
-///   overlay**) when unlocked, "View" (the read-only `AppListDetailView`) while
-///   a Lock While Blocking rule blocks. Creating a list selects it without popping.
+/// - **Picker** (`selection` non-nil): each row's tap **toggles** its membership
+///   in the rule's selection, so multiple lists can be combined into one rule.
+///   A trailing button opens the list for editing/viewing as before. Creating
+///   a list appends it to the selection.
 /// - **Management** (`selection` nil): no checkmark; tapping the row opens it —
 ///   the editor sheet when unlocked, the read-only `AppListDetailView` while
 ///   locked. Used by Settings ▸ Manage App Lists.
@@ -26,9 +25,7 @@ import SwiftUI
 /// but viewing a list's apps stays allowed, since reading can't weaken a block.
 struct AppListLibraryView: View {
     /// Picker mode when non-nil; management mode when nil.
-    var selection: Binding<AppList?>?
-    /// Called after a row is tapped in picker mode — the rule editor uses this
-    /// to pop the pushed selection screen back to itself.
+    var selection: Binding<[AppList]>?
     var onPick: (() -> Void)?
 
     @Environment(\.modelContext) private var modelContext
@@ -104,7 +101,11 @@ struct AppListLibraryView: View {
         // a discard prompt); it dismisses itself, which clears these bindings.
         .sheet(isPresented: $creatingList) {
             AppListEditorView(list: nil) { created in
-                selection?.wrappedValue = created
+                if var current = selection?.wrappedValue, !current.contains(where: { $0.id == created.id }) {
+                    current.append(created)
+                    selection?.wrappedValue = current
+                }
+                onPick?()
             }
         }
         // The editor's Delete menu item marks the list and dismisses; the removal
@@ -149,12 +150,10 @@ struct AppListLibraryView: View {
     @ViewBuilder
     private func listRow(_ list: AppList) -> some View {
         if isPicking {
-            // Picker mode: tapping the row selects the list, so it keeps a
-            // distinct trailing Edit affordance to open the list for editing.
+            // Picker mode: tapping the row toggles the list's membership.
             HStack {
                 Button {
-                    selection?.wrappedValue = list
-                    onPick?()
+                    toggle(list)
                 } label: {
                     HStack {
                         Image(systemName: isSelected(list) ? "checkmark.circle.fill" : "circle")
@@ -224,7 +223,18 @@ struct AppListLibraryView: View {
     }
 
     private func isSelected(_ list: AppList) -> Bool {
-        selection?.wrappedValue?.id == list.id
+        selection?.wrappedValue.contains { $0.id == list.id } ?? false
+    }
+
+    /// Adds or removes the list from the picker's selection binding.
+    private func toggle(_ list: AppList) {
+        guard var current = selection?.wrappedValue else { return }
+        if let index = current.firstIndex(where: { $0.id == list.id }) {
+            current.remove(at: index)
+        } else {
+            current.append(list)
+        }
+        selection?.wrappedValue = current
     }
 
     /// A list still used by a rule can't be deleted — show the blocking alert.
@@ -238,8 +248,8 @@ struct AppListLibraryView: View {
     }
 
     private func performDelete(_ list: AppList) {
-        if isSelected(list) {
-            selection?.wrappedValue = nil
+        if let current = selection?.wrappedValue {
+            selection?.wrappedValue = current.filter { $0.id != list.id }
         }
         modelContext.delete(list)
     }

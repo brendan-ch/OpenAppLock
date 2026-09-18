@@ -360,24 +360,22 @@ struct RuleDetailSheet: View {
     // MARK: - Detail rows
 
     /// Whether this rule selects any app/category/web domain to scope the report
-    /// to. An empty selection makes `usageFilter`'s token sets empty, which
-    /// `DeviceActivityFilter` treats as "no restriction" (all device activity), so
-    /// the panel is hidden rather than enumerating every app.
+    /// to (see `combinedSelectionData`). An empty selection matches *all*
+    /// device activity, so the panel is hidden rather than enumerating every app.
     private var hasUsageSelection: Bool {
-        let selection = AppSelectionCodec.decode(rule.appList?.selectionData)
+        let selection = AppSelectionCodec.decode(rule.combinedSelectionData)
         return !selection.applicationTokens.isEmpty
             || !selection.categoryTokens.isEmpty
             || !selection.webDomainTokens.isEmpty
     }
 
-    /// Today's `.daily` filter scoped to this rule's selection, so the report
-    /// extension attributes only this rule's apps/categories/web domains.
+    /// Today's `.daily` filter scoped to the rule's lists' union selection.
     private var usageFilter: DeviceActivityFilter {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: .now)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
         let interval = DateInterval(start: startOfDay, end: endOfDay)
-        let selection = AppSelectionCodec.decode(rule.appList?.selectionData)
+        let selection = AppSelectionCodec.decode(rule.combinedSelectionData)
         return DeviceActivityFilter(
             segment: .daily(during: interval),
             users: .all,
@@ -418,8 +416,7 @@ struct RuleDetailSheet: View {
     }
 
     private var appCountLabel: String {
-        guard let list = rule.appList else { return CopyKey.ruleDetailNoAppsPlaceholder.string }
-        return CopyKey.ruleDetailAppListSummaryFormat.string(list.name, list.appCountLabel)
+        rule.appListSummary
     }
 
     private func row(_ label: String, _ value: String) -> some View {
@@ -468,7 +465,7 @@ private func ruleDetailPreview(
     if let appList {
         let list = AppList(name: appList.name, selectionCount: appList.appCount)
         container.mainContext.insert(list)
-        rule.appList = list
+        rule.appLists = [list]
     }
     return RuleDetailSheet(rule: rule)
         .modelContainer(container)

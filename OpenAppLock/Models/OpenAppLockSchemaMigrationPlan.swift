@@ -10,14 +10,15 @@ import Foundation
 
 enum OpenAppLockSchemaMigrationPlan: SchemaMigrationPlan {
     static var stages: [MigrationStage] {
-        [migrateV1toV2]
+        [migrateV1toV2, migrateV2toV3]
     }
-    
+
     static var schemas: [any VersionedSchema.Type] = [
         OpenAppLockSchemaV1.self,
-        OpenAppLockSchemaV2.self
+        OpenAppLockSchemaV2.self,
+        OpenAppLockSchemaV3.self
     ]
-    
+
     static let migrateV1toV2 = MigrationStage.custom(
         fromVersion: OpenAppLockSchemaV1.self,
         toVersion: OpenAppLockSchemaV2.self,
@@ -30,6 +31,18 @@ enum OpenAppLockSchemaMigrationPlan: SchemaMigrationPlan {
                 Diag.log(.migration, "clamped schedule rule times; flagged migrated-data banner")
             }
         }, didMigrate: nil
+    )
+
+    /// Custom V2→V3 stage: `didMigrate` promotes each rule's legacy `appList`
+    /// into the new `appLists` array.
+    static let migrateV2toV3 = MigrationStage.custom(
+        fromVersion: OpenAppLockSchemaV2.self,
+        toVersion: OpenAppLockSchemaV3.self,
+        willMigrate: nil,
+        didMigrate: { context in
+            Diag.log(.migration, "migrating schema from V2 to V3")
+            try MigrationHelpers.promoteV2RuleAppLists(context)
+        }
     )
 }
 
@@ -78,7 +91,29 @@ enum MigrationHelpers {
         }
         
         try context.save()
-        
+
         return changed
+    }
+
+    /// Copies each rule's legacy `appList` into the V3 `appLists` array, then
+    /// strips the legacy column. Required to ensurethat `appList` becomes `nil`
+    /// on the rule.
+    static func promoteV2RuleAppLists(_ context: ModelContext) throws {
+        let rules = try context.fetch(FetchDescriptor<BlockingRule>())
+        var promoted = 0
+        for rule in rules where rule.appLists.isEmpty && rule.appList != nil {
+            rule.appLists = [rule.appList!]
+            promoted += 1
+        }
+        
+        // All rules have lists stored in appLists at this point
+        for rule in rules where rule.appList != nil {
+            rule.appList = nil
+        }
+        
+        // May log 0 if SwiftData already repointed the data via lightweight migration
+        Diag.log(.migration, "promoted \(promoted) additional rules' legacy appList to appLists")
+        
+        try context.save()
     }
 }

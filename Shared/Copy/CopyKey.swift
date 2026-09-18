@@ -33,6 +33,7 @@ nonisolated enum CopyKey: String, CaseIterable {
     case ruleEditorHardModeToggle = "ruleEditor.hardModeToggle"
     case ruleEditorChooseAppListPlaceholder = "ruleEditor.chooseAppListPlaceholder"
     case ruleEditorAppListSummaryFormat = "ruleEditor.appListSummaryFormat"
+    case ruleEditorAppListMultipleSummaryFormat = "ruleEditor.appListMultipleSummaryFormat"
     case ruleEditorDailyLabel = "ruleEditor.dailyLabel"
     case ruleEditorDailyTimeLimitAccessibilityLabel = "ruleEditor.dailyTimeLimitAccessibilityLabel"
     case ruleEditorDailyOpenLimitAccessibilityLabel = "ruleEditor.dailyOpenLimitAccessibilityLabel"

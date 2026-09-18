@@ -24,10 +24,10 @@ struct RuleEditorForm: View {
             nameSection
             sections
         }
-        // Push the app-list selection onto the host's stack (the back button
-        // returns here); the library presents its editor as a sheet.
+        // Push the app-list selection onto the host's stack; the back button
+        // returns here. Row taps toggle lists into the rule's selection.
         .navigationDestination(isPresented: $showingAppPicker) {
-            AppListLibraryView(selection: $draft.appList, onPick: { showingAppPicker = false })
+            AppListLibraryView(selection: $draft.appLists)
                 .navigationTitle(CopyKey.ruleEditorAppListTitle.resource)
                 .navigationBarTitleDisplayMode(.inline)
         }
@@ -189,8 +189,13 @@ struct RuleEditorForm: View {
     }
 
     private var appListLabel: String {
-        guard let list = draft.appList else { return CopyKey.ruleEditorChooseAppListPlaceholder.string }
-        return CopyKey.ruleEditorAppListSummaryFormat.string(list.name, list.appCountLabel)
+        let lists = draft.appLists
+        if lists.isEmpty { return CopyKey.ruleEditorChooseAppListPlaceholder.string }
+        if let only = lists.first, lists.count == 1 {
+            return CopyKey.ruleEditorAppListSummaryFormat.string(only.name, only.appCountLabel)
+        }
+        let apps = lists.reduce(0) { $0 + $1.selectionCount }
+        return CopyKey.ruleEditorAppListMultipleSummaryFormat.string(lists.count, apps)
     }
 
     private func budgetRow(

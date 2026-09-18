@@ -17,10 +17,8 @@ struct RuleDraft: Hashable {
     var name: String
     var days: Set<Weekday>
     var hardMode: Bool
-    /// Reference to the persisted list the rule will use. App lists are
-    /// managed (created/edited) directly by the picker, so the draft only
-    /// carries the pointer.
-    var appList: AppList?
+    /// The persisted lists the rule will use, treated as one combined selection.
+    var appLists: [AppList]
     var configuration: RuleConfiguration
 
     var kind: RuleKind { configuration.kind }
@@ -31,7 +29,7 @@ struct RuleDraft: Hashable {
         self.name = kind.defaultRuleName
         self.days = Weekday.weekdays
         self.hardMode = false
-        self.appList = nil
+        self.appLists = []
         self.configuration = .default(for: kind)
     }
 
@@ -39,7 +37,7 @@ struct RuleDraft: Hashable {
         self.name = rule.name
         self.days = rule.days
         self.hardMode = rule.hardMode
-        self.appList = rule.appList
+        self.appLists = rule.sortedAppLists
         self.configuration = rule.configuration
     }
 
@@ -67,9 +65,8 @@ struct RuleDraft: Hashable {
         validate() == .success
     }
 
-    /// Writes the draft back onto a rule. The rule (and the chosen list) must
-    /// already be inserted in a context: SwiftData relationships may only be
-    /// assigned between managed models (see `BlockingRule.appList`).
+    /// Writes the draft back onto a rule. The rule (and the chosen lists) must
+    /// already be inserted in a context.
     func apply(to rule: BlockingRule) {
         rule.name = name
         rule.days = days
@@ -80,12 +77,12 @@ struct RuleDraft: Hashable {
         // pause elapsed. See `BlockingRule.pausedUntil`.
         if hardMode { rule.pausedUntil = nil }
         rule.configuration = configuration
-        if rule.appList !== appList {
-            rule.appList = appList
+        if Set(rule.appLists.map(\.id)) != Set(appLists.map(\.id)) {
+            rule.appLists = appLists
         }
         Diag.log(
             .rule, .event,
-            "commit rule-\(rule.id.logTag) \"\(name)\" \(rule.kindRaw) hard=\(hardMode) enabled=\(rule.isEnabled) list=\(appList?.name ?? "none")")
+            "commit rule-\(rule.id.logTag) \"\(name)\" \(rule.kindRaw) hard=\(hardMode) enabled=\(rule.isEnabled) lists=\(appLists.map(\.name).joined(separator: ", "))")
     }
 
     /// Creates and inserts a new rule from this draft. The rule is inserted

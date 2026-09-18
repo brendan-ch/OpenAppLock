@@ -22,6 +22,8 @@ enum SampleRules {
         // is display-only; UI tests never decode real tokens.
         let distractions = AppList(name: "Distractions", selectionCount: 3)
         context.insert(distractions)
+        let focus = AppList(name: "Focus Apps", selectionCount: 2)
+        context.insert(focus)
 
         let rules: [BlockingRule]
         switch scenario {
@@ -62,10 +64,10 @@ enum SampleRules {
             }
         }
         // Relationships are wired only after both sides are managed
-        // (see BlockingRule.appList).
+        // (see BlockingRule.appLists).
         for rule in rules {
             context.insert(rule)
-            rule.appList = distractions
+            rule.appLists = [distractions]
         }
     }
 

@@ -77,12 +77,10 @@ final class AppListUITests: XCTestCase {
         // The editor's checkmark saves the list and dismisses the overlay.
         app.buttons["saveAppListButton"].waitToAppear().tap()
 
-        // Back on the selection screen with the new list present; tapping it
-        // selects the list and pops back to the rule editor.
-        app.element("appListRow-Focus Apps").waitToAppear().tap()
+        // The list auto-selects after creating it.
 
         // The editor row now reports the chosen list.
-        let row = app.element("selectedAppsRow").waitToAppear()
+        let row = app.element("appListRow-Focus Apps").waitToAppear()
         XCTAssertTrue(row.label.contains("Focus Apps"), "Got: \(row.label)")
     }
 

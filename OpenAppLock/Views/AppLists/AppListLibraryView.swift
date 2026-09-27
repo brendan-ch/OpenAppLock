@@ -166,7 +166,7 @@ struct AppListLibraryView: View {
                             .frame(width: 28)
                         rowText(list)
                     }
-                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     .contentShape(Rectangle())
                 }
                 .accessibilityIdentifier("appListRow-\(list.name)")

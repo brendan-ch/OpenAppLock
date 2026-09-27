@@ -305,6 +305,58 @@ final class AppListUITests: XCTestCase {
         )
     }
 
+    func testPickerRowTouchTargetExtendsToEditButton() throws {
+        let app = XCUIApplication.launchOpenAppLock(seedScenario: "standard")
+        app.goToRulesTab()
+        app.buttons["newRuleButton"].waitToAppear().tap()
+        app.buttons["ruleKind-timeLimit"].waitToAppear().tap()
+
+        // The App List row pushes the selection screen onto the editor's stack.
+        app.element("selectedAppsRow").waitToAppear()
+            .tap(untilAppears: app.buttons["editAppListButton-Distractions"])
+        let row = app.element("appListRow-Distractions").waitToAppear()
+        let edit = app.buttons["editAppListButton-Distractions"].waitToAppear()
+
+        XCTAssertGreaterThanOrEqual(
+            row.frame.height, 44,
+            "Row tap target should be at least 44pt tall"
+        )
+        XCTAssertGreaterThanOrEqual(
+            row.frame.maxX, edit.frame.minX - 12,
+            "Row tap target should extend to the Edit button, got \(row.frame) vs \(edit.frame)"
+        )
+
+        // Tapping the title (the leading stretch of the row) selects the list.
+        row.tapAtNormalizedOffset(0.15, 0.5)
+        waitForSelection(row, expected: true)
+
+        // Tapping further along the row — well past the text, in the stretch
+        // before the Edit button that used to be an untappable gap — deselects.
+        row.tapAtNormalizedOffset(0.8, 0.5)
+        waitForSelection(row, expected: false)
+
+        // The title still toggles back on after the dead-zone tap.
+        row.tapAtNormalizedOffset(0.15, 0.5)
+        waitForSelection(row, expected: true)
+    }
+
+    /// Polls until the element's `isSelected` accessibility trait matches,
+    /// rather than reading the property straight after a tap — the SwiftUI
+    /// re-render that recomputes the trait updates asynchronously on a slow
+    /// runner.
+    private func waitForSelection(
+        _ element: XCUIElement, expected: Bool,
+        file: StaticString = #filePath, line: UInt = #line
+    ) {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "isSelected == %@", NSNumber(value: expected)),
+            object: element)
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [expectation], timeout: 5), .completed,
+            "Expected isSelected to become \(expected)",
+            file: file, line: line)
+    }
+
     /// Asserts the read-only `AppListDetailView` is showing: its lock notice is
     /// present and neither edit affordance (the apps picker, the Save button)
     /// exists — the "no editing" rule holds while a list is merely viewable.

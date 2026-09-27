@@ -14,8 +14,11 @@ import SwiftUI
 ///
 /// - **Picker** (`selection` non-nil): each row's tap **toggles** its membership
 ///   in the rule's selection, so multiple lists can be combined into one rule.
-///   A trailing button opens the list for editing/viewing as before. Creating
-///   a list appends it to the selection.
+///   The toggle target spans the whole row left of the trailing button — icon,
+///   title, description, and the stretch in between — so tapping the title or
+///   description selects/deselects too; the row exposes `.isSelected` to
+///   VoiceOver. A trailing button opens the list for editing/viewing as before.
+///   Creating a list appends it to the selection.
 /// - **Management** (`selection` nil): no checkmark; tapping the row opens it —
 ///   the editor sheet when unlocked, the read-only `AppListDetailView` while
 ///   locked. Used by Settings ▸ Manage App Lists.
@@ -150,7 +153,7 @@ struct AppListLibraryView: View {
     @ViewBuilder
     private func listRow(_ list: AppList) -> some View {
         if isPicking {
-            // Picker mode: tapping the row toggles the list's membership.
+            // Whole-row tap target (see the picker-mode doc comment above).
             HStack {
                 Button {
                     toggle(list)
@@ -163,9 +166,11 @@ struct AppListLibraryView: View {
                             .frame(width: 28)
                         rowText(list)
                     }
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
                 .accessibilityIdentifier("appListRow-\(list.name)")
-                Spacer()
+                .accessibilityAddTraits(isSelected(list) ? .isSelected : [])
                 // Locked lists stay read-only (no "Edit"), but can still be
                 // opened to view their apps; unlocked lists open the editor.
                 if listsLocked {

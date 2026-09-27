@@ -214,12 +214,19 @@ when reminded:
   inaccurate, update it in the same commit (see Documentation above). Then write
   the failing test, run it (compile failure counts as red), implement, re-run
   focused tests, then the full suite. Run tests often and fail fast.
-- **Always attempt to validate the UI manually before committing.** Build and
-  run the app (simulator/device) and visually confirm the change behaves as
-  intended. This step **may be skipped only when such tooling is unavailable**
-  (e.g. the Xcode MCP / a simulator is not reachable in the session) — in that
-  case, say so explicitly and hand the verification back to the user rather
-  than silently skipping it.
+- **Always attempt to validate the UI manually before committing.** Every
+  change that touches what a screen renders (views, layout, hit targets,
+  strings) must be visually confirmed via the Xcode MCP before committing —
+  either an `xcode_RenderPreview` snapshot of the affected view, or better a
+  `DeviceInteraction*` run on a simulator: build & install the app, drive the
+  affected flow with synthesized taps, and inspect the captured screenshots
+  directly (subagents can drive the simulator; see the `device-interaction`
+  skill). Read the screenshots yourself, don't only trust interaction logs.
+  Manual verification is what catches "the right element exists but the layout
+  looks wrong" failures that tests can't. This step **may be skipped only when
+  such tooling is unavailable** (e.g. the Xcode MCP / a simulator is not
+  reachable in the session) — in that case, say so explicitly and hand the
+  verification back to the user rather than silently skipping it.
 - **Branch and open a PR for every change.** New features and bug fixes do not
   go directly onto `main`. Create a topic branch (`feat/…`, `fix/…`,
   `chore/…`), push it, and open a GitHub PR with `gh pr create` for the

@@ -23,9 +23,11 @@ final class RuleCreationUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["ruleEditorTitle"].waitToAppear().label, "In the Zone")
         XCTAssertTrue(app.staticTexts["During this time"].exists)
 
-        // The confirmation checkmark lives in the navigation bar and carries
-        // a descriptive accessibility label.
-        let commit = app.navigationBars.buttons["commitRuleButton"].waitToAppear()
+        // The confirmation checkmark lives in the top chrome of the editor.
+        // Under iOS 27 the sheet's chrome classifies that button inside the
+        // sheet's Toolbar (not the NavigationBar) on the iPhone Duo, so match
+        // by identifier anywhere — the identifier is unique to this control.
+        let commit = app.buttons["commitRuleButton"].waitToAppear()
         XCTAssertEqual(commit.label, "Add Rule")
         commit.tap()
         app.buttons["ruleCard-In the Zone"].waitToAppear()
@@ -78,17 +80,21 @@ final class RuleCreationUITests: XCTestCase {
             first.frame.height, 44,
             "Day toggle tap target should be at least 44pt tall"
         )
-        // The "fill the row" guarantee is measured against the window width, which
-        // only holds where the editor sheet spans the full width (iPhone). On iPad
-        // the editor is a centered form sheet narrower than the window, so that
-        // comparison doesn't apply; the toggles still fill their (narrower) row.
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            let span = last.frame.maxX - first.frame.minX
-            XCTAssertGreaterThan(
-                span, app.frame.width * 0.75,
-                "Day toggles should span the full row width, got \(span) of \(app.frame.width)"
-            )
-        }
+        // Measured against the strip's own container row, not the window: narrow
+        // phones span the editor sheet across the window, but iOS 27 presents the
+        // sheet narrower on other form factors (e.g. the iPhone Duo), and the
+        // invariant under test — "equal share, all seven in one row" — is
+        // window-independent (DayOfWeekPicker's doc comment).
+        let picker = app.element("dayOfWeekPicker").waitToAppear()
+        let span = last.frame.maxX - first.frame.minX
+        XCTAssertGreaterThan(
+            span, picker.frame.width * 0.9,
+            "Day toggles should share the picker row evenly, got \(span) of \(picker.frame.width)"
+        )
+        XCTAssertEqual(
+            last.frame.minY, first.frame.minY,
+            "All seven day toggles must sit in one row"
+        )
     }
 
     func testCreateTimeLimitRule() throws {
@@ -116,16 +122,20 @@ final class RuleCreationUITests: XCTestCase {
     }
 
     func testEditorSupportsNativeSwipeBack() throws {
-        // The edge-swipe starts at the window's left edge, which only lands on the
-        // editor when the sheet spans the full width (iPhone). On iPad the editor
-        // is a centered form sheet, so the equivalent back navigation is covered by
+        // The edge-swipe starts at the window's left edge, which only lands on
+        // the editor when the sheet spans the full width (compact width). In
+        // regular width (iPad, open iPhone Duo) the editor is a centered form
+        // sheet, so the equivalent back navigation is covered by
         // AppListUITests.testLimitEditorsAreBlockOnly (nav back button) instead.
+        // The gate is the chrome the shell actually presents — the app must be
+        // launched before asking — because iPad and an open iPhone Duo share the
+        // same regular-width presentation while reporting different idioms.
+        let app = XCUIApplication.launchOpenAppLock()
         try XCTSkipUnless(
-            UIDevice.current.userInterfaceIdiom == .phone,
-            "Edge-swipe-back is an iPhone full-width-sheet gesture; iPad back nav is covered elsewhere"
+            app.usesTabBarNavigation(),
+            "Edge-swipe-back is a compact-width full-width-sheet gesture; regular-width back nav is covered elsewhere"
         )
 
-        let app = XCUIApplication.launchOpenAppLock()
         app.goToRulesTab()
         app.buttons["newRuleButton"].waitToAppear().tap()
         app.buttons["ruleKind-schedule"].waitToAppear().tap()

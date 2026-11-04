@@ -41,11 +41,18 @@ final class RuleManagementUITests: XCTestCase {
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
         app.buttons["editRuleButton"].waitToAppear().tap()
 
-        // Wait for the editor to render the Lock While Blocking row, then scroll it into
-        // view only if it is actually below the fold. (The previous
+        // Wait for the editor to render the Lock While Blocking row. The editor
+        // Form realizes rows lazily: on the iPhone Duo's shorter window the last
+        // section (Hard Mode) starts below the fold and doesn't exist in the
+        // tree until scrolled into view, so swipe until it exists before the
+        // hittability dance below. (The previous
         // `waitForExistence(timeout: 2)` gate could flake `false` on a slow runner
         // before the editor had rendered and trigger a spurious `swipeUp()`, which
         // destabilized the iPad form sheet and made the next tap dismiss it.)
+        for _ in 0..<6 {
+            if app.switches["hardModeToggle"].exists { break }
+            app.swipeUp()
+        }
         let hardMode = app.switches["hardModeToggle"].waitToAppear()
         if !hardMode.isHittable {
             app.swipeUp()
@@ -157,8 +164,11 @@ final class RuleManagementUITests: XCTestCase {
 
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
 
-        // Disable lives in the detail overlay's ellipsis options menu.
-        let actionsMenu = app.navigationBars.buttons["ruleActionsMenu"].waitToAppear()
+        // Disable lives in the detail overlay's ellipsis options menu. Matched
+        // from the app root: under iOS 27 the sheet's toolbar items classify
+        // outside `navigationBars` (RuleDetailSheet puts the menu in its
+        // toolbar).
+        let actionsMenu = app.buttons["ruleActionsMenu"].waitToAppear()
         XCTAssertEqual(actionsMenu.label, "Rule Actions")
         actionsMenu.tap()
         app.buttons["Disable"].waitToAppear().tap()
@@ -180,7 +190,7 @@ final class RuleManagementUITests: XCTestCase {
         
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
         
-        let actionsMenu = app.navigationBars.buttons["ruleActionsMenu"].waitToAppear()
+        let actionsMenu = app.buttons["ruleActionsMenu"].waitToAppear()
         XCTAssertEqual(actionsMenu.label, "Rule Actions")
         actionsMenu.tap()
         app.buttons["Disable"].waitToAppear().tap()
@@ -202,9 +212,10 @@ final class RuleManagementUITests: XCTestCase {
 
         app.buttons["ruleCard-Sleep"].waitToAppear().tap()
 
-        // Delete lives in the detail overlay's ellipsis options menu and now
-        // confirms before removing the rule.
-        app.navigationBars.buttons["ruleActionsMenu"].waitToAppear().tap()
+        // Delete lives in the detail overlay's ellipsis options menu (matched
+        // from the app root — see `testDisableRule`) and now confirms before
+        // removing the rule.
+        app.buttons["ruleActionsMenu"].waitToAppear().tap()
         app.buttons["deleteRuleButton"].waitToAppear().tap()
         app.sheets.buttons["Delete"].waitToAppear().tap()
 
@@ -223,7 +234,7 @@ final class RuleManagementUITests: XCTestCase {
         // whose options menu offers Pause — no inline unblock dialog.
         app.buttons["blockedTile-Work Time"].waitToAppear().tap()
         XCTAssertEqual(app.staticTexts["detailRuleName"].waitToAppear().label, "Work Time")
-        app.navigationBars.buttons["ruleActionsMenu"].waitToAppear().tap()
+        app.buttons["ruleActionsMenu"].waitToAppear().tap()
         app.buttons["pauseRuleButton"].waitToAppear()
     }
 
@@ -233,18 +244,18 @@ final class RuleManagementUITests: XCTestCase {
         app.buttons["ruleCard-Work Time"].waitToAppear().tap()
 
         // Pause lives in the options menu; its confirmation shares the row label.
-        app.navigationBars.buttons["ruleActionsMenu"].waitToAppear().tap()
+        app.buttons["ruleActionsMenu"].waitToAppear().tap()
         app.buttons["pauseRuleButton"].waitToAppear().tap()
         app.sheets.buttons["Pause for 15 minutes"].waitToAppear().tap()
 
         // Paused → the Status row reads a resume countdown and the menu offers Resume
         // (polled — the row's label re-renders asynchronously after the dialog).
         app.element("detailRow-Status").waitForLabel(containing: "Resumes in")
-        app.navigationBars.buttons["ruleActionsMenu"].tap()
+        app.buttons["ruleActionsMenu"].tap()
         app.buttons["resumeRuleButton"].waitToAppear().tap()
 
         // Resume re-blocks immediately, so Pause is offered again.
-        app.navigationBars.buttons["ruleActionsMenu"].waitToAppear().tap()
+        app.buttons["ruleActionsMenu"].waitToAppear().tap()
         app.buttons["pauseRuleButton"].waitToAppear()
     }
 }

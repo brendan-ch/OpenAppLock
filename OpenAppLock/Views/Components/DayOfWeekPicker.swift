@@ -17,6 +17,8 @@ struct DayOfWeekPicker: View {
                 dayToggle(day)
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("dayOfWeekPicker")
     }
 
     private func dayToggle(_ day: Weekday) -> some View {

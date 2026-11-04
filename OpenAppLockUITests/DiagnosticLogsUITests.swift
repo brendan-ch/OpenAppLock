@@ -45,7 +45,7 @@ final class DiagnosticLogsUITests: XCTestCase {
         XCTAssertTrue(app.element("exportLogButton").waitForExistence(timeout: 5))
 
         // Back to the days list, clear, confirm, and expect the empty state.
-        app.navigationBars[todayKey].buttons.firstMatch.tap()  // back to "Logs"
+        app.buttons["BackButton"].firstMatch.tap()  // back to "Logs"
         let clear = app.element("clearLogsButton")
         XCTAssertTrue(clear.waitForExistence(timeout: 5))
         clear.tap()

@@ -8,17 +8,19 @@ on:
 jobs:
   test:
     name: Test on ${{ matrix.device }}
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 60
 
     strategy:
-      # Run every device leg to completion: an iPad failure shouldn't hide the
-      # iPhone result (or vice versa).
+      # Run every device leg to completion: an iPad or iPhone Duo failure
+      # shouldn't hide the iPhone result (or vice versa).
       fail-fast: false
       matrix:
         include:
           - device: iPhone 17 Pro
             slug: iphone
+          - device: iPhone Duo
+            slug: iphone-duo
           - device: iPad Pro 11-inch (M5)
             slug: ipad
 
@@ -26,9 +28,12 @@ jobs:
       - name: Checkout current repository
         uses: actions/checkout@v4
 
+      # The xcode-27 runner image (macOS 27, arm64) ships Xcode 27.1 GA as
+      # default and an iPhone Duo simulator pre-provisioned on the iOS 27.1
+      # runtime — the device type's only compatible runtime.
       - name: Set Xcode version
         run: |
-          sudo xcode-select -s /Applications/Xcode_26.5.app
+          sudo xcode-select -s /Applications/Xcode_27.1.app
 
       # Some macos-26 runner-image builds intermittently ship without the named
       # simulator, and the build step then dies in ~80s with the cryptic

@@ -18,7 +18,8 @@ final class OnboardingUITests: XCTestCase {
         app.buttons["onboardingContinueButton"].waitToAppear().tap()
 
         // Permission step: granting (mocked) lands on the main app, in whichever
-        // navigation chrome the device uses (tab bar on iPhone, sidebar on iPad).
+        // navigation chrome the width allows (tab bar in compact width, sidebar
+        // in regular width — iPad or an open iPhone Duo).
         app.buttons["allowScreenTimeButton"].waitToAppear().tap()
         app.waitForMainUI()
         XCTAssertTrue(app.staticTexts["Currently Blocking"].waitToAppear().exists)

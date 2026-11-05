@@ -62,8 +62,9 @@ extension XCUIApplication {
     func goToSettingsTab() { goToSection(tabLabel: "Settings", sidebarIdentifier: "sidebarItem-settings") }
 
     /// Navigates to a top-level section regardless of the current navigation
-    /// chrome: the bottom tab bar in compact width (iPhone, iPad multitasking) or
-    /// the left sidebar in regular width (full-screen iPad). Keeps the rest of the
+    /// chrome: the bottom tab bar in compact width (iPhone, iPhone Duo closed —
+    /// rendered by iOS 27 as a vertical trailing rail), or the left sidebar in
+    /// regular width (full-screen iPad, open iPhone Duo). Keeps the rest of the
     /// UI suite agnostic to which device it runs on.
     ///
     /// Each section's detail names its navigation bar after the same label as the
@@ -73,9 +74,16 @@ extension XCUIApplication {
         tabLabel: String, sidebarIdentifier: String,
         file: StaticString = #filePath, line: UInt = #line
     ) {
-        let tab = tabBars.buttons[tabLabel]
+        let tab = tabBars.buttons[tabLabel].firstMatch
         if tab.waitForExistence(timeout: 2) {
             tab.tap()
+            return
+        }
+
+        // iPhone Duo's iOS 27 vertical rail (see `usesTabBarNavigation`).
+        let rail = railTabButton(tabLabel)
+        if rail.waitForExistence(timeout: 2) {
+            rail.tap()
             return
         }
 
@@ -99,17 +107,57 @@ extension XCUIApplication {
     }
 
     /// Waits for the post-onboarding shell to appear in whichever chrome the
-    /// device presents — the bottom tab bar on iPhone, the left sidebar on
-    /// full-screen iPad — so tests can confirm "we reached the main app" without
-    /// hard-coding one device's navigation.
+    /// (possibly foldable) device presents — a tab bar (classic horizontal, or
+    /// iPhone Duo's vertical rail) in compact width, the left sidebar in regular
+    /// width (full-screen iPad, open iPhone Duo) — so tests can confirm "we
+    /// reached the main app" without hard-coding one device's navigation.
     @discardableResult
     func waitForMainUI() -> XCUIApplication {
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            element("sidebarItem-home").waitToAppear()
+        if usesTabBarNavigation() {
+            // The two tab renderings are mutually exclusive, so whichever query
+            // comes up empty below is guaranteed to stay empty; on the rail the
+            // classic `tabBars` query never matches (and vice versa).
+            let classic = tabBars.buttons["Home"].firstMatch
+            (classic.waitForExistence(timeout: 3) ? classic : railTabButton("Home")).waitToAppear()
         } else {
-            tabBars.buttons["Home"].waitToAppear()
+            element("sidebarItem-home").waitToAppear()
         }
         return self
+    }
+
+    /// The tab control for `label` as iPhone Duo's iOS 27 vertical trailing
+    /// rail: plain buttons inside a `Toolbar`, which XCUITest doesn't classify
+    /// as a `TabBar`. Empty on every other device/pose.
+    func railTabButton(_ label: String) -> XCUIElement {
+        toolbars.buttons[label].firstMatch
+    }
+
+    /// Whether the post-onboarding shell is currently presenting tab-style
+    /// navigation (compact width), decided by sniffing the tree rather than the
+    /// device idiom: iPhone Duo identifies as `.phone` in both poses, but shows
+    /// the regular-width sidebar (like a full-screen iPad) while open, and its
+    /// compact tab bar is a vertical rail that `tabBars` doesn't match — so
+    /// neither `userInterfaceIdiom` nor `tabBars` alone predicts the chrome.
+    func usesTabBarNavigation(timeout: TimeInterval = 5) -> Bool {
+        if tabBars.firstMatch.waitForExistence(timeout: timeout) { return true }
+        return railTabButton("Home").waitForExistence(timeout: 1)
+    }
+
+    /// The first hittable element matching `query` that exists, waiting for the
+    /// query to resolve first. iOS 27 keeps the occluded nav stacks of windows
+    /// behind a presented sheet alive in the hierarchy, so the same identifier
+    /// can match controls in both the visible sheet and the background window —
+    /// only the visible one is hittable.
+    func hittableElement(
+        _ query: XCUIElementQuery, identifier: String,
+        timeout: TimeInterval = 10, file: StaticString = #filePath, line: UInt = #line
+    ) -> XCUIElement {
+        let matched = query.matching(identifier: identifier)
+        matched.firstMatch.waitToAppear(timeout: timeout, file: file, line: line)
+        if let hit = matched.allElementsBoundByIndex.first(where: { $0.isHittable }) {
+            return hit
+        }
+        return matched.firstMatch
     }
 }
 

@@ -160,8 +160,8 @@ truth.
     per `AppListUITests.swift:270`.)
   - **Alert absent (guards "only shows"):** launch `-seed-scenario=standard`
     (2 rules) → tap `newRuleButton` → editor opens, no alert.
-  - Both run on the iPhone + iPad matrix via the idiom-aware nav helpers
-    (`goToRulesTab()` / `waitForMainUI()`).
+  - Both run on the iPhone + iPhone Duo + iPad matrix via the chrome-aware nav
+    helpers (`goToRulesTab()` / `waitForMainUI()`).
 
 ## Sequencing (TDD)
 

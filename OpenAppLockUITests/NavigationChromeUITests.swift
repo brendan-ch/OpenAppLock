@@ -5,33 +5,39 @@
 
 import XCTest
 
-/// The post-onboarding shell adapts its navigation chrome to the available width:
-/// a bottom tab bar on iPhone (compact), a left sidebar on full-screen iPad
-/// (regular). These flows run on whatever destination the suite is launched
-/// against and branch on the device idiom, so the same test validates both legs
-/// of the CI matrix.
+/// The post-onboarding shell adapts its navigation chrome to the available
+/// width: a bottom tab bar in compact width, a left sidebar in regular width
+/// (full-screen iPad, open iPhone Duo). These flows run on whatever destination
+/// the suite is launched against and detect the chrome from the tree itself —
+/// not the device idiom, because an open iPhone Duo presents regular-width
+/// chrome and iPhone idiom in the same pose — so the same test validates every
+/// leg of the CI matrix.
 final class NavigationChromeUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
 
-    /// iPad shows a sidebar and no tab bar; iPhone shows a tab bar and no sidebar.
-    func testNavigationChromeMatchesIdiom() throws {
+    /// Compact width shows a tab bar and no sidebar; regular width shows the
+    /// sidebar and no tab bar.
+    func testNavigationChromeMatchesAvailableWidth() throws {
         let app = XCUIApplication.launchOpenAppLock()
 
-        if UIDevice.current.userInterfaceIdiom == .pad {
+        if app.usesTabBarNavigation() {
+            // Either tab rendering satisfies "compact width chrome"; the two
+            // forms are mutually exclusive (see `waitForMainUI`).
+            let classic = app.tabBars.buttons["Home"].firstMatch
+            (classic.waitForExistence(timeout: 3) ? classic : app.railTabButton("Home")).waitToAppear()
+            XCTAssertFalse(
+                app.element("sidebarItem-home").exists,
+                "Compact width should use tab navigation, not a sidebar"
+            )
+        } else {
             app.element("sidebarItem-home").waitToAppear()
             app.element("sidebarItem-rules").waitToAppear()
             app.element("sidebarItem-settings").waitToAppear()
             XCTAssertFalse(
                 app.tabBars.firstMatch.exists,
-                "Full-screen iPad should use a sidebar, not a bottom tab bar"
-            )
-        } else {
-            app.tabBars.buttons["Home"].waitToAppear()
-            XCTAssertFalse(
-                app.element("sidebarItem-home").exists,
-                "iPhone should use a bottom tab bar, not a sidebar"
+                "Regular width should use a sidebar, not a bottom tab bar"
             )
         }
     }

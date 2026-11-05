@@ -293,13 +293,24 @@ Gotchas learned the hard way:
   (a bare `buttons["Pause for 15 minutes"]` is ambiguous with the
   `pauseRuleButton` row label). Pause/Resume live on the rule detail overlay;
   Home's Currently Blocking rows navigate to it.
-- **iPad presentation differs and the UI suite runs on both** (CI matrix:
-  iPhone + iPad). On iPad the shell is a sidebar, not a tab bar — navigate with
-  the idiom-aware `goToHomeTab()/…` and `waitForMainUI()` helpers, never bare
+- **Regular-width presentation differs and the UI suite runs on three legs** (CI
+  matrix: iPhone + iPhone Duo + iPad). In regular width (iPad, **open iPhone
+  Duo**) the shell is a sidebar, not a tab bar — navigate with the chrome-aware
+  `goToHomeTab()/…` and `waitForMainUI()` helpers, never bare
   `tabBars`. Sheets present as *centered, shorter* form sheets, so: a window-edge
   swipe-back misses them (use the nav `BackButton`); rows can start below the
   fold (scroll into view); and span/width assertions measured against the full
-  window only hold on iPhone (gate with `UIDevice.current.userInterfaceIdiom`).
+  window only hold in compact width (gate with `usesTabBarNavigation()`).
+- **Never branch UI tests on `UIDevice.current.userInterfaceIdiom`**: iPhone Duo
+  identifies as `.phone` in both poses while showing regular-width (sidebar)
+  chrome when open, so idiom cannot predict the layout. Decide from the actual
+  chrome (`usesTabBarNavigation()` / `waitForMainUI()`) instead. Additional
+  wrinkles: iPhone Duo renders its compact tab bar as a **vertical trailing
+  rail** of plain buttons (not a `TabBar` — use `railTabButton()`/the
+  chrome-aware helpers), and the simulator has no `simctl` fold control, so CI
+  only exercises whatever pose its default boot presents (closed here behaves
+  like a compact iPhone; the open pose is covered by the iPad leg's assertions
+  plus `NavigationChromeUITests`).
 
 ## Known gaps / next steps
 

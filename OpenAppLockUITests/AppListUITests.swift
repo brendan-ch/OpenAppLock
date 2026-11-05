@@ -38,11 +38,15 @@ final class AppListUITests: XCTestCase {
         )
 
         // Back to the rule-type list, then check the open-limit editor too. Use
-        // the nav back button rather than an edge-swipe, which assumes a full-width
-        // sheet and misses iPad's centered form sheet. Target the back button by
+        // the nav back button rather than an edge-swipe, which assumes a
+        // full-width sheet and misses the centered form sheet (iPad, open
+        // iPhone Duo). Target the back button by
         // its identifier ("BackButton") — its "New Rule" label collides with the
-        // Rules tab's "New Rule" (+) button sitting behind the sheet.
-        app.navigationBars.buttons["BackButton"].waitToAppear().tap()
+        // Rules tab's "New Rule" (+) button sitting behind the sheet, so it is
+        // matched from the app root: under iOS 27 the editor sheet's
+        // NavigationBar is anonymous (a mangled `NavigationStackHosting`
+        // identifier), so `navigationBars.buttons` can't reach it.
+        app.buttons["BackButton"].waitToAppear().tap()
 
         app.buttons["ruleKind-openLimit"].waitToAppear().tap()
         app.element("selectedAppsRow").waitToAppear()
@@ -69,10 +73,13 @@ final class AppListUITests: XCTestCase {
 
         // Edit Apps pushes the Screen Time picker; selections apply live, so it
         // has no Save of its own — the nav back button returns to the editor.
+        // Matched by identifier from the app root (iOS 27 leaves the sheet's
+        // NavigationBar anonymous; see `testLimitEditorsAreBlockOnly`), picked
+        // among hittable matches: the main window's occluded stack behind the
+        // sheet carries its own BackButton, which must not be tapped.
         app.element("emptySelectionLabel").waitToAppear()
         app.buttons["editAppsButton"].tap()
-        let appsBar = app.navigationBars["Edit Apps"].waitToAppear()
-        appsBar.buttons["BackButton"].tap()
+        app.hittableElement(app.buttons, identifier: "BackButton").tap()
 
         // The editor's checkmark saves the list and dismisses the overlay.
         app.buttons["saveAppListButton"].waitToAppear().tap()

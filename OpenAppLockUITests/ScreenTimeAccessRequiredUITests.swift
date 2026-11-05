@@ -18,7 +18,9 @@ final class ScreenTimeAccessRequiredUITests: XCTestCase {
         app.element("screenTimeAccessRequiredTitle").waitToAppear()
         XCTAssertTrue(app.buttons["screenTimeAccessOpenSettingsButton"].exists)
         XCTAssertFalse(app.buttons["newRuleButton"].exists)
+        // No main-UI chrome in either tab form (classic bar, or Duo's rail).
         XCTAssertFalse(app.tabBars.buttons["Home"].exists)
+        XCTAssertFalse(app.railTabButton("Home").exists)
     }
 
     func testApprovedAuthorizationShowsMainApp() throws {
